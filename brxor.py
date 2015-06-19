@@ -7,7 +7,7 @@
 #
 # Version 0.01b - still need to test passing regular expressions
 # 
-# brutexor.py Created by (Alexander.Hanel@gmail).com
+# brutexor.py Created by Alexander Hanel (Alexander.Hanel@gmail.com)
 # Modified by Trenton Tait (tretait@gmail.com)
 #
 # Usage: brxor.py [options] <file>
