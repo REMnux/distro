@@ -96,7 +96,7 @@ def main(argv):
     buff = ''
 
     try:
-        f = open(sys.argv[len(sys.argv)-1],'rb+')
+        f = open(sys.argv[len(sys.argv)-1],'rb')
     except Exception:
         print '[ERROR] FILE CAN NOT BE OPENED OR READ!'
         return
