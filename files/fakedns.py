@@ -18,6 +18,7 @@ Modified by Kevin Murray
 import socket
 import sys
 import getopt
+import subprocess
 
 class DNSQuery:
     def __init__(self, data):
@@ -82,7 +83,9 @@ def usage():
     sys.exit(1)
     
 if __name__ == '__main__':
-    ip='192.168.1.1'     # built in default ip address can be overridden with the -a option
+    # Use the first local IP by default. Can be overridden with the -a option
+    first_ip = subprocess.check_output("hostname -I | awk '{print $1}'", shell=True)
+    ip = first_ip
     ignoredDomains = []  # List of domains/sundomains to be ignored
     ignoredFQDNs = []    # List of fully qualified domain names to be ignored
     resolvedDomains = {} # Dictionary to map domains/subdomains to specific ip addresses
@@ -113,8 +116,12 @@ if __name__ == '__main__':
     print ""
     print "fakedns:: dom.query. 60 IN A %s" % ip
     udps = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    # The original line below had '' instead of ip. -- Lenny
-    udps.bind((ip,53))
+
+    # The original script attempted to bind to the default interface,
+    # but this caused problems on Ubuntu 18.04, because there's already
+    # a UDP port 53 listener, so we'll bind to the first IP instead.
+    udps.bind((first_ip,53))
+
     try:
         while 1:
             data, addr = udps.recvfrom(1024)
