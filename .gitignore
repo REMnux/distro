@@ -1,4 +1,4 @@
-*.jar
+burpsuite-community.jar
 *.build
 *.upload
 *.changes
