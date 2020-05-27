@@ -1,0 +1,9 @@
+*.jar
+*.build
+*.upload
+*.changes
+*.buildinfo
+*.xz
+*.gz
+*.tar
+!files.*
