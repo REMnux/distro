@@ -1,0 +1,24 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'com.github.johnrengelman.shadow' version '2.0.4'
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['java']
+        }
+    }
+}
+
+mainClassName = 'com.gitlab.pdftk_java.pdftk'
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    compile 'org.bouncycastle:bcprov-jdk15on:1.51'
+    compile 'org.apache.commons:commons-lang3:3.7'
+}

@@ -1,0 +1,25 @@
+#!/bin/sh
+
+set -e
+
+case "$1" in
+    configure|abort-remove|abort-deconfigure)
+        update-alternatives --install /usr/bin/pdftk pdftk \
+            /usr/bin/pdftk.pdftk-java 100 \
+            --slave /usr/share/man/man1/pdftk.1.gz  pdftkman\
+            /usr/share/man/man1/pdftk.pdftk-java.1.gz
+        [ -e /usr/bin/pdftk ] || update-alternatives --auto pdftk
+        ;;
+
+    abort-upgrade)
+        # Nothing to undo
+        :;
+        ;;
+
+    *)
+        echo "$0: Undocumented call: \"$@\"" >&2
+        exit 1
+        ;;
+esac
+
+#DEBHELPER#

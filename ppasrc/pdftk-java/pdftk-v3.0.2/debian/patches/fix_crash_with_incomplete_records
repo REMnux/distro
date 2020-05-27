@@ -1,0 +1,61 @@
+From e61c4744dba7bf553954f8b8afb1feba5e54422b Mon Sep 17 00:00:00 2001
+From: Marc Vinyals <vinyals@kth.se>
+Date: Tue, 15 Jan 2019 23:12:49 +0530
+Subject: [PATCH] Fix crash with incomplete records
+
+Fixes #13
+---
+ java/com/gitlab/pdftk_java/data_import.java |  1 +
+ test/BlackBoxTest.java                      | 12 ++++++++++++
+ 2 files changed, 13 insertions(+)
+
+diff --git a/java/com/gitlab/pdftk_java/data_import.java b/java/com/gitlab/pdftk_java/data_import.java
+index 9aa5960..e4ca910 100644
+--- a/java/com/gitlab/pdftk_java/data_import.java
++++ b/java/com/gitlab/pdftk_java/data_import.java
+@@ -98,6 +98,7 @@ static PdfData
+ 
+       // reset
+       buff_prev= "";
++      buff_prev_len= 0;
+       //
+       info= new PdfInfo();
+       info_b= false;
+diff --git a/test/BlackBoxTest.java b/test/BlackBoxTest.java
+index c272e6b..0d03076 100644
+--- a/test/BlackBoxTest.java
++++ b/test/BlackBoxTest.java
+@@ -3,6 +3,7 @@ import org.junit.Rule;
+ import org.junit.Test;
+ import org.junit.contrib.java.lang.system.SystemOutRule;
+ import org.junit.contrib.java.lang.system.ExpectedSystemExit;
++import org.junit.contrib.java.lang.system.TextFromStandardInputStream;
+ 
+ import java.nio.file.Files;
+ import java.nio.file.Paths;
+@@ -18,6 +19,10 @@ public class BlackBoxTest {
+   @Rule
+   public final ExpectedSystemExit exit = ExpectedSystemExit.none();
+ 
++  @Rule
++  public final TextFromStandardInputStream systemInMock
++    = TextFromStandardInputStream.emptyStandardInputStream();
++
+   public String slurp(String filename) throws IOException {
+     return new String(slurpBytes(filename));
+   }
+@@ -79,4 +84,11 @@ public class BlackBoxTest {
+     assertEquals(expectedData, systemOutRule.getLogAsBytes());
+   }
+ 
++  @Test
++  public void update_info_incomplete_record() {
++    exit.expectSystemExitWithStatus(0);
++    systemInMock.provideLines("InfoBegin", "InfoKey: Title", " ","InfoBegin", "InfoKey: Author", " ");
++    pdftk.main(new String[]{"test/files/blank.pdf", "update_info", "-", "output", "-"});
++  }
++
+ };
+--
+2.11.0
+

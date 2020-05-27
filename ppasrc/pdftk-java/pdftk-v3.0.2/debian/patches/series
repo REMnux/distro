@@ -1,0 +1,4 @@
+fix_classpath
+fix_hyphen_pdftk.1_man
+fix_bug_that_corrupts_images
+fix_crash_with_incomplete_records

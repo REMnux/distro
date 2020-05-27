@@ -1,0 +1,90 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: pdftk
+Upstream-Contact: Marc Vinyals <vinyals@kth.se>
+Source: https://gitlab.com/marcvinyals/pdftk
+
+Files: *
+Copyright:
+  2017-2018, Marc Vinyals <vinyals@kth.se>
+  2003-2013, Sid Steward <sid.steward at pdflabs dot com>
+License: GPL-2+
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
+ .
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ .
+ On Debian systems, the complete text of the GNU General Public License
+ version 2 can be found in /usr/share/common-licenses/GPL-2 file.
+
+Files: java/pdftk/com/*
+Copyright: 1999-2005, Bruno Lowagie
+           2002, Jeremy Bowman <bowmanjm@attbi.com>.
+           2002, Josselin PUJO
+	   2002, Mark Thompson
+           2003, Galo Gimenez
+	   2004, Oren Manor
+           2004, Takenori
+	   2004, Ygal Blum
+           2000-2005, Paulo Soares
+License: LGPL-2+
+ The Original Code is 'iText, a free JAVA-PDF library'.
+ .
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Library General Public
+ License as published by the Free Software Foundation; either
+ version 2 of the License, or (at your option) any later version.
+ .
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Library General Public License for more details.
+ .
+ On Debian systems, the complete text of the GNU General Public License
+ version 2 can be found in /usr/share/common-licenses/LGPL-2.
+
+
+Files: java/pdftk/com/lowagie/text/pdf/TIFFLZWDecoder.java
+Copyright: The Apache Software Foundation
+License: Apache-2.0
+ Licensed to the Apache Software Foundation (ASF) under one or more
+ contributor license agreements.  See the NOTICE file distributed with
+ this work for additional information regarding copyright ownership.
+ The ASF licenses this file to You under the Apache License, Version 2.0
+ (the "License"); you may not use this file except in compliance with
+ the License.  You may obtain a copy of the License at
+ .
+  http://www.apache.org/licenses/LICENSE-2.0
+ .
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ .
+ On Debian systems, the complete text of the GNU General Public License
+ version 2 can be found in /usr/share/common-licenses/Apache-2.0 file.
+
+Files: java/pdftk/com/lowagie/text/pdf/fonts/*.afm
+       java/pdftk/com/lowagie/text/pdf/fonts/License-Adobe.txt
+Copyright: 1985-1997, Adobe Systems Incorporated
+License: other1
+ This file and the 14 PostScript(R) AFM files it accompanies may be
+ used, copied, and distributed for any purpose and without charge, with
+ or without modification, provided that all copyright notices are
+ retained; that the AFM files are not distributed without this file;
+ that all modifications to this file or any of the AFM files are
+ prominently noted in the modified file(s); and that this paragraph is
+ not modified. Adobe Systems has no responsibility or obligation to
+ support the use of the AFM files.
+
+Files: debian/*
+Copyright: 2019 Johann Felix Soden <johfel@debian.org>
+License: GPL
+ The Debian packaging information is under the GPL.
+ On Debian systems, the complete text of the GNU General Public
+ License can be found in `/usr/share/common-licenses/GPL-2'.

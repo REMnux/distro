@@ -1,0 +1,17 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+DPKG_EXPORT_BUILDFLAGS = 1
+-include /usr/share/dpkg/buildflags.mk
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	LC_ALL=C.UTF-8 ant -Dant.build.javac.target=1.8 -Dant.build.javac.source=1.8 jar
+
+override_dh_auto_install:
+	dh_auto_install --destdir=debian/pdftk
+
+override_dh_installdocs:
+	dh_installdocs --link-doc=pdftk-java

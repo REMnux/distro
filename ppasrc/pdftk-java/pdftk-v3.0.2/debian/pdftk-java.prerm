@@ -1,0 +1,20 @@
+#!/bin/sh
+
+set -e
+
+case "$1" in
+    upgrade|failed-upgrade)
+        :;
+        ;;
+
+    remove|deconfigure)
+        update-alternatives --remove pdftk /usr/bin/pdftk.pdftk-java
+        ;;
+
+    *)
+        echo "Undocumented call: \"$@\"" >&2
+        exit 1
+        ;;
+esac
+
+#DEBHELPER#

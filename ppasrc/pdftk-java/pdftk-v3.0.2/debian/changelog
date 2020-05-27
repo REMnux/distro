@@ -1,0 +1,42 @@
+pdftk-java (3.0.2-3) bionic; urgency=medium
+
+  * Tweaked Debian package setup for Ubuntu 18.04.
+
+ -- REMnux Distribution <distro@remnux.org>  Fri, 15 May 2020 20:48:24 -0400
+
+pdftk-java (3.0.2-2) unstable; urgency=high
+
+  * Backport bugfixes from upstream version 3.0.3 (Closes: #919548).
+    - Fix bug which can corrupt images in PDFs.
+    - Fix crash with incomplete metadata records in PDFs.
+  * Add debian/watch file.
+
+ -- Johann Felix Soden <johfel@debian.org>  Tue, 19 Feb 2019 19:47:27 +0100
+
+pdftk-java (3.0.2-1) unstable; urgency=medium
+
+  * New upstream version.
+  * Update Standards-Version to 4.2.1.
+
+ -- Johann Felix Soden <johfel@debian.org>  Sat, 15 Dec 2018 19:12:00 +0100
+
+pdftk-java (0.0.0+20180723.1-1) unstable; urgency=medium
+
+  * New upstream snapshot.
+  * debian/control:
+    - Update Standards-Version to 4.2.0.
+    - Update upstream homepage.
+    - depend on default-jre-headless (Closes: #905643).
+  * Add patch to fix classpath during build.
+  * Synchronize pdftk-java run script with upstream version.
+  * Remove MPL-1.1 notice from debian/copyright (Closes: #904864).
+  * Build with source/target compatibility 1.8 to support older java runtimes.
+
+ -- Johann Felix Soden <johfel@debian.org>  Sat, 04 Aug 2018 12:01:57 +0200
+
+pdftk-java (0.0.0+20180620.1-1) unstable; urgency=low
+
+  * Initial release. (Closes: #901370) -
+    thanks to Emilio Pozuelo Monfort <pochu@debian.org> for preparing work.
+
+ -- Johann Felix Soden <johfel@debian.org>  Wed, 20 Jun 2018 08:59:23 +0200
