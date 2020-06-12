@@ -1,0 +1,70 @@
+pdfresurrect
+------------
+PDFResurrect is a tool aimed at analyzing PDF documents.  The PDF format allows
+for previous document changes to be retained in a more recent version of the
+document, thereby creating a running history of changes for the document.  This
+tool attempts to extract all previous versions while also producing a summary
+of changes between versions.  This tool can also "scrub" or write data over the
+original instances of PDF objects that have been modified or deleted, in an
+effort to disguise information from previous versions that might not be
+intended for anyone else to read.
+
+
+Notes
+-----
+The scrubbing feature (-s) should not be trusted for any serious security
+uses.  After using this feature, please verify that it in fact zero'd all
+of the objects that were of concern (those objects that were to be zero'd).
+
+This tool relies on the application reading the pdfresurrect extracted versions
+to treat the last xref table as the most recent in the document.  This should
+typically be the case.
+
+The verbose output, which tries to deduce the PDF object type (e.g. stream,
+page), is not always accurate, and the object counts might not be 100%
+accurate.  However, this should not prevent the extraction of the versions.
+This output is merely to provide a hint for the user as to what might be
+different between the documents.
+
+Object counts might appear off in linearized PDF documents.  That is not truly
+the case, the reason for this is that each version of the PDF consists of the
+objects that compose the linear portion of the PDF plus all of the objects that
+compose the version in question.  Suppose there is a linearized PDF with 59
+objects in its linear portion, and suppose the PDF has a second version that
+consists of 21 objects.  The total number of objects in "version 2"
+would be 59 + 21 or 80 objects.
+
+
+Building
+--------
+From the top-level directory of pdfresurrect run:
+    ./configure
+    make
+
+To install/uninstall the resulting binary to a specific path
+the '--prefix=' flag can be used:
+    ./configure --prefix=/my/desired/path/
+
+Debugging mode can be enabled when configuring by using the following option:
+    ./configure --enable-debug
+
+The resulting binary can be placed anywhere, however it can also be
+installed/uninstalled to the configured path automatically.  If no path was
+specified at configure time, the default is /usr/local/bin
+To install/uninstall:
+    make install 
+         or
+    make uninstall
+
+
+Thanks
+------
+The rest 757/757Labs crew.
+GNU (www.gnu.org).
+All of the contributors: See AUTHORS file.
+
+
+Contact / Project URL
+---------------------
+mattdavis9@gmail.com
+https://github.com/enferex/pdfresurrect
