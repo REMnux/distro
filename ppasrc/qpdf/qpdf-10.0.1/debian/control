@@ -1,0 +1,86 @@
+Source: qpdf
+Section: libs
+Priority: optional
+Build-Depends: debhelper (>> 10.3~), libjpeg-dev, zlib1g-dev, libgnutls28-dev
+Maintainer: Jay Berkenbilt <qjb@debian.org>
+Standards-Version: 4.5.0
+Homepage: http://qpdf.sourceforge.net
+
+Package: libqpdf28
+Section: libs
+Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: runtime library for PDF transformation/inspection software
+ QPDF is a program that can be used to linearize (web-optimize),
+ encrypt (password-protect), decrypt, and inspect PDF files from the
+ command-line.  It does these and other structural, content-preserving
+ transformations on PDF files, reading a PDF file as input and
+ creating a new one as output.  It also provides many useful
+ capabilities to developers of PDF-producing software or for people
+ who just want to look at the innards of a PDF file to learn more
+ about how they work.
+ .
+ QPDF understands PDF files that use compressed object streams
+ (supported by newer PDF applications) and can convert such files into
+ those that can be read with older viewers.  It can also be used for
+ checking PDF files for structural errors, inspecting stream contents,
+ or extracting objects from PDF files.  QPDF is not PDF content
+ creation or viewing software -- it does not have the capability to
+ create PDF files from scratch or to display PDF files.
+ .
+ This package contains the qpdf runtime libraries required to run
+ programs that link with the qpdf library.
+
+Package: libqpdf-dev
+Section: libdevel
+Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends}, libqpdf28 (= ${binary:Version}), libjpeg-dev, zlib1g-dev
+Description: development files for PDF transformation/inspection library
+ QPDF is a program that can be used to linearize (web-optimize),
+ encrypt (password-protect), decrypt, and inspect PDF files from the
+ command-line.  It does these and other structural, content-preserving
+ transformations on PDF files, reading a PDF file as input and
+ creating a new one as output.  It also provides many useful
+ capabilities to developers of PDF-producing software or for people
+ who just want to look at the innards of a PDF file to learn more
+ about how they work.
+ .
+ QPDF understands PDF files that use compressed object streams
+ (supported by newer PDF applications) and can convert such files into
+ those that can be read with older viewers.  It can also be used for
+ checking PDF files for structural errors, inspecting stream contents,
+ or extracting objects from PDF files.  QPDF is not PDF content
+ creation or viewing software -- it does not have the capability to
+ create PDF files from scratch or to display PDF files.
+ .
+ This package includes all development files needed to compile
+ applications that use the qpdf library.
+
+Package: qpdf
+Section: text
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: tools for transforming and inspecting PDF files
+ QPDF is a program that can be used to linearize (web-optimize),
+ encrypt (password-protect), decrypt, and inspect PDF files from the
+ command-line.  It does these and other structural, content-preserving
+ transformations on PDF files, reading a PDF file as input and
+ creating a new one as output.  It also provides many useful
+ capabilities to developers of PDF-producing software or for people
+ who just want to look at the innards of a PDF file to learn more
+ about how they work.
+ .
+ QPDF understands PDF files that use compressed object streams
+ (supported by newer PDF applications) and can convert such files into
+ those that can be read with older viewers.  It can also be used for
+ checking PDF files for structural errors, inspecting stream contents,
+ or extracting objects from PDF files.  QPDF is not PDF content
+ creation or viewing software -- it does not have the capability to
+ create PDF files from scratch or to display PDF files.
+ .
+ This package includes the command-line qpdf tools.  It also contains
+ the documentation.

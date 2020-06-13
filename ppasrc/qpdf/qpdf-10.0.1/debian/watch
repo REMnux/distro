@@ -1,0 +1,6 @@
+version=4
+# qpdf releases are based on artifacts that are explicitly uploaded
+# rather than the automatically created source releases.
+opts=pgpsigurlmangle=s/$/.asc/,\
+  uversionmangle=s/(\d)\.([a-z].+)$/$1~$2/ \
+  https://github.com/qpdf/qpdf/releases .*/qpdf-(\d\S+)\.tar\.gz

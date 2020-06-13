@@ -1,0 +1,620 @@
+upx-ucl (3.96) bionic; urgency=medium
+
+  * Updated to the latest upstream release 
+
+ -- REMnux Distribution <distro@remnux.org>  Fri, 12 Jun 2020 21:42:18 -0400
+
+upx-ucl (3.95-2) unstable; urgency=medium
+
+  * Add two new patches, namely 02-Ignore-malformed-ElfXX_Shdr.patch, and
+    03-Malformed-input.patch, taken from upstream to fix CVE-2019-14295,
+    and CVE-2019-14296 (closes: #933232).
+  * Add autopkgtest check for the above bug fix.
+  * Bump debhelper's compat version to 12.
+  * debian/rules: Use DPKG_*_MAINT_APPEND variables and buildflags.mk
+    to setup build flags.
+  * Standards-Version: 4.4.0.
+
+ -- Robert Luberda <robert@debian.org>  Mon, 29 Jul 2019 21:10:27 +0200
+
+upx-ucl (3.95-1) unstable; urgency=medium
+
+  * New upstream version:
+    + contains fix for multiple memory reading issue (CVE-2018-11243,
+      closes: #899190).
+  * Add autopkgtest checks for basic functionalities of upx and for
+    regressions against a few bugs reported in Debian in last few years.
+  * Upload to unstable.
+  * Standards-Version: 4.2.1.
+
+ -- Robert Luberda <robert@debian.org>  Tue, 28 Aug 2018 21:47:27 +0200
+
+upx-ucl (3.95~git20180805-1) experimental; urgency=medium
+
+  * New upstream snapshot from git commit b97688d11.
+  * Merge changes from 3.94-5 (switch to debhelper v11, update Vcs-*,
+    and Standards-Version fields).
+
+ -- Robert Luberda <robert@debian.org>  Sun, 05 Aug 2018 13:10:55 +0200
+
+upx-ucl (3.94+git20171222-1) experimental; urgency=medium
+
+  * New upstream snapshot from git commit aefb2fa3c.
+  * Merge changes from 3.94-3 and 3.94-4, but remove both patches added
+    in the latter version, as they are already included in this upstream
+    snaphot.
+  * debian/control: set Rules-Requires-Root to "no".
+
+ -- Robert Luberda <robert@debian.org>  Sat, 23 Dec 2017 00:33:34 +0100
+
+upx-ucl (3.94+git20170810-1) experimental; urgency=low
+
+  * New upstream snapshot from git commit 5b545444 that hopefully fixes
+    FTBFS on i386 and other architectures.
+
+ -- Robert Luberda <robert@debian.org>  Thu, 10 Aug 2017 22:58:01 +0200
+
+upx-ucl (3.94+git20170809-1) experimental; urgency=low
+
+  * New upstream snapshot from git commit 8f572e5f.
+  * Remove no longer needed  Check-DT_REL-i386.patch.
+
+ -- Robert Luberda <robert@debian.org>  Wed, 09 Aug 2017 23:47:19 +0200
+
+upx-ucl (3.94-5) unstable; urgency=medium
+
+  * Apply Silence-some-gcc-8-snapshot-compiler-warnings.patch from upstream
+    to fix gcc-8 compilation failure (closes: #897880).
+  * Bump debhelper's compat level to 11.
+  * debian/control:
+    + update Vcs-* fields for salsa migration;
+    + add `Rules-Requires-Root: no' field;
+    + Standards-Version: 4.2.0.
+
+ -- Robert Luberda <robert@debian.org>  Sun, 05 Aug 2018 08:55:46 +0200
+
+upx-ucl (3.94-4) unstable; urgency=medium
+
+  * Apply Mach-o-defend-against-bad-crafted-input.patch from upstream
+    to fix crash on packing corrupted Mach-O file (CVE-2017-16869,
+    closes: #882041).
+  * Apply Protect-against-bad-crafted-input.patch from upstream to fix
+    crashes found by AFL (CVE-2017-15056, closes: #873260).
+  * Standards-Version: 4.1.2.
+
+ -- Robert Luberda <robert@debian.org>  Fri, 22 Dec 2017 23:25:38 +0100
+
+upx-ucl (3.94-3) unstable; urgency=medium
+
+  * Note in README.source that upx uses upstream-provided LZMA library
+    because lzma-dev package does not provide all the files necessary
+    to build upx (closes: #871647).
+  * Apply patch from Helmut Grohne to fix cross-compiling (closes: #871633):
+    + let debhelper choose the correct CC;
+    + fix build/host confusion;
+    + ask dpkg for host endianness rather than maintaining a list.
+  * Standards-Version: 4.1.0.
+
+ -- Robert Luberda <robert@debian.org>  Fri, 01 Sep 2017 23:43:04 +0200
+
+upx-ucl (3.94-2) unstable; urgency=low
+
+  * Upload to unstable.
+  * Merge changes from version 3.91-3 and 3.91-4: add Check-DT_REL-i386.patch
+    and changelog entries.
+  * Standards-Version: 4.0.1.
+
+ -- Robert Luberda <robert@debian.org>  Wed, 09 Aug 2017 22:59:28 +0200
+
+upx-ucl (3.94-1) experimental; urgency=low
+
+  * New upstream version.
+  * Remove no longer needed 02-FTBFS-GCC7.patch.
+  * debian/rules: Add sparc64 to big-endian archs to hopefully fix FTBFS.
+
+ -- Robert Luberda <robert@debian.org>  Thu, 18 May 2017 00:00:53 +0200
+
+upx-ucl (3.93-1) experimental; urgency=low
+
+  * New upstream version:
+    + contains fixes for failed assertions (closes: #775451) and segmentation
+      fault (closes: #775455).
+  * Upstream homepage was moved to github, update URLs in debian/watch,
+    debian/control and debian/copyright.
+  * Remove 00-Makefile.patch; override a few upstream Makefile's variables
+    in debian/rules instead.
+  * Remove 02-Lzma-support.patch together with build-dependency on lzma-dev
+    and Built-Using control field. Now upx is built with lzma sources included
+    by upstream in the upx source package.
+  * Drop 03-FTBFS-GCC6.patch, applied by upstream.
+  * Add 02-FTBFS-GCC7.patch that fixes the implicit fallthrough error reported
+    by g++-7 (closes: #853694; all other issues mentioned in the bug seem to
+    be fixed by upstream).
+  * Bump debhelper's compat level to 10.
+  * Update debian/copyright with lzma-sdk license details.
+
+ -- Robert Luberda <robert@debian.org>  Fri, 21 Apr 2017 23:08:52 +0200
+
+upx-ucl (3.91-4) unstable; urgency=medium
+
+  * Introduce Check-DT_REL-i386.patch to fix segmentation faults occurring
+    while executing upx-compressed i386 position-independent binaries. The
+    patch is strongly based on the one added previously for amd64 binaries,
+    and was reported to upstream in https://github.com/upx/upx/issues/106.
+
+ -- Robert Luberda <robert@debian.org>  Wed, 31 May 2017 21:50:25 +0200
+
+upx-ucl (3.91-3) unstable; urgency=medium
+
+  * Add Check-DT_RELA.patch based on upstream's commit d688a05ac7 to
+    fix segmentation faults on decompressing executables produced by
+    newer binutils on amd64 (closes: #860953).
+  * Apply the following packaging changes from 3.94-1 in Debian/experimental:
+    + upstream homepage was moved to github, update URLs in debian/watch,
+      debian/control and debian/copyright;
+    + debian/rules: Add sparc64 to big-endian archs to fix FTBFS.
+
+ -- Robert Luberda <robert@debian.org>  Sat, 20 May 2017 09:17:12 +0200
+
+upx-ucl (3.91-2) unstable; urgency=medium
+
+  * Add 03-FTBFS-GCC6.patch to fix build failure with g++-6 (closes: #811595).
+  * debian/rules: Enable all hardening options.
+  * debian/copyright: Switch to the DEP-5 format.
+  * debian/control:
+    + switch VCS fields to https;
+    + bump Standards-Version to 3.9.8 (no changes).
+
+ -- Robert Luberda <robert@debian.org>  Sun, 03 Jul 2016 13:02:47 +0200
+
+upx-ucl (3.91-1) unstable; urgency=low
+
+  * New upstream version with experimental support for Windows 64-bit
+    PE files.
+
+ -- Robert Luberda <robert@debian.org>  Sun, 20 Oct 2013 12:27:21 +0200
+
+upx-ucl (3.09-2) unstable; urgency=low
+
+  * Upload to unstable.
+  * Standard-Version: 3.9.4:
+    + add Built-Using field referring to version of lzma-dev package.
+
+ -- Robert Luberda <robert@debian.org>  Fri, 10 May 2013 09:18:12 +0200
+
+upx-ucl (3.09-1) experimental; urgency=low
+
+  * New upstream version 3.09:
+    + g++-4.8 compilation issue fixed by upstream (closes: #701368).
+  * Compile with -D_FILE_OFFSET_BITS=64 to fix `file not found'
+    error on Windows samba shares (closes: #698029).
+  * Bump Standards-Version to 3.9.3 (no changes required).
+
+ -- Robert Luberda <robert@debian.org>  Sun, 24 Mar 2013 11:03:52 +0100
+
+upx-ucl (3.08-2) unstable; urgency=low
+
+  * Upload to unstable.
+  * LZMA compression is now supported (LP: #625158).
+
+ -- Robert Luberda <robert@debian.org>  Mon, 09 Jan 2012 00:56:10 +0100
+
+upx-ucl (3.08-1) experimental; urgency=low
+
+  * New upstream version 3.08.
+  * Switch to tiny rules format and debhelper v9.
+  * Rename & refresh patches with gbp-pq import/export.
+  * Add VCS fields.
+
+ -- Robert Luberda <robert@debian.org>  Sun, 08 Jan 2012 16:41:22 +0100
+
+upx-ucl (3.07-4) experimental; urgency=low
+
+  * Compile with the latest version of lzma-dev (closes: #452817):
+    + add 02_lzma.patch for minor changes required to accomplish the above;
+    + introduce build dependency on lzma-dev (>= 9.22).
+  * 03_typos.patch, debian/doc-base: Fix typos found by lintian.
+  * Remove leading article from package's description (lintian).
+  * Bump Standards-Version to 3.9.2 (no changes required).
+
+ -- Robert Luberda <robert@debian.org>  Tue, 13 Sep 2011 07:55:34 +0200
+
+upx-ucl (3.07-3) unstable; urgency=low
+
+  * debian/rules: use CPPFLAGS instead of CXXFLAGS for setting preprocessor
+    macros to fix FTBFS on sparc introduced in previous upload.
+
+ -- Robert Luberda <robert@debian.org>  Wed, 09 Feb 2011 08:21:54 +0100
+
+upx-ucl (3.07-2) unstable; urgency=low
+
+  * Upload to unstable.
+  * Remove dh_upx, is not needed at all.
+  * debian/rules:
+    + provide build-indep, build-arch targets;
+    + call dpkg-buildflags for getting CXXFLAGS and LDFLAGS;
+    + use dh_auto_build and dh_auto_clean.
+
+ -- Robert Luberda <robert@debian.org>  Tue, 08 Feb 2011 20:19:12 +0100
+
+upx-ucl (3.07-1) experimental; urgency=low
+
+  * New upstream release.
+  * Build with debhelper v8.
+  * Standards-Version: 3.9.1 (no changes).
+
+ -- Robert Luberda <robert@debian.org>  Sun, 12 Sep 2010 16:44:13 +0200
+
+upx-ucl (3.05-1) unstable; urgency=low
+
+  * New upstream release.
+  * Switch to the `3.0 (quilt)' source format:
+    + split previous changes into two patches: 00_Makefile.patch
+      and 01_documentation.patch.
+  * Standards-Version: 3.8.4 (no changes).
+
+ -- Robert Luberda <robert@debian.org>  Sat, 12 Jun 2010 16:21:24 +0200
+
+upx-ucl (3.04-1) unstable; urgency=low
+
+  * New upstream release:
+    + FTBFS with gcc 4.4 fixed by upstream (closes: #548566).
+  * p_mach.cpp: Fix from upstream vcs: mach/fat needs seek()
+    after set_extent().
+
+ -- Robert Luberda <robert@debian.org>  Fri, 16 Oct 2009 12:56:47 +0200
+
+upx-ucl (3.03-3) unstable; urgency=low
+
+  * Upload to unstable.
+  * Standards-Version: 3.8.3 (no changes).
+  * Build with debhelper v7.
+  * rules: call dh_prep instead of `dh_clean -k'.
+
+ -- Robert Luberda <robert@debian.org>  Sun, 20 Sep 2009 21:34:57 +0200
+
+upx-ucl (3.03-2) experimental; urgency=low
+
+  * Merge changes from 3.01-2.1 and 3.01-3.
+
+ -- Robert Luberda <robert@debian.org>  Sun, 27 Jul 2008 23:38:45 +0200
+
+upx-ucl (3.03-1) experimental; urgency=low
+
+  * New upstream release.
+  * Fix bashism in debian/rules (closes: #478635).
+
+ -- Robert Luberda <robert@debian.org>  Tue, 29 Apr 2008 23:01:31 +0200
+
+upx-ucl (3.02-2) experimental; urgency=low
+
+  * Merge changes from 3.01-2.
+
+ -- Robert Luberda <robert@debian.org>  Sun, 27 Apr 2008 09:37:26 +0200
+
+upx-ucl (3.02-1) experimental; urgency=low
+
+  * New upstream version.
+  * Standards-Version: 3.7.3 (no changes).
+  * Move homepage url from Description to its own field.
+
+ -- Robert Luberda <robert@debian.org>  Sat, 05 Jan 2008 10:03:36 +0100
+
+upx-ucl (3.01-3) unstable; urgency=low
+
+  * Applied patch from Ubuntu to fix ftbfs due to "format not a string
+    literal and no format arguments" warning.
+
+ -- Robert Luberda <robert@debian.org>  Sun, 27 Jul 2008 13:06:38 +0200
+
+upx-ucl (3.01-2.1) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Fix bashism in debian/rules (Closes: #478635)
+  * Bump Standards-Version to 3.8.0.
+
+ -- Chris Lamb <chris@chris-lamb.co.uk>  Sat, 07 Jun 2008 21:21:37 +0100
+
+upx-ucl (3.01-2) unstable; urgency=low
+
+  * Merge changes from experimental:
+    + Standards-Version: 3.7.3 (no changes).
+    + Move homepage url from Description to its own field.
+  * Build with debhelper v6.
+  * Remove debian revision from libucl-dev build dependency (lintian).
+  * Change doc-base section to `File Management' (lintian).
+
+ -- Robert Luberda <robert@debian.org>  Sat, 26 Apr 2008 18:45:42 +0200
+
+upx-ucl (3.01-1) unstable; urgency=low
+
+  * New upstream version.
+
+ -- Robert Luberda <robert@debian.org>  Thu, 09 Aug 2007 22:59:19 +0200
+
+upx-ucl (3.00-2) unstable; urgency=low
+
+  * Fix FTBFS on big-endian archs (hppa, ia64,sparc).
+
+ -- Robert Luberda <robert@debian.org>  Fri, 06 Jul 2007 09:03:34 +0200
+
+upx-ucl (3.00-1) unstable; urgency=low
+
+  * New upstream version (closes: #422910).
+
+ -- Robert Luberda <robert@debian.org>  Sun, 20 May 2007 13:43:54 +0200
+
+upx-ucl (2.03-3) unstable; urgency=low
+
+  * Upload to unstable.
+  * Fix FTBFS with gcc 4.3 (closes: #417676).
+
+ -- Robert Luberda <robert@debian.org>  Mon, 23 Apr 2007 21:50:34 +0200
+
+upx-ucl (2.03-2) experimental; urgency=low
+
+  * Sync debian/rules with upx-ucl-beta 2.93-1.
+  * dh_upx: Fix broken i386-linux architecture check.
+
+ -- Robert Luberda <robert@debian.org>  Sat, 10 Mar 2007 22:12:32 +0100
+
+upx-ucl (2.03-1) unstable; urgency=low
+
+  * New upstream version.
+
+ -- Robert Luberda <robert@debian.org>  Wed, 31 Jan 2007 00:45:25 +0100
+
+upx-ucl (2.01-1) unstable; urgency=low
+
+  * New upstream version.
+  * Standards-Version: 3.7.2 (no changes).
+
+ -- Robert Luberda <robert@debian.org>  Tue, 13 Jun 2006 21:23:23 +0200
+
+upx-ucl (2.00-1) unstable; urgency=low
+
+  * New upstream version:
+    + support for a few new executable formats, like arm/pe, linux elf/amd64,
+      linux elf/ppc32, mach/ppc32, bootable Linux kernels ("vmlinuz/386"),
+      Playstation exes ("ps1/exe")
+    + new options for compression tuning (e.g. '--brute')
+    + improved win32/pe compatibility
+    + direct ELF-to-memory decompression.
+  * Update package description.
+  * Add build dependency on zlib1g-dev, remove unneeded dependency on man-db.
+  * Use debhelper v5.
+  * Standards-Version: 3.7.0.
+
+ -- Robert Luberda <robert@debian.org>  Mon,  1 May 2006 18:09:52 +0200
+
+upx-ucl (1.25-5) unstable; urgency=low
+
+  * debian/doc-base: change section to Apps/Tools (closes: #335075).
+
+ -- Robert Luberda <robert@debian.org>  Sat, 22 Oct 2005 20:08:00 +0200
+
+upx-ucl (1.25-4) unstable; urgency=low
+
+  * Rebuild for g++ transition.
+  * Standards-Version: 3.6.2 (no changes).
+
+ -- Robert Luberda <robert@debian.org>  Sun,  7 Aug 2005 22:01:10 +0200
+
+upx-ucl (1.25-3) unstable; urgency=low
+
+  * Try to fix problem with compling on arm.
+
+ -- Robert Luberda <robert@debian.org>  Sun, 10 Oct 2004 20:48:04 +0200
+
+upx-ucl (1.25-2) unstable; urgency=low
+
+  * Upload to unstable.
+  * Fix typo in debian/watch file.
+
+ -- Robert Luberda <robert@debian.org>  Tue, 28 Sep 2004 21:34:32 +0200
+
+upx-ucl (1.25-1) experimental; urgency=low
+
+  * New upstream version:
+    + build with libucl-dev 1.03-1
+  * Standards-Version: 3.6.1 (no changes).
+  * Add debian/watch file.
+  * Add lintian source override file for `cvsignore-file-in-source'.
+  * Add homepage link to the package description.
+
+ -- Robert Luberda <robert@debian.org>  Mon, 26 Jul 2004 21:00:43 +0200
+
+upx-ucl (1.24-2) unstable; urgency=low
+
+  * Rebuild with g++-3.2 for C++ transition.
+  * Standards-Version: 3.5.8 (no changes).
+  * Reformat this changelog with `fmt -80 -s' to get rid of too long lines.
+
+ -- Robert Luberda <robert@debian.org>  Sat, 18 Jan 2003 16:10:53 +0100
+
+upx-ucl (1.24-1) unstable; urgency=low
+
+  * New upstream version.
+
+ -- Robert Luberda <robert@debian.org>  Sat, 16 Nov 2002 10:53:14 +0100
+
+upx-ucl (1.23-2) unstable; urgency=low
+
+  * doc/upx.pod: We don't include the LICENSE file in the package,
+    so replace all references to this file with references
+    to /usr/share/doc/upx-ucl/copyright. (see: #161647).
+
+ -- Robert Luberda <robert@debian.org>  Sun, 29 Sep 2002 14:41:57 +0200
+
+upx-ucl (1.23-1) unstable; urgency=low
+
+  * New upstream version.
+  * Standards-Version: 3.5.7
+  * Support DEB_BUILD_OPTIONS=noopt,nostrip
+  * Build with debhelper v4.
+
+ -- Robert Luberda <robert@debian.org>  Thu, 12 Sep 2002 22:11:17 +0200
+
+upx-ucl (1.22-1) unstable; urgency=low
+
+  * New upstream version.
+
+ -- Robert Luberda <robert@debian.org>  Tue,  2 Jul 2002 20:19:29 +0200
+
+upx-ucl (1.21-2) unstable; urgency=low
+
+  * Fix problem with building the package on archs other than i386.
+
+ -- Robert Luberda <robert@debian.org>  Tue,  4 Jun 2002 21:15:23 +0200
+
+upx-ucl (1.21-1) unstable; urgency=low
+
+  * New upstream version.
+  * Use debhelper v4.
+  * Update copyright file.
+
+ -- Robert Luberda <robert@debian.org>  Mon,  3 Jun 2002 21:32:18 +0200
+
+upx-ucl (1.20-2) unstable; urgency=low
+
+  * Rebuild with the newset libucl-dev to get proper dependency on libucl0.
+  * Better handle update-alternatives in postinst & prerm scripts.
+  * Updated dh_upx, based on the newest dh_strip.
+
+ -- Robert Luberda <robert@debian.org>  Thu,  4 Apr 2002 07:04:24 +0200
+
+upx-ucl (1.20-1) unstable; urgency=low
+
+  * New upstream version.
+  * Added support for DEB_BUILD_OPTIONS.
+  * Standards-Version: 3.5.6
+  * Don't include UCL source in source package, build-depends on libucl
+    instead.
+  * Removed build dependency on automake.
+  * Updated README.Debian.
+  * Upgrade debian/rules to the newest debhelper.
+  * Closing NMU fixed bugs: closes: #128453, #131369.
+
+ -- Robert Luberda <robert@debian.org>  Fri, 29 Mar 2002 00:32:50 +0100
+
+upx-ucl (1.07-10) unstable; urgency=low
+
+  * New maintainer (closes: #136971).
+
+ -- Robert Luberda <robert@debian.org>  Thu, 28 Mar 2002 02:15:29 +0100
+
+upx-ucl (1.07-9.1) unstable; urgency=low
+
+  * NMU
+  * This package builds on most architectures. Don't hardcode things
+    to make it not build elsewhere. Closes: #128453, #131369
+
+ -- Randolph Chung <tausq@debian.org>  Mon, 28 Jan 2002 21:02:19 -0800
+
+upx-ucl (1.07-9) unstable; urgency=low
+
+  * no idea what sparc's problem (with groff-base) is, but I wanted to drop
+    the PS docs though.  Closes: #116395
+
+ -- Eduard Bloch <blade@debian.org>  Sat, 20 Oct 2001 21:38:47 +0200
+
+upx-ucl (1.07-8) unstable; urgency=low
+
+  * better automake dependency, closes: #116218
+  * dependency on gcc-2.95, gcc-3.0 is still broken
+  * cosmetical fixes
+
+ -- Eduard Bloch <blade@debian.org>  Fri, 19 Oct 2001 11:51:08 +0200
+
+upx-ucl (1.07-7) unstable; urgency=low
+
+  * added architecture test to dh_upx. prevents compressing if the
+    target architecture is not i386/linux.
+  * UPX compresses himself if dh_upx works
+
+ -- Eduard Bloch <blade@debian.org>  Tue, 17 Apr 2001 01:45:46 +0200
+
+upx-ucl (1.07-6) unstable; urgency=low
+
+  * discovered bugs in dh_upx and fixed them
+
+ -- Eduard Bloch <blade@debian.org>  Mon, 16 Apr 2001 18:41:10 +0200
+
+upx-ucl (1.07-5) unstable; urgency=low
+
+  * limited number of Architectures to i386, m68k, sparc and powerpc.
+    These seem to be the only plattforms where upx compiles. Prevention
+    of RC bug reports.
+  * wrote dh_upx, based on dh_strip. Changed control file to provide
+    dh-upx. For possible changes in the future.
+  * removed developer docs, not needed for end-users
+  * fixed the clean rule to remove _all_ generated docs
+
+ -- Eduard Bloch <blade@debian.org>  Mon, 16 Apr 2001 15:49:47 +0200
+
+upx-ucl (1.07-4) unstable; urgency=low
+
+  * tested compilation on misc. architectures. Unfortunately, the build
+    fails on architectures other than i386, sparc and ppc.
+  * changed arch back to any
+
+ -- Eduard Bloch <blade@debian.org>  Sun,  1 Apr 2001 23:47:48 +0200
+
+upx-ucl (1.07-3) unstable; urgency=low
+
+  * set arch to i386 only. Closes: #92408
+  * changed Makefile to remove pentium dependency
+
+ -- Eduard Bloch <blade@debian.org>  Sun,  1 Apr 2001 10:34:48 +0200
+
+upx-ucl (1.07-2) unstable; urgency=low
+
+  * changed section to unstable
+
+ -- Eduard Bloch <blade@debian.org>  Fri, 16 Mar 2001 17:30:10 +0100
+
+upx-ucl (1.07-1) stable; urgency=low
+
+  * new upstream version
+  * mixed with ucl-0.92
+
+ -- Eduard Bloch <blade@debian.org>  Sat, 10 Mar 2001 22:59:58 +0100
+
+upx (1.01-5) stable; urgency=low
+
+  * Major changes after discussion with the upstream author. ucl is
+    integrated into upx-ucl package, since it probably won't be used
+    anywhere else.
+  * Removed unused stuff from the ucl-package.
+  * Renamed to upx-ucl and created alternatives system, suggested by the
+    upstream author.
+  * Still looking for anyone to overtake it.
+
+ -- Eduard Bloch <edi@ka.linux.de>  Wed, 10 May 2000 22:32:54 +0200
+
+upx (1.01-4) unstable; urgency=low
+
+  * Changed the copyright again after having discussed it on debian-devel
+    ML. Still looking for a sponsor.
+
+ -- Eduard Bloch <edi@ka.linux.de>  Tue, 11 Apr 2000 9:30:10 +0200
+
+upx (1.01-3) unstable; urgency=low
+
+  * Updated again, changed the copyright file. This package should probably
+    go into the non-free section, since the LICENSE requires the compressed
+    binaries to be GPLed.
+
+ -- Eduard Bloch <edi@ka.linux.de>  Tue, 11 Apr 2000 11:48:33 +0200
+
+upx (1.01-2) unstable; urgency=low
+
+  * Updated. Fixed bugs.
+
+ -- Eduard Bloch <edi@ka.linux.de>  Mon, 10 Apr 2000 15:33:31 +0200
+
+upx (1.01-1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Eduard Bloch <edi@ka.linux.de>  Mon, 10 Apr 2000 15:33:31 +0200

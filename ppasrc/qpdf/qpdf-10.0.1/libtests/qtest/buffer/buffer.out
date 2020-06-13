@@ -1,0 +1,14 @@
+count: 10
+count: 21
+size: 21
+data: 1234567890abcdefghij
+count: 32
+size: 11
+data: qwertyuiop
+Pl_Buffer::getBuffer() called when not ready
+size: 9
+data: mooquack
+size: 0
+size: 0
+size: 0
+done

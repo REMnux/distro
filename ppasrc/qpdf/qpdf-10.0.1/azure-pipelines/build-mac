@@ -1,0 +1,15 @@
+#!/bin/bash
+set -ex
+curl -L https://github.com/qpdf/qpdf/raw/external-libs/jpegsrc.v9c.tar.gz -o jpegsrc.v9c.tar.gz
+tar xzf jpegsrc.v9c.tar.gz
+cd jpeg-9c
+./configure
+make -k
+sudo make install
+cd ..
+if [ -f distfiles/distfiles.zip ]; then
+    unzip distfiles/distfiles.zip
+fi
+./configure --enable-werror --enable-show-failed-test-output
+make -j$(nproc) -k
+make -k check

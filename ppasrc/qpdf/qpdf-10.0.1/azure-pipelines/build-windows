@@ -1,0 +1,39 @@
+#!/bin/bash
+set -ex
+cd $(dirname $0)/..
+wordsize=$1
+tool=$2
+
+if [[ $tool == mingw ]]; then
+    pacman -Sy --noconfirm make base-devel tar zip unzip
+    if [[ $wordsize == 64 ]]; then
+        pacman -Sy --noconfirm mingw-w64-x86_64-toolchain
+        PATH="/c/tools/msys64/mingw64/bin:$PATH"
+    else
+        pacman -Sy --noconfirm mingw-w64-i686-toolchain
+        PATH="/c/tools/msys64/mingw32/bin:$PATH"
+    fi
+    g++ -v
+elif [[ $tool == msvc ]]; then
+    cl
+fi
+if [ -f distfiles/distfiles.zip ]; then
+    unzip distfiles/distfiles.zip
+fi
+curl -L https://github.com/qpdf/qpdf/raw/external-libs/qpdf-external-libs-bin.zip -o qpdf-external-libs-bin.zip
+unzip qpdf-external-libs-bin.zip
+cwd=`pwd`
+PATH=$cwd/libqpdf/build:$PATH
+
+installdir=install-$tool$wordsize
+rm -rf $installdir
+./config-$tool --enable-show-failed-test-output --disable-crypto-gnutls --disable-crypto-openssl
+make -j$(nproc) -k
+make -k check
+make install
+
+v=`(cd $installdir; ls -d qpdf-*)`
+cp -p README-windows-install.txt $installdir/$v/README.txt
+mkdir distribution
+(cd $installdir; zip -r ../distribution/$v-bin-$tool$wordsize-ci.zip $v)
+sha256sum distribution/*
