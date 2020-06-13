@@ -1,0 +1,22 @@
+#!/bin/sh
+
+set -e
+
+update_alt()
+{
+# arguments: link program priority
+  if ! update-alternatives --display "$1" | grep -q "^/usr/bin/$2" ; then
+       update-alternatives --install "/usr/bin/$1" "$1" "/usr/bin/$2" "$3" \
+		--slave "/usr/share/man/man1/$1.1.gz" "$1.1.gz" \
+					"/usr/share/man/man1/$2.1.gz"
+  fi
+}
+
+
+if [ "$1" = "configure" ] ; then
+	update_alt upx upx-ucl 30
+fi
+
+#DEBHELPER#
+
+exit 0
