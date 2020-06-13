@@ -1,0 +1,12 @@
+Source: procdot
+Section: utils
+Priority: optional
+Maintainer: REMnux Distro <distro@remnux.org>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.4
+Homepage: http://www.procdot.com/
+
+Package: procdot
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}, tcpdump, graphviz, libgtk2.0-0:amd64, libgdk-pixbuf2.0-0:amd64, libatk1.0-0:amd64, libpangoft2-1.0-0:amd64, libpangocairo-1.0-0:amd64, libfreetype6:amd64, libfontconfig1:amd64, libx11-6:amd64, python-easygui, libwebkitgtk-3.0:amd64
+Description: Visualize and examine the output of Process Monitor and network sniffer logs

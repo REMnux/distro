@@ -1,0 +1,39 @@
+procdot (1.22-1) bionic; urgency=medium
+
+  * Updated to the latest upstream version. 
+
+ -- REMnux Distribution <distro@remnux.org>  Sat, 13 Jun 2020 13:01:38 -0400
+
+remnux-procdot (1.2-1) trusty; urgency=medium
+
+  * Updated PCAP_tools to the latest upstream version. 
+
+ -- REMnux Distribution (https://REMnux.org) <distro@remnux.org>  Fri, 23 Dec 2016 12:07:02 -0500
+
+remnux-procdot (1.2) trusty; urgency=medium
+
+  * Updated ProcDOT to the latest version: 1.2 (Build 55)
+  * Added Brian Maloney's PCAP_tools plugin from https://github.com/Beercow/ProcDOT-Plugins/tree/master/PCAP_tools
+  * Removed the other plugins.
+
+ -- REMnux Distribution (https://REMnux.org) <distro@remnux.org>  Sat, 17 Dec 2016 10:45:56 -0500
+
+remnux-procdot (1.1.47-2) trusty; urgency=medium
+
+  * Fixed permission of plugin file serverslist_linsh.sh
+  * Added plugin PCAPext by Brian Maloney from
+    https://github.com/Beercow/ProcDOT-Plugins/tree/master/PCAPext
+
+ -- REMnux Distribution (https://REMnux.org) <distro@remnux.org>  Tue, 29 Sep 2015 08:35:31 -0400
+
+remnux-procdot (1.1.47-1) trusty; urgency=medium
+
+  * Updated to the latest ProcDOT release 1.1 Build 47. 
+
+ -- REMnux Distribution (https://REMnux.org) <distro@remnux.org>  Tue, 23 Jun 2015 08:43:34 -0400
+
+remnux-procdot (1.1.44-1) trusty; urgency=medium
+
+  * Initial Release.
+
+ -- REMnux Distribution (https://REMnux.org) <distro@remnux.org>  Fri, 15 May 2015 6:55:27 -0400

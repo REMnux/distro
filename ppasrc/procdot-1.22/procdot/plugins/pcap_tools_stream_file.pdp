@@ -1,0 +1,13 @@
+Name = Extract File(s) From Flow
+Author = Beercow
+Description = ProcDOT plugin to extract file from TCP stream
+Version = 2.5
+Type = ContextMenuItemForGraph
+Architecture = Linux64BitExe
+File = ./pcap_tools/pcap_tools
+Priority = 9
+RunHidden = 1
+RunExclusively = 1
+CanOverrideOtherPlugins = 0
+CanOverrideProcdot = 0
+CanBeVerified = 1
