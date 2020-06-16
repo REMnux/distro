@@ -1,0 +1,26 @@
+Source: dex2jar
+Section: utils
+Priority: optional
+Maintainer: Kali Developers <devel@kali.org>
+Uploaders: dookie <dookie@kali.org>
+Build-Depends: debhelper (>= 11)
+Standards-Version: 4.2.1
+Homepage: https://github.com/pxb1988/dex2jar/tree/2.x
+Vcs-Git: https://gitlab.com/kalilinux/packages/dex2jar.git
+Vcs-Browser: https://gitlab.com/kalilinux/packages/dex2jar
+
+Package: dex2jar
+Architecture: all
+Depends: ${misc:Depends}, default-jre
+Description: Tools to work with android .dex and java .class files
+ dex2jar contains 4 compments:
+ .
+ dex-reader is designed to read the Dalvik Executable 
+ (.dex/.odex) format. It has a light weight API similar 
+ with ASM. An example here
+ dex-translator is designed to do the convert job. It reads 
+ the dex instruction to dex-ir format, after some optimize, 
+ convert to ASM format.
+ dex-ir used by dex-translator, is designed to represent 
+ the dex instruction
+ dex-tools tools to work with .class files.

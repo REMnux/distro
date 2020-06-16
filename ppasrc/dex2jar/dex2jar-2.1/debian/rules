@@ -1,0 +1,15 @@
+#!/usr/bin/make -f
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+%:
+	dh $@ 
+
+override_dh_auto_install:
+	dh_auto_install
+	# remove extension of all scripts *.sh installed in /usr/bin
+	for f in *.sh; do \
+	    newf=$$(echo $$f | sed 's/\.sh//'); \
+	    mv $$f debian/dex2jar/usr/bin/$$newf; \
+	done
