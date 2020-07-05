@@ -1,0 +1,3 @@
+scdbg opt/
+wrappers/scdbg usr/bin
+wrappers/scdbgc usr/bin
