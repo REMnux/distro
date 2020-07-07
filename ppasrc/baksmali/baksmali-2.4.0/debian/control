@@ -1,0 +1,12 @@
+Source: baksmali
+Section: utils
+Priority: optional
+Maintainer: REMnux Distribution <distro@remnux.org>
+Build-Depends: debhelper (>= 10)
+Standards-Version: 4.1.2
+Homepage: https://bitbucket.org/JesusFreke/smali/src/master/
+
+Package: baksmali
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, default-jre
+Description: Disassembler for the dex format used by Dalvik, Android's Java VM implementation.
