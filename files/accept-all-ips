@@ -1,0 +1,31 @@
+#!/bin/bash
+
+#
+# Accept connections to all IPv4 and IPv6 addresses and redirect it to the
+# corresponding local port. This technique uses IPtables' NAT capabilities,
+# as outlined in https://techanarchy.net/2013/10/inetsim-and-ip-addresses.
+# This is convenient for intercepting and redirecting traffic in the
+# malware analysis lab when malicious software attempts to connect
+# to hard-coded or dynamically-generated IP addresses.
+#
+# Copyright 2015 Lenny Zeltser
+# Licensed under GPL-3.0+
+#
+
+if [ "${2}" = "" ]; then
+  INTERFACE=`myip`
+else
+  INTERFACE="${2}"
+fi
+if [ "${1}" = "start" ]; then
+  echo "OK, iptables will accept and redirect connections to all IPs on $INTERFACE."
+  echo "Remember to set the client system's default gateway to IP of this REMnux host."
+  sudo iptables -t nat -A PREROUTING -i $INTERFACE -j REDIRECT
+  sudo ip6tables -t nat -A PREROUTING -i $INTERFACE -j REDIRECT
+elif [ "${1}" = "stop" ]; then
+  echo "OK, iptables is set to stop redirecting connections to all IPs on $INTERFACE."
+  sudo iptables -t nat -D PREROUTING -i $INTERFACE -j REDIRECT
+  sudo ip6tables -t nat -D PREROUTING -i $INTERFACE -j REDIRECT
+else 
+  echo "Usage: accept-all-ips <start|stop> [interface]"
+fi
