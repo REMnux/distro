@@ -1,0 +1,11 @@
+#!/bin/bash
+
+#
+# Determine the name of the default network interface.
+#
+# By Lenny Zeltser
+#
+# Public Domain
+#
+
+ip addr | egrep -A 1 " (en|eth)" | grep UP | cut -f 2 -d " " | cut -f 1 -d ":"

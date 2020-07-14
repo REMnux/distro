@@ -9,11 +9,14 @@
 # to hard-coded or dynamically-generated IP addresses.
 #
 # Copyright 2015 Lenny Zeltser
+#
 # Licensed under GPL-3.0+
+#
+# Thanks to Jim Clausing for pointing out the IPv6 command.
 #
 
 if [ "${2}" = "" ]; then
-  INTERFACE=`myip`
+  INTERFACE=`mynic`
 else
   INTERFACE="${2}"
 fi
