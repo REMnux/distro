@@ -1,0 +1,13 @@
+Source: remnux-didier
+Section: utils
+Priority: optional
+Maintainer: REMnux <distro@remnux.org>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.4
+Homepage: https://didierstevens.com
+
+Package: remnux-didier
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, python-pefile, python-poster, python-tk, python-poster
+Description: A collection of several tools by Didier Stevens.
+ This package contains several tools by Didier Stevens useful for malware analysis on Linux.

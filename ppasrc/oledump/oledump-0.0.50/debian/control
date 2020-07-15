@@ -1,0 +1,12 @@
+Source: oledump
+Section: utils
+Priority: optional
+Maintainer: REMnux Distribution <distro@remnux.org>
+Build-Depends: debhelper (>= 10)
+Standards-Version: 4.1.2
+Homepage: https://blog.didierstevens.com/programs/oledump-py/
+
+Package: oledump
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, python-minimal
+Description: Analyze OLE2 Structured Storage files.
