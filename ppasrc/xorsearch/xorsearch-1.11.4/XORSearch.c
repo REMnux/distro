@@ -1,6 +1,6 @@
 /*
-	29/12/2006 - 13/10/2014
-	XORSearch V1.11.1, search for a XOR, ROL, ROT, SHIFT or ADD encoded string in a file
+	29/12/2006 - 15/07/2020
+	XORSearch V1.11.4, search for a XOR, ROL, ROT, SHIFT or ADD encoded string in a file
 	Use -s to save the XOR, ROL, ROT, SHIFT or ADD encoded file containing the string
 	Use -l length to limit the number of printed characters (50 by default)
 	Use -i to ignore the case when searching
@@ -15,7 +15,6 @@
 
 	Shortcommings, or todo's ;-)
 	- optimize embedded keys algos for speed
-	- no pipe support (file redirection)
 	- file must fit in memory
 
 	History:
@@ -45,6 +44,16 @@
 		27/09/2014: added option -L
 		11/10/2014: 1.11.1: fixes for xcode gcc warnings
 		13/10/2014: added option -x
+		15/11/2014: 1.11.2: increased line size for rule files (1024 -> 4096)
+		25/03/2018: added option -r
+		24/04/2018: added support for stdin
+		24/08/2018: fixed bug: initialize ucOPRIter before ADD
+		10/11/2018: changed ?? to \?\? to avoid trigram warning; added option -S
+		11/11/2018: option -S UNICODE
+		12/11/2018: continue
+		26/12/2018: fixed gcc -Wall warnings; fixed bug: off by one InsertSorted
+		07/04/2020: 1.11.3: changed option -n to accept signed numbers
+		15/07/2020: 1.11.4: fixed printf formatstring bug for Linux
 
 */
 
@@ -54,6 +63,10 @@
 #include <string.h>
 #include <ctype.h>
 #include <limits.h>
+#ifdef _WIN32
+#include <fcntl.h>
+#include <io.h>
+#endif
 
 #define countof(array)	(sizeof(array) / sizeof(array[0]))
 
@@ -76,6 +89,11 @@
 #define WILDCARD_MODE_BITS 1
 #define WILDCARD_MODE_JUMP 2
 #define WILDCARD_MODE_STOP 3
+
+#define NUMBER_UNDEFINED         0
+#define NUMBER_NEGATIVE          1
+#define NUMBER_POSITIVE          2
+#define NUMBER_EXPLICIT_POSITIVE 3
 
 typedef struct
 {
@@ -100,6 +118,12 @@ typedef struct
 	WILDCARD *pWildcards;
 	int iPrintASCII;
 } SEARCH;
+
+typedef struct
+{
+	unsigned int uiNumberType;
+	int iNumberValue;
+} NUMBER;
 
 int *piFoundIndex;
 int *piFoundSize;
@@ -215,9 +239,9 @@ int WildcardSearch(SEARCH *pSearch, unsigned char *pucBuffer, long lSize, char *
 						ucMask = ucMask >> 1;
 						ucValue = ucValue >> 1;
 					}
-					if (aiVariables[pSearch->pWildcards[iIter].cVariableName1] == -1)
-						aiVariables[pSearch->pWildcards[iIter].cVariableName1] = ucValue;
-					else if (aiVariables[pSearch->pWildcards[iIter].cVariableName1] != ucValue)
+					if (aiVariables[(int)pSearch->pWildcards[iIter].cVariableName1] == -1)
+						aiVariables[(int)pSearch->pWildcards[iIter].cVariableName1] = ucValue;
+					else if (aiVariables[(int)pSearch->pWildcards[iIter].cVariableName1] != ucValue)
 						break;
 				}
 				if (pSearch->pWildcards[iIter].ucMaskVariable2 != 0)
@@ -229,9 +253,9 @@ int WildcardSearch(SEARCH *pSearch, unsigned char *pucBuffer, long lSize, char *
 						ucMask = ucMask >> 1;
 						ucValue = ucValue >> 1;
 					}
-					if (aiVariables[pSearch->pWildcards[iIter].cVariableName2] == -1)
-						aiVariables[pSearch->pWildcards[iIter].cVariableName2] = ucValue;
-					else if (aiVariables[pSearch->pWildcards[iIter].cVariableName2] != ucValue)
+					if (aiVariables[(int)pSearch->pWildcards[iIter].cVariableName2] == -1)
+						aiVariables[(int)pSearch->pWildcards[iIter].cVariableName2] = ucValue;
+					else if (aiVariables[(int)pSearch->pWildcards[iIter].cVariableName2] != ucValue)
 						break;
 				}
 				iIter++;
@@ -261,11 +285,23 @@ int WildcardSearch(SEARCH *pSearch, unsigned char *pucBuffer, long lSize, char *
 			iFound = 1;
 			*piScore += pSearch->iScore;
 			if (!strcmp(sOperation, OPR_XOR32))
-				printf("Found %s %08X offset +%d position %08lX: %s ", sOperation, uiOperand, ucOffset, pucFoundCharFirst - pucBuffer, pSearch->pcWildcardName);
+#ifndef __WINNT__
+				printf("Found %s %08X offset +%d position %08llX: %s ", sOperation, uiOperand, ucOffset, (long long unsigned int)(pucFoundCharFirst - pucBuffer), pSearch->pcWildcardName);
+#else
+				printf("Found %s %08X offset +%d position %08I64X: %s ", sOperation, uiOperand, ucOffset, (long long unsigned int)(pucFoundCharFirst - pucBuffer), pSearch->pcWildcardName);
+#endif
 			else if (strcmp(sOperation, OPR_ROT))
-				printf("Found %s %02X position %08lX: %s ", sOperation, uiOperand, pucFoundCharFirst - pucBuffer, pSearch->pcWildcardName);
+#ifndef __WINNT__
+				printf("Found %s %02X position %08llX: %s ", sOperation, uiOperand, (long long unsigned int)(pucFoundCharFirst - pucBuffer), pSearch->pcWildcardName);
+#else
+				printf("Found %s %02X position %08I64X: %s ", sOperation, uiOperand, (long long unsigned int)(pucFoundCharFirst - pucBuffer), pSearch->pcWildcardName);
+#endif
 			else
-				printf("Found %s %02d position %08lX: %s ", sOperation, uiOperand, pucFoundCharFirst - pucBuffer, pSearch->pcWildcardName);
+#ifndef __WINNT__
+				printf("Found %s %02d position %08llX: %s ", sOperation, uiOperand, (long long unsigned int)(pucFoundCharFirst - pucBuffer), pSearch->pcWildcardName);
+#else
+				printf("Found %s %02d position %08I64X: %s ", sOperation, uiOperand, (long long unsigned int)(pucFoundCharFirst - pucBuffer), pSearch->pcWildcardName);
+#endif
 			for (iIter = 0; iIter < iMaxLength && pSearch->pWildcards[iIter].ucMode != WILDCARD_MODE_STOP && pucFoundCharFirst + iIter <= pucLastByteInBuffer; iIter++)
 				if (pSearch->pWildcards[iIter].ucMode == WILDCARD_MODE_JUMP)
 				{
@@ -340,12 +376,12 @@ long ParseNumericArg(const char *szArg)
 		return(ParseIntegerArg(szArg));
 }
 
-int ParseArgs(int argc, char **argv, int *piSave, int *piMaxLength, int *piIgnoreCase, char **ppcFile, char **ppcSearch, char **ppcSearchFile, int *piUnicode, int *piNeighbourgLength, int *piHex, int *piKeys, int *piPEFile, int *piExcludeByte, int *piWildcard, int *piWildcardEmbedded, char **ppcDisable, int *piList, int *piHexFile)
+int ParseArgs(int argc, char **argv, int *piSave, int *piMaxLength, int *piIgnoreCase, char **ppcFile, char **ppcSearch, char **ppcSearchFile, int *piUnicode, NUMBER *psNUMBERNeighbourLength, int *piHex, int *piKeys, int *piPEFile, int *piExcludeByte, int *piWildcard, int *piWildcardEmbedded, char **ppcDisable, int *piList, int *piHexFile, int *piReverse, int *piStrings)
 {
 	int iIterArgv;
 	int iCountParameters;
 	int iFlagMaxLength;
-	int iFlagNeighbourgLength;
+	int iFlagNeighbourLength;
 	int iFlagSearchFile;
 	int iFlagExcludeByte;
 	int iFlagDisable;
@@ -353,13 +389,13 @@ int ParseArgs(int argc, char **argv, int *piSave, int *piMaxLength, int *piIgnor
 
 	iCountParameters = 0;
 	iFlagMaxLength = 0;
-	iFlagNeighbourgLength = 0;
+	iFlagNeighbourLength = 0;
 	iFlagSearchFile = 0;
 	iFlagExcludeByte = 0;
 	iFlagDisable = 0;
 	*piSave = 0;
 	*piMaxLength = -1;
-	*piNeighbourgLength = -1;
+	psNUMBERNeighbourLength->uiNumberType = NUMBER_UNDEFINED;
 	*piIgnoreCase = 0;
 	*ppcSearch = NULL;
 	*ppcSearchFile = NULL;
@@ -373,10 +409,17 @@ int ParseArgs(int argc, char **argv, int *piSave, int *piMaxLength, int *piIgnor
 	*ppcDisable = NULL;
 	*piList = 0;
 	*piHexFile = 0;
+	*piReverse = 0;
+	*piStrings = 0;
 
 	for (iIterArgv = 1; iIterArgv < argc; iIterArgv++)
 	{
-		if (argv[iIterArgv][0] == '-')
+		if (argv[iIterArgv][0] == '-' && argv[iIterArgv][1] == '\0' && iCountParameters == 0)
+		{
+			*ppcFile = argv[iIterArgv];
+			iCountParameters++;
+		}
+		else if (argv[iIterArgv][0] == '-' && 1 != iFlagNeighbourLength)
 		{
 			if (iFlagMaxLength || iFlagSearchFile || iFlagDisable)
 				return 1;
@@ -400,7 +443,7 @@ int ParseArgs(int argc, char **argv, int *piSave, int *piMaxLength, int *piIgnor
 						*piUnicode = 1;
 						break;
 					case 'n':
-						iFlagNeighbourgLength = 1;
+						iFlagNeighbourLength = 1;
 						break;
 					case 'h':
 						*piHex = 1;
@@ -429,6 +472,12 @@ int ParseArgs(int argc, char **argv, int *piSave, int *piMaxLength, int *piIgnor
 					case 'x':
 						*piHexFile = 1;
 						break;
+					case 'r':
+						*piReverse = 1;
+						break;
+					case 'S':
+						*piStrings = 1;
+						break;
 					default:
 						return 1;
 				}
@@ -447,12 +496,18 @@ int ParseArgs(int argc, char **argv, int *piSave, int *piMaxLength, int *piIgnor
 				return 1;
 			iFlagExcludeByte = 0;
 		}
-		else if (iFlagNeighbourgLength)
+		else if (iFlagNeighbourLength)
 		{
-			*piNeighbourgLength = ParseNumericArg(argv[iIterArgv]);
-			if (*piNeighbourgLength < 1)
+			psNUMBERNeighbourLength->iNumberValue = ParseNumericArg(argv[iIterArgv]);
+			if (0 == psNUMBERNeighbourLength->iNumberValue)
 				return 1;
-			iFlagNeighbourgLength = 0;
+			else if (psNUMBERNeighbourLength->iNumberValue < 0)
+				psNUMBERNeighbourLength->uiNumberType = NUMBER_NEGATIVE;
+			else if ('+' == argv[iIterArgv][0])
+				psNUMBERNeighbourLength->uiNumberType = NUMBER_EXPLICIT_POSITIVE;
+			else
+				psNUMBERNeighbourLength->uiNumberType = NUMBER_POSITIVE;
+			iFlagNeighbourLength = 0;
 		}
 		else if (iFlagSearchFile)
 		{
@@ -479,29 +534,31 @@ int ParseArgs(int argc, char **argv, int *piSave, int *piMaxLength, int *piIgnor
 	}
 	if (1 == *piList)
 		return iCountParameters == 0 ? 0 : 1;
-	else if (iCountParameters != 2 && *ppcSearchFile == NULL && *piPEFile == 0 && *piWildcardEmbedded == 0)
+	else if (iCountParameters != 2 && *ppcSearchFile == NULL && *piPEFile == 0 && *piWildcardEmbedded == 0 && *piStrings == 0)
 		return 1;
 	else if (iCountParameters != 1 && *ppcSearchFile != NULL)
 		return 1;
 	else if (iCountParameters != 1 && *piPEFile != 0)
 		return 1;
+	else if (iCountParameters != 1 && *piStrings != 0)
+		return 1;
 	else if (iCountParameters != 1 && *piWildcardEmbedded != 0)
 		return 1;
-	else if (*piMaxLength != -1 && *piNeighbourgLength != -1)
+	else if (*piMaxLength != -1 && NUMBER_UNDEFINED != psNUMBERNeighbourLength->uiNumberType)
 		return 1;
 	else if ((*piUnicode && *piHex) || (*piUnicode && (*piWildcard || *piWildcardEmbedded)) || (*piHex && (*piWildcard || *piWildcardEmbedded)) || (*piWildcard && *piWildcardEmbedded))
 		return 1;
 	else if (*piKeys && *piExcludeByte != -1)
 		return 1;
-	else if (*piPEFile != 0 && *ppcSearchFile != NULL)
+	else if ((*piPEFile != 0 || *piStrings != 0) && *ppcSearchFile != NULL)
 		return 1;
-	else if (*piPEFile != 0 && *piIgnoreCase != 0)
+	else if ((*piPEFile != 0 || *piStrings != 0) && *piIgnoreCase != 0)
 		return 1;
-	else if (*piPEFile != 0 && *piUnicode != 0)
+	else if ((*piPEFile != 0 || *piStrings != 0) && *piUnicode != 0)
 		return 1;
-	else if (*piPEFile != 0 && *piHex != 0)
+	else if ((*piPEFile != 0 || *piStrings != 0) && *piHex != 0)
 		return 1;
-	else if (*piPEFile != 0 && *piNeighbourgLength != -1)
+	else if ((*piPEFile != 0 || *piStrings != 0) && NUMBER_UNDEFINED != psNUMBERNeighbourLength->uiNumberType)
 		return 1;
 	else if (*piWildcardEmbedded != 0 && *ppcSearchFile != NULL)
 		return 1;
@@ -611,7 +668,7 @@ void SaveFile(char *pcFile, char *sOperation, unsigned char ucXOR, void *pBuffer
 	}
 }
 
-void PrintFinds(int iCountFinds, int iMaxLength, char *sOperation, unsigned char ucOffset, unsigned int uiOperand, off_t otFileSize, void *pBuffer, int iSearchType, int iNeighbourgLength)
+void PrintFinds(int iCountFinds, int iMaxLength, char *sOperation, unsigned char ucOffset, unsigned int uiOperand, off_t otFileSize, void *pBuffer, int iSearchType, NUMBER *psNUMBERNeighbourLength)
 {
 	int iIter1, iIter2;
 	int iMaxPrint;
@@ -627,17 +684,34 @@ void PrintFinds(int iCountFinds, int iMaxLength, char *sOperation, unsigned char
 			printf("Found %s %02X position %04X", sOperation, uiOperand, piFoundIndex[iIter1]);
 		else
 			printf("Found %s %02d position %04X", sOperation, uiOperand, piFoundIndex[iIter1]);
-		if (iNeighbourgLength > 0)
-			printf("(-%d): ", iNeighbourgLength);
+		if (NUMBER_POSITIVE == psNUMBERNeighbourLength->uiNumberType)
+			printf("(-%d): ", psNUMBERNeighbourLength->iNumberValue);
+		else if (NUMBER_NEGATIVE == psNUMBERNeighbourLength->uiNumberType)
+			printf("(%d): ", psNUMBERNeighbourLength->iNumberValue);
 		else
 			printf(": ");
-		if (iNeighbourgLength > 0)
+		if (NUMBER_UNDEFINED != psNUMBERNeighbourLength->uiNumberType)
 		{
 			iStep = iSearchType == SEARCHTYPE_UNICODE ? 2 : 1;
-			iStart = piFoundIndex[iIter1] - iNeighbourgLength * iStep;
+			if (NUMBER_POSITIVE == psNUMBERNeighbourLength->uiNumberType)
+			{
+				iStart = piFoundIndex[iIter1] - psNUMBERNeighbourLength->iNumberValue * iStep;
+				iStop = piFoundIndex[iIter1] + piFoundSize[iIter1] + psNUMBERNeighbourLength->iNumberValue * iStep;
+			}
+			else if (NUMBER_NEGATIVE == psNUMBERNeighbourLength->uiNumberType)
+			{
+				iStart = piFoundIndex[iIter1] + psNUMBERNeighbourLength->iNumberValue * iStep;
+				iStop = piFoundIndex[iIter1] + piFoundSize[iIter1];
+			}
+			else if (NUMBER_EXPLICIT_POSITIVE == psNUMBERNeighbourLength->uiNumberType)
+			{
+				iStart = piFoundIndex[iIter1];
+				iStop = piFoundIndex[iIter1] + piFoundSize[iIter1] + psNUMBERNeighbourLength->iNumberValue * iStep;
+			}
+			else
+				return;
 			if (iStart < 0)
 				iStart = 0;
-			iStop = piFoundIndex[iIter1] + piFoundSize[iIter1] + iNeighbourgLength * iStep;
 			if (iStop > otFileSize)
 				iStop = otFileSize;
 			for (iIter2 = iStart; iIter2 < iStop; iIter2 += iStep)
@@ -829,33 +903,33 @@ int BinarySearch(unsigned int *puiArray, unsigned int uiElement, int iMinimum, i
 	}
 }
 
-void InsertSorted(unsigned int uiElement, unsigned int *puiArray, unsigned int uiArraySize, unsigned int *uiArrayCount)
+void InsertSorted(unsigned int uiElement, unsigned int *puiArray, unsigned int uiArraySize, unsigned int *puiArrayCount)
 {
 	unsigned int uiIndex;
 	unsigned int uiIter;
 
-	if (*uiArrayCount >= uiArraySize)
+	if (*puiArrayCount >= uiArraySize)
 		return;
-	if (*uiArrayCount == 0)
+	if (*puiArrayCount == 0)
 	{
-		puiArray[(*uiArrayCount)++] = uiElement;
+		puiArray[(*puiArrayCount)++] = uiElement;
 		return;
 	}
 
-	if (BinarySearch(puiArray, uiElement, 0, *uiArrayCount - 1, &uiIndex))
+	if (BinarySearch(puiArray, uiElement, 0, *puiArrayCount - 1, &uiIndex))
 		return;
 
-	if (uiIndex == *uiArrayCount)
+	if (uiIndex == *puiArrayCount)
 	{
-		if (puiArray[*uiArrayCount - 1] != uiElement)
-			puiArray[(*uiArrayCount)++] = uiElement;
+		if (puiArray[*puiArrayCount - 1] != uiElement)
+			puiArray[(*puiArrayCount)++] = uiElement;
 	}
 	else
 	{
-		for (uiIter = *uiArrayCount + 1; uiIndex < uiIter; uiIter--)
+		for (uiIter = *puiArrayCount; uiIndex < uiIter; uiIter--)
 			puiArray[uiIter] = puiArray[uiIter - 1];
 		puiArray[uiIndex] = uiElement;
-		(*uiArrayCount)++;
+		(*puiArrayCount)++;
 	}
 }
 
@@ -891,11 +965,23 @@ int SearchForPEFile(unsigned char *pucBuffer, long lSize, char *sOperation, unsi
 
 		iFound = 1;
 		if (!strcmp(sOperation, OPR_XOR32))
-			printf("Found %s %08X offset +%d position %08lX: %08X ", sOperation, uiOperand, ucOffset, pucFoundCharM - pucBuffer, uiE_lfanew);
+#ifndef __WINNT__
+			printf("Found %s %08X offset +%d position %08llX: %08X ", sOperation, uiOperand, ucOffset, (long long unsigned int)(pucFoundCharM - pucBuffer), uiE_lfanew);
+#else
+			printf("Found %s %08X offset +%d position %08I64X: %08X ", sOperation, uiOperand, ucOffset, (long long unsigned int)(pucFoundCharM - pucBuffer), uiE_lfanew);
+#endif
 		else if (strcmp(sOperation, OPR_ROT))
-			printf("Found %s %02X position %08lX: %08X ", sOperation, uiOperand, pucFoundCharM - pucBuffer, uiE_lfanew);
+#ifndef __WINNT__
+			printf("Found %s %02X position %08llX: %08X ", sOperation, uiOperand, (long long unsigned int)(pucFoundCharM - pucBuffer), uiE_lfanew);
+#else
+			printf("Found %s %02X position %08I64X: %08X ", sOperation, uiOperand, (long long unsigned int)(pucFoundCharM - pucBuffer), uiE_lfanew);
+#endif
 		else
-			printf("Found %s %02d position %08lX: %08X ", sOperation, uiOperand, pucFoundCharM - pucBuffer, uiE_lfanew);
+#ifndef __WINNT__
+			printf("Found %s %02d position %08llX: %08X ", sOperation, uiOperand, (long long unsigned int)(pucFoundCharM - pucBuffer), uiE_lfanew);
+#else
+			printf("Found %s %02d position %08I64X: %08X ", sOperation, uiOperand, (long long unsigned int)(pucFoundCharM - pucBuffer), uiE_lfanew);
+#endif
 		for (iIter = 0; iIter < iMaxLength && pucFoundCharM + 0x40 + iIter <= pucLastByteInBuffer; iIter++)
 		{
 			if (isprint(*(pucFoundCharM + 0x40 + iIter)))
@@ -1172,7 +1258,7 @@ SEARCH *InitializeSearch(char *pcRule, char *szFile, int iFlagEmbedded)
 	int iIndex;
 	int iIter;
 	FILE *fRules;
-	char szLine[1024];
+	char szLine[4096];
 	char *aszEmbeddedRules[] =
 	{
 		"Function prolog signature:10:558bec83c4",
@@ -1180,25 +1266,25 @@ SEARCH *InitializeSearch(char *pcRule, char *szFile, int iFlagEmbedded)
 		"Function prolog signature:10:558beceb",
 		"Function prolog signature:10:558bece8",
 		"Function prolog signature:10:558bece9",
-		"Indirect function call tris:10:FFB7(B;????????)(B;????????)(B;????????)(B;????????)FF57(B;????????)",
-		"GetEIP method 4 FLDZ/FSTENV [esp-12]:10:D9EED97424F4(B;01011???)",
-		"GetEIP method 1:10:E800000000(B;01011???)",
-		"GetEIP method 2:10:EB(J;1)E8(J;4)(B;01011???)",
-		"GetEIP method 3:10:E9(J;4)E8(J;4)(B;01011???)",
-		"GetEIP method 4:10:D9EE9BD97424F4(B;01011???)",
-		"Find kernel32 base method 1:10:648B(B;00???101)30000000",
+		"Indirect function call tris:10:FFB7(B;\?\?\?\?\?\?\?\?)(B;\?\?\?\?\?\?\?\?)(B;\?\?\?\?\?\?\?\?)(B;\?\?\?\?\?\?\?\?)FF57(B;\?\?\?\?\?\?\?\?)",
+		"GetEIP method 4 FLDZ/FSTENV [esp-12]:10:D9EED97424F4(B;01011\?\?\?)",
+		"GetEIP method 1:10:E800000000(B;01011\?\?\?)",
+		"GetEIP method 2:10:EB(J;1)E8(J;4)(B;01011\?\?\?)",
+		"GetEIP method 3:10:E9(J;4)E8(J;4)(B;01011\?\?\?)",
+		"GetEIP method 4:10:D9EE9BD97424F4(B;01011\?\?\?)",
+		"Find kernel32 base method 1:10:648B(B;00\?\?\?101)30000000",
 		"Find kernel32 base method 1bis:10:64A130000000",
-		"Find kernel32 base method 2:10:31(B;11A??A??)(B;10100A??)30648B(B;00B??A??)",
-		"Find kernel32 base method 3:10:6830000000(B;01011A??)648B(B;00B??A??)",
-		"Structured exception handling :10:648B(B;00???101)00000000",
+		"Find kernel32 base method 2:10:31(B;11A\?\?A\?\?)(B;10100A\?\?)30648B(B;00B\?\?A\?\?)",
+		"Find kernel32 base method 3:10:6830000000(B;01011A\?\?)648B(B;00B\?\?A\?\?)",
+		"Structured exception handling :10:648B(B;00\?\?\?101)00000000",
 		"Structured exception handling bis:10:64A100000000",
 		"API Hashing:10:AC84C07407C1CF0D01C7EBF481FF",
 		"API Hashing bis:10:AC84C07407C1CF0701C7EBF481FF",
-//	"API-Hashing signature:10:74(B;????????)c1(B;????????)0d(B;????????)(B;????????)(B;????????)(B;????????), // too many false positives
-//	"API-Hashing signature:10:74(B;????????)c1(B;????????)07(B;????????)(B;????????)(B;????????)(B;????????), // too many false positives
-//	"API-Hashing signature:10:74(B;????????)c1(B;????????)0b03(B;????????)(B;????????)(B;????????)(B;????????), // too many false positives
-		"Indirect function call:10:FF75(B;A???????)FF55(B;A???????)",
-		"Indirect function call bis:10:FFB5(B;A???????)(B;B???????)(B;C???????)(B;D???????)FF95(B;A???????)(B;B???????)(B;C???????)(B;D???????)",
+//	"API-Hashing signature:10:74(B;\?\?\?\?\?\?\?\?)c1(B;\?\?\?\?\?\?\?\?)0d(B;\?\?\?\?\?\?\?\?)(B;\?\?\?\?\?\?\?\?)(B;\?\?\?\?\?\?\?\?)(B;\?\?\?\?\?\?\?\?), // too many false positives
+//	"API-Hashing signature:10:74(B;\?\?\?\?\?\?\?\?)c1(B;\?\?\?\?\?\?\?\?)07(B;\?\?\?\?\?\?\?\?)(B;\?\?\?\?\?\?\?\?)(B;\?\?\?\?\?\?\?\?)(B;\?\?\?\?\?\?\?\?), // too many false positives
+//	"API-Hashing signature:10:74(B;\?\?\?\?\?\?\?\?)c1(B;\?\?\?\?\?\?\?\?)0b03(B;\?\?\?\?\?\?\?\?)(B;\?\?\?\?\?\?\?\?)(B;\?\?\?\?\?\?\?\?)(B;\?\?\?\?\?\?\?\?), // too many false positives
+		"Indirect function call:10:FF75(B;A\?\?\?\?\?\?\?)FF55(B;A\?\?\?\?\?\?\?)",
+		"Indirect function call bis:10:FFB5(B;A\?\?\?\?\?\?\?)(B;B\?\?\?\?\?\?\?)(B;C\?\?\?\?\?\?\?)(B;D\?\?\?\?\?\?\?)FF95(B;A\?\?\?\?\?\?\?)(B;B\?\?\?\?\?\?\?)(B;C\?\?\?\?\?\?\?)(B;D\?\?\?\?\?\?\?)",
 		"OLE file magic number:10:D0CF11E0",
 		"Suspicious strings:2:str=UrlDownloadToFile",
 		"Suspicious strings:2:str=GetTempPath",
@@ -1326,39 +1412,85 @@ int ReadFile(char *pcArgFile, off_t *potFileSize, void **ppBuffer)
 {
 	struct stat statFile;
 	FILE *fIn;
+	off_t otSizeRead;
+	void *pBufferRealloc;
 
-	if (stat(pcArgFile, &statFile) != 0)
-	{
-		fprintf(stderr, "error opening file %s\n", pcArgFile);
-		return -1;
-	}
+  if (!strcmp(pcArgFile, "-"))
+  {
 
-	*potFileSize = statFile.st_size;
-	if (*potFileSize == 0)
-	{
-		fprintf(stderr, "file %s is empty\n", pcArgFile);
-		return -1;
-	}
-	if ((*ppBuffer = malloc(*potFileSize)) == NULL)
-	{
-		fprintf(stderr, "file %s is too large %lld\n", pcArgFile, *potFileSize);
-		return -1;
-	}
+#ifdef _WIN32
+		_setmode(_fileno(stdin), _O_BINARY);
+#else
+		freopen(NULL, "rb", stdin);
+#endif
 
-	if ((fIn = fopen(pcArgFile, "rb")) == NULL)
+		*potFileSize = 100 * 1024 * 1024;
+		if ((*ppBuffer = malloc(*potFileSize)) == NULL)
+		{
+			fprintf(stderr, "memory allocation failed\n");
+			return -1;
+		}
+		otSizeRead = fread(*ppBuffer, 1, *potFileSize, stdin);
+		if (0 == otSizeRead)
+		{
+			fprintf(stderr, "stdin is empty %d\n", ferror(stdin));
+  		free(*ppBuffer);
+			return -1;
+		}
+#ifndef __WINNT__
+		fprintf(stderr, "Number of bytes read from stdin: %lld\n", otSizeRead);
+#else
+		fprintf(stderr, "Number of bytes read from stdin: %ld\n", otSizeRead);
+#endif
+		pBufferRealloc = realloc(*ppBuffer, otSizeRead);
+		if (NULL == pBufferRealloc)
+		{
+			fprintf(stderr, "memory reallocation failed\n");
+  		free(*ppBuffer);
+			return -1;
+		}
+		*potFileSize = otSizeRead;
+		*ppBuffer = pBufferRealloc;
+  }
+  else
 	{
-		fprintf(stderr, "error opening file %s\n", pcArgFile);
-		free(*ppBuffer);
-		return -1;
-	}
-	if (fread(*ppBuffer, *potFileSize, 1, fIn) != 1)
-	{
-		fprintf(stderr, "error reading file %s\n", pcArgFile);
+		if (stat(pcArgFile, &statFile) != 0)
+		{
+			fprintf(stderr, "error opening file %s\n", pcArgFile);
+			return -1;
+		}
+
+		*potFileSize = statFile.st_size;
+		if (*potFileSize == 0)
+		{
+			fprintf(stderr, "file %s is empty\n", pcArgFile);
+			return -1;
+		}
+		if ((*ppBuffer = malloc(*potFileSize)) == NULL)
+		{
+#ifndef __WINNT__
+			fprintf(stderr, "file %s is too large %lld\n", pcArgFile, *potFileSize);
+#else
+			fprintf(stderr, "file %s is too large %ld\n", pcArgFile, *potFileSize);
+#endif
+			return -1;
+		}
+
+		if ((fIn = fopen(pcArgFile, "rb")) == NULL)
+		{
+			fprintf(stderr, "error opening file %s\n", pcArgFile);
+			free(*ppBuffer);
+			return -1;
+		}
+		if (fread(*ppBuffer, *potFileSize, 1, fIn) != 1)
+		{
+			fprintf(stderr, "error reading file %s\n", pcArgFile);
+			fclose(fIn);
+			free(*ppBuffer);
+			return -1;
+		}
 		fclose(fIn);
-		free(*ppBuffer);
-		return -1;
 	}
-	fclose(fIn);
 
 	return 0;
 }
@@ -1457,6 +1589,140 @@ int ReadHexFile(char *pcArgFile, off_t *potFileSize, void **ppBuffer)
 	return 0;
 }
 
+void StringsPrint(const unsigned char *pucBuffer, long lSize, int iMinimumStringLength)
+{
+	long lIter;
+	long lIter2;
+	long lStringStartASCII = -1;
+	long lStringStartUNILE = -1;
+	long lStringFoundBeginUNILE = -1;
+	long lStringFoundEndUNILE = -1;
+	long lStringStartUNIBE = -1;
+	long lStringFoundBeginUNIBE = -1;
+	long lStringFoundEndUNIBE = -1;
+	unsigned char ucByte;
+	unsigned char ucPrintable;
+
+	for (lIter = 0; lIter < lSize + 2; lIter++)
+	{
+		if (lIter >= lSize)
+			ucByte = 0;
+		else
+			ucByte = pucBuffer[lIter];
+		ucPrintable = ucByte >= 0x20 && ucByte <= 0x7E;
+
+		if (ucPrintable)
+		{
+			if (lStringStartASCII == -1)
+				lStringStartASCII = lIter;
+		}
+		else if (lStringStartASCII != -1)
+		{
+			if (lIter - lStringStartASCII >= iMinimumStringLength)
+				printf("%.*s\n", (int)(lIter - lStringStartASCII), pucBuffer + lStringStartASCII);
+			lStringStartASCII = -1;
+		}
+
+		if (lStringStartUNILE == -1)
+		{
+			if (ucPrintable)
+				lStringStartUNILE = lIter;
+		}
+		else if ((lIter - lStringStartUNILE) & 0x01)
+		{
+			if (ucByte != 0)
+			{
+				if (lIter - lStringStartUNILE - 2 >= iMinimumStringLength * 2)
+				{
+					lStringFoundBeginUNILE = lStringStartUNILE;
+					lStringFoundEndUNILE = lIter - 3;
+				}
+				lStringStartUNILE = -1;
+			}
+		}
+		else
+		{
+			if (!ucPrintable)
+			{
+				if (lIter - lStringStartUNILE - 1 >= iMinimumStringLength * 2)
+				{
+					lStringFoundBeginUNILE = lStringStartUNILE;
+					lStringFoundEndUNILE = lIter - 2;
+				}
+				lStringStartUNILE = -1;
+			}
+		}
+
+		if (lStringStartUNIBE == -1)
+		{
+			if (ucByte == 0)
+				lStringStartUNIBE = lIter;
+		}
+		else if ((lIter - lStringStartUNIBE) & 0x01)
+		{
+			if (!ucPrintable)
+			{
+				if (lIter - lStringStartUNIBE - 2 >= iMinimumStringLength * 2)
+				{
+					lStringFoundBeginUNIBE = lStringStartUNIBE + 1;
+					lStringFoundEndUNIBE = lIter - 2;
+				}
+				lStringStartUNIBE = -1;
+			}
+		}
+		else
+		{
+			if (ucByte != 0)
+			{
+				if (lIter - lStringStartUNIBE - 1 >= iMinimumStringLength * 2)
+				{
+					lStringFoundBeginUNIBE = lStringStartUNIBE + 1;
+					lStringFoundEndUNIBE = lIter - 3;
+				}
+				lStringStartUNIBE = -1;
+			}
+		}
+
+		if (lStringFoundBeginUNIBE != -1 && lStringFoundBeginUNILE != -1)
+		{
+			if (lStringFoundEndUNILE - lStringFoundBeginUNILE >= lStringFoundEndUNIBE - lStringFoundBeginUNIBE)
+			{
+					for (lIter2 = lStringFoundBeginUNILE; lIter2 <= lStringFoundEndUNILE; lIter2 += 2)
+						putchar(pucBuffer[lIter2]);
+					putchar('\n');
+			}
+			else
+			{
+					for (lIter2 = lStringFoundBeginUNIBE; lIter2 <= lStringFoundEndUNIBE; lIter2 += 2)
+						putchar(pucBuffer[lIter2]);
+					putchar('\n');
+			}
+			lStringFoundBeginUNILE = -1;
+			lStringFoundEndUNILE = -1;
+			lStringFoundBeginUNIBE = -1;
+			lStringFoundEndUNIBE = -1;
+		}
+
+		if (lStringFoundBeginUNILE != -1)
+		{
+			for (lIter2 = lStringFoundBeginUNILE; lIter2 <= lStringFoundEndUNILE; lIter2 += 2)
+				putchar(pucBuffer[lIter2]);
+			putchar('\n');
+			lStringFoundBeginUNILE = -1;
+			lStringFoundEndUNILE = -1;
+		}
+
+		if (lStringFoundBeginUNIBE != -1)
+		{
+			for (lIter2 = lStringFoundBeginUNIBE; lIter2 <= lStringFoundEndUNIBE; lIter2 += 2)
+				putchar(pucBuffer[lIter2]);
+			putchar('\n');
+			lStringFoundBeginUNIBE = -1;
+			lStringFoundEndUNIBE = -1;
+		}
+	}
+}
+
 int main(int argc, char **argv)
 {
 	struct stat statFile;
@@ -1475,7 +1741,9 @@ int main(int argc, char **argv)
 	int iFound;
 	int iFlagUnicode;
 	int iSearchLength;
-	int iNeighbourgLength;
+	NUMBER sNUMBERNeighbourLength;
+	sNUMBERNeighbourLength.uiNumberType = NUMBER_UNDEFINED;
+	sNUMBERNeighbourLength.iNumberValue = 0;
 	int iFlagHex;
 	int iFlagKeys;
 	int iFlagPEFile;
@@ -1485,6 +1753,8 @@ int main(int argc, char **argv)
 	int iFlagWildcardEmbedded;
 	int iFlagList;
 	int iFlagHexFile;
+	int iFlagReverse;
+	int iFlagStrings;
 	unsigned int *pui32bitKeys;
 	unsigned int uiSize32bitKeys;
 	unsigned int uiCount32bitKeys;
@@ -1501,19 +1771,22 @@ int main(int argc, char **argv)
 	off_t otFileSize;
 	int iResult;
 
-	if (ParseArgs(argc, argv, &iFlagSave, &iMaxLength, &iFlagIgnoreCase, &pcArgFile, &pcArgSearch, &pcArgSearchFile, &iFlagUnicode, &iNeighbourgLength, &iFlagHex, &iFlagKeys, &iFlagPEFile, &iExcludeByte, &iFlagWildcard, &iFlagWildcardEmbedded, &pcDisable, &iFlagList, &iFlagHexFile))
+	if (ParseArgs(argc, argv, &iFlagSave, &iMaxLength, &iFlagIgnoreCase, &pcArgFile, &pcArgSearch, &pcArgSearchFile, &iFlagUnicode, &sNUMBERNeighbourLength, &iFlagHex, &iFlagKeys, &iFlagPEFile, &iExcludeByte, &iFlagWildcard, &iFlagWildcardEmbedded, &pcDisable, &iFlagList, &iFlagHexFile, &iFlagReverse, &iFlagStrings))
 	{
-		fprintf(stderr, "Usage: XORSearch [-siuhkpwWLx] [-l length] [-n length] [-f search-file] [-e byte] [-d encodings] file string|hex|rule\n"
-										"XORSearch V1.11.1, search for a XOR, ROL, ROT, SHIFT or ADD encoded string in a file\n"
+		fprintf(stderr, "Usage: XORSearch [-siuhkpwWLxrS] [-l length] [-n [-+]length] [-f search-file] [-e byte] [-d encodings] file [string|hex|rule]\n"
+										"XORSearch V1.11.4, search for a XOR, ROL, ROT, SHIFT or ADD encoded string in a file\n"
+										"Use filename - to read from stdin\n"
 										"Use -x when the file to search is a hexdump\n"
 										"Use -s to save the XOR, ROL, ROT, SHIFT or ADD encoded file containing the string\n"
 										"Use -l length to limit the number of printed characters (50 by default, 38 with option -p)\n"
 										"Use -i to ignore the case when searching\n"
 										"Use -u to search for Unicode strings (limited support)\n"
+										"Use -r to reverse the file before searching\n"
 										"Use -f to provide a file with search strings\n"
-										"Use -n length to print the length neighbouring charaters (before & after the found keyword)\n"
+										"Use -n [-+]length to print neighbouring characters (before & after the found keyword)\n"
 										"Use -h to search for hex strings\n"
 										"Use -k to decode with embedded keys\n"
+										"Use -S to print all strings\n"
 										"Use -p to search for PE-files\n"
 										"Use -w to search with wildcards\n"
 										"Use -W to search with embedded wildcards\n"
@@ -1523,7 +1796,7 @@ int main(int argc, char **argv)
 										"Options -l and -n are mutually exclusive\n"
 										"Options -u and -h are mutually exclusive\n"
 										"Options -k and -e are mutually exclusive\n"
-										"Option -p is not compatible with options -i, -u, -h and -n\n"
+										"Option -p is not compatible with options -i, -u, -h, -n and -r\n"
 										"When using -p, do not provide a search string or use -f\n"
 										"When using -W, do not provide a search string or use -f\n"
 										"Use option -L without arguments or other options\n"
@@ -1600,9 +1873,29 @@ int main(int argc, char **argv)
 	if (0 != iResult)
 		return iResult;
 
+	if (iFlagReverse)
+	{
+		char *pchrFirst, *pchrSecond;
+		char chrTmp;
+
+		pchrFirst = (char *) pBuffer;
+		pchrSecond = pchrFirst + otFileSize - 1;
+
+		while (pchrSecond > pchrFirst)
+		{
+			chrTmp = *pchrFirst;
+			*pchrFirst++ = *pchrSecond;
+			*pchrSecond-- = chrTmp;
+		}
+	}
+
 	if ((pBufferCopy = malloc(otFileSize)) == NULL)
 	{
+#ifndef __WINNT__
 		fprintf(stderr, "file %s is too large %lld\n", pcArgFile, otFileSize);
+#else
+		fprintf(stderr, "file %s is too large %ld\n", pcArgFile, otFileSize);
+#endif
 		free(pBuffer);
 		return -1;
 	}
@@ -1621,7 +1914,11 @@ int main(int argc, char **argv)
 	if (iFlagKeys)
 		if ((pui32bitKeys = malloc(uiSize32bitKeys * sizeof(unsigned int))) == NULL)
 		{
+#ifndef __WINNT__
 			fprintf(stderr, "file %s is too large for copy %lld\n", pcArgFile, otFileSize);
+#else
+			fprintf(stderr, "file %s is too large for copy %ld\n", pcArgFile, otFileSize);
+#endif
 			uiSize32bitKeys = 0;
 		}
 
@@ -1645,17 +1942,29 @@ int main(int argc, char **argv)
 
 	if ((piFoundIndex = (int *)malloc(otFileSize * sizeof(int))) == NULL)
 	{
+#ifndef __WINNT__
 		fprintf(stderr, "file %s is too large %lld\n", pcArgFile, otFileSize);
+#else
+		fprintf(stderr, "file %s is too large %ld\n", pcArgFile, otFileSize);
+#endif
 		free(pBuffer);
 		free(pBufferCopy);
+		if (NULL != pui32bitKeys)
+			free(pui32bitKeys);
 		return -1;
 	}
 
 	if ((piFoundSize = (int *)malloc(otFileSize * sizeof(int))) == NULL)
 	{
+#ifndef __WINNT__
 		fprintf(stderr, "file %s is too large %lld\n", pcArgFile, otFileSize);
+#else
+		fprintf(stderr, "file %s is too large %ld\n", pcArgFile, otFileSize);
+#endif
 		free(pBuffer);
 		free(pBufferCopy);
+		if (NULL != pui32bitKeys)
+			free(pui32bitKeys);
 		free(piFoundIndex);
 		return -1;
 	}
@@ -1674,6 +1983,8 @@ int main(int argc, char **argv)
 				iFound = 0;
 				if (iFlagPEFile)
 					iFound = SearchForPEFile((unsigned char *)pBuffer, otFileSize, OPR_XOR32, ucOPRIter, pui32bitKeys[uiIter32bitKeys], iMaxLength);
+				else if (iFlagStrings)
+					StringsPrint((unsigned char *)pBuffer, otFileSize, 4);
 				else if (iSearchType == SEARCHTYPE_WILDCARD)
 					iFound = WildcardSearches(pSearch, pBuffer, otFileSize, OPR_XOR32, 0, ucOPRIter, iMaxLength, &iScore);
 				else
@@ -1685,7 +1996,7 @@ int main(int argc, char **argv)
 							iCountFinds = KMP(pcSearch, iSearchLength, pBuffer, otFileSize, iFlagIgnoreCase);
 							if (iCountFinds > 0)
 							{
-								PrintFinds(iCountFinds, iMaxLength, OPR_XOR32, ucOPRIter, pui32bitKeys[uiIter32bitKeys], otFileSize, pBuffer, iSearchType, iNeighbourgLength);
+								PrintFinds(iCountFinds, iMaxLength, OPR_XOR32, ucOPRIter, pui32bitKeys[uiIter32bitKeys], otFileSize, pBuffer, iSearchType, &sNUMBERNeighbourLength);
 								iFound = 1;
 							}
 						}
@@ -1713,6 +2024,8 @@ int main(int argc, char **argv)
 				iFound = 0;
 				if (iFlagPEFile)
 					iFound = SearchForPEFile((unsigned char *)pBuffer, otFileSize, OPR_XOR, 0, ucOPRIter, iMaxLength);
+				else if (iFlagStrings)
+					StringsPrint((unsigned char *)pBuffer, otFileSize, 4);
 				else if (iSearchType == SEARCHTYPE_WILDCARD)
 					iFound = WildcardSearches(pSearch, pBuffer, otFileSize, OPR_XOR, 0, ucOPRIter, iMaxLength, &iScore);
 				else
@@ -1724,7 +2037,7 @@ int main(int argc, char **argv)
 							iCountFinds = KMP(pcSearch, iSearchLength, pBuffer, otFileSize, iFlagIgnoreCase);
 							if (iCountFinds > 0)
 							{
-								PrintFinds(iCountFinds, iMaxLength, OPR_XOR, 0, ucOPRIter, otFileSize, pBuffer, iSearchType, iNeighbourgLength);
+								PrintFinds(iCountFinds, iMaxLength, OPR_XOR, 0, ucOPRIter, otFileSize, pBuffer, iSearchType, &sNUMBERNeighbourLength);
 								iFound = 1;
 							}
 						}
@@ -1748,6 +2061,8 @@ int main(int argc, char **argv)
 				iFound = 0;
 				if (iFlagPEFile)
 					iFound = SearchForPEFile((unsigned char *)pBuffer, otFileSize, OPR_ROL, 0, ucOPRIter, iMaxLength);
+				else if (iFlagStrings)
+					StringsPrint((unsigned char *)pBuffer, otFileSize, 4);
 				else if (iSearchType == SEARCHTYPE_WILDCARD)
 					iFound = WildcardSearches(pSearch, pBuffer, otFileSize, OPR_ROL, 0, ucOPRIter, iMaxLength, &iScore);
 				else
@@ -1759,7 +2074,7 @@ int main(int argc, char **argv)
 							iCountFinds = KMP(pcSearch, iSearchLength, pBuffer, otFileSize, iFlagIgnoreCase);
 							if (iCountFinds > 0)
 							{
-								PrintFinds(iCountFinds, iMaxLength, OPR_ROL, 0, ucOPRIter, otFileSize, pBuffer, iSearchType, iNeighbourgLength);
+								PrintFinds(iCountFinds, iMaxLength, OPR_ROL, 0, ucOPRIter, otFileSize, pBuffer, iSearchType, &sNUMBERNeighbourLength);
 								iFound = 1;
 							}
 						}
@@ -1782,6 +2097,8 @@ int main(int argc, char **argv)
 				iFound = 0;
 				if (iFlagPEFile)
 					iFound = SearchForPEFile((unsigned char *)pBuffer, otFileSize, OPR_ROT, 0, ucOPRIter, iMaxLength);
+				else if (iFlagStrings)
+					StringsPrint((unsigned char *)pBuffer, otFileSize, 4);
 				else if (iSearchType == SEARCHTYPE_WILDCARD)
 					iFound = WildcardSearches(pSearch, pBuffer, otFileSize, OPR_ROT, 0, ucOPRIter, iMaxLength, &iScore);
 				else
@@ -1793,7 +2110,7 @@ int main(int argc, char **argv)
 							iCountFinds = KMP(pcSearch, iSearchLength, pBuffer, otFileSize, iFlagIgnoreCase);
 							if (iCountFinds > 0)
 							{
-								PrintFinds(iCountFinds, iMaxLength, OPR_ROT, 0, ucOPRIter, otFileSize, pBuffer, iSearchType, iNeighbourgLength);
+								PrintFinds(iCountFinds, iMaxLength, OPR_ROT, 0, ucOPRIter, otFileSize, pBuffer, iSearchType, &sNUMBERNeighbourLength);
 								iFound = 1;
 							}
 						}
@@ -1816,6 +2133,8 @@ int main(int argc, char **argv)
 				iFound = 0;
 				if (iFlagPEFile)
 					iFound = SearchForPEFile((unsigned char *)pBuffer, otFileSize, OPR_SHIFT, 0, ucOPRIter, iMaxLength);
+				else if (iFlagStrings)
+					StringsPrint((unsigned char *)pBuffer, otFileSize, 4);
 				else if (iSearchType == SEARCHTYPE_WILDCARD)
 					iFound = WildcardSearches(pSearch, pBuffer, otFileSize, OPR_SHIFT, 0, ucOPRIter, iMaxLength, &iScore);
 				else
@@ -1827,7 +2146,7 @@ int main(int argc, char **argv)
 							iCountFinds = KMP(pcSearch, iSearchLength, pBuffer, otFileSize, iFlagIgnoreCase);
 							if (iCountFinds > 0)
 							{
-								PrintFinds(iCountFinds, iMaxLength, OPR_SHIFT, 0, ucOPRIter, otFileSize, pBuffer, iSearchType, iNeighbourgLength);
+								PrintFinds(iCountFinds, iMaxLength, OPR_SHIFT, 0, ucOPRIter, otFileSize, pBuffer, iSearchType, &sNUMBERNeighbourLength);
 								iFound = 1;
 							}
 						}
@@ -1843,6 +2162,7 @@ int main(int argc, char **argv)
 
 		if (NULL == pcDisable || !strchr(pcDisable, '5'))
 		{
+			ucOPRIter = 1;
 			do
 			{
 				ADD((unsigned char *) pBuffer, otFileSize, iExcludeByte);
@@ -1850,6 +2170,8 @@ int main(int argc, char **argv)
 				iFound = 0;
 				if (iFlagPEFile)
 					iFound = SearchForPEFile((unsigned char *)pBuffer, otFileSize, OPR_ADD, 0, ucOPRIter, iMaxLength);
+				else if (iFlagStrings)
+					StringsPrint((unsigned char *)pBuffer, otFileSize, 4);
 				else if (iSearchType == SEARCHTYPE_WILDCARD)
 					iFound = WildcardSearches(pSearch, pBuffer, otFileSize, OPR_ADD, 0, ucOPRIter, iMaxLength, &iScore);
 				else
@@ -1861,7 +2183,7 @@ int main(int argc, char **argv)
 							iCountFinds = KMP(pcSearch, iSearchLength, pBuffer, otFileSize, iFlagIgnoreCase);
 							if (iCountFinds > 0)
 							{
-								PrintFinds(iCountFinds, iMaxLength, OPR_ADD, 0, ucOPRIter, otFileSize, pBuffer, iSearchType, iNeighbourgLength);
+								PrintFinds(iCountFinds, iMaxLength, OPR_ADD, 0, ucOPRIter, otFileSize, pBuffer, iSearchType, &sNUMBERNeighbourLength);
 								iFound = 1;
 							}
 						}
@@ -1877,6 +2199,8 @@ int main(int argc, char **argv)
 
 	free(pBuffer);
 	free(pBufferCopy);
+	if (NULL != pui32bitKeys)
+		free(pui32bitKeys);
 	free(piFoundIndex);
 	free(piFoundSize);
 

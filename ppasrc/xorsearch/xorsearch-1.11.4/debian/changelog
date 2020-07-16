@@ -1,3 +1,9 @@
+xorsearch (1.11.4) bionic; urgency=medium
+
+  * Updated to latest upstream version. 
+
+ -- REMnux Distribution <distro@remnux.org>  Thu, 16 Jul 2020 19:40:46 -0400
+
 xorsearch (1.11.1) bionic; urgency=medium
 
   * Initial Release.
