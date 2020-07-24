@@ -1,3 +1,10 @@
+signsrch (0.2.4-2) bionic; urgency=medium
+
+  * Added full path to the location of the /usr/share/signsrch/signsrch.sig
+    file
+
+ -- REMnux Distribution <distro@remnux.org>  Fri, 24 Jul 2020 08:12:02 -0400
+
 signsrch (0.2.4-1) bionic; urgency=medium
 
   * Initial Release.

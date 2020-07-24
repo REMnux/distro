@@ -70,7 +70,7 @@ typedef uint64_t    u64;
 #define mystrdup            strdup
 #define PATHSZ              2000
 #define MAX_AND_DISTANCE    ((pattern_len < (3000/32)) ? (pattern_len * 32) : 3000) // was 3000
-#define SIGNFILE            "signsrch.sig"
+#define SIGNFILE            "/usr/share/signsrch/signsrch.sig"
 #define SIGNFILEWEB         "http://aluigi.org/mytoolz/signsrch.sig.zip"
 #define INVALID_OFFSET      (-1)
 #define FREEZ(X)            if(X) { free(X); X = NULL; }
