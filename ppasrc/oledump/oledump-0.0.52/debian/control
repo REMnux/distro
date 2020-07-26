@@ -8,5 +8,5 @@ Homepage: https://blog.didierstevens.com/programs/oledump-py/
 
 Package: oledump
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, python-minimal
+Depends: ${shlibs:Depends}, ${misc:Depends}, python3-minimal
 Description: Analyze OLE2 Structured Storage files.
