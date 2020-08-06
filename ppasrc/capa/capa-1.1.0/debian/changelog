@@ -1,0 +1,11 @@
+capa (1.1.0) bionic; urgency=medium
+
+  * Updated to latest upstream release 
+
+ -- REMnux Distribution <distro@remnux.org>  Thu, 06 Aug 2020 08:47:56 -0400
+
+capa (1.0.0) bionic; urgency=medium
+
+  * Initial Release.
+
+ -- REMnux Distribution <distro@remnux.org>  Thu, 16 Jul 2020 15:12:28 -0400
