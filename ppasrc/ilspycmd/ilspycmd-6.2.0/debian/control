@@ -1,0 +1,12 @@
+Source: ilspycmd
+Section: utils
+Priority: optional
+Maintainer: REMnux Distribution <distro@remnux.org>
+Build-Depends: debhelper (>= 10)
+Standards-Version: 4.1.2
+Homepage: https://github.com/icsharpcode/ILSpy
+
+Package: ilspycmd
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}, dotnet-runtime-3.1
+Description: Examine and decompile .NET programs from the command-line.
