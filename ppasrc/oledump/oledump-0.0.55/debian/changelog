@@ -1,3 +1,9 @@
+oledump (0.0.55) bionic; urgency=medium
+
+  * Updated to latest upstream version.
+
+ -- REMnux Distribution <distro@remnux.org>  Mon, 16 Nov 2020 10:02:38 -0500
+
 oledump (0.0.54) bionic; urgency=medium
 
   * Updated to latest upstream version. 
