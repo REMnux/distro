@@ -1,0 +1,12 @@
+Source: signsrch
+Section: utils
+Priority: optional
+Maintainer: REMnux Distribution <distro@remnux.org>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.4
+Homepage: http://aluigi.altervista.org/mytoolz.htm
+
+Package: signsrch
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Search for encryption and encoding signatures in binary files.

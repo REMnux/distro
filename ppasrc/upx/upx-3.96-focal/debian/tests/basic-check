@@ -1,0 +1,26 @@
+#!/bin/sh
+# autopkgtest check: Run really basic tests to confirm upx-ucl works
+
+set -e
+
+readonly UPXTMPDIR="$(mktemp -d)"
+trap "cd /; rm -rf $UPXTMPDIR" 0 INT QUIT TERM ABRT
+
+cd "$UPXTMPDIR"
+
+run()
+{
+  echo "+ $@"
+  "$@"
+}
+
+run cp /bin/ls "$UPXTMPDIR"
+
+run upx-ucl ./ls
+run ./ls -al
+
+run upx-ucl -t ./ls
+
+run upx-ucl -d ./ls
+
+run cmp ./ls /bin/ls

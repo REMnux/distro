@@ -1,0 +1,11 @@
+xorsearch (1.11.4-1-focal) focal; urgency=medium
+
+  * Updated to latest upstream version. 
+
+ -- REMnux Distribution <distro@remnux.org>  Thu, 16 Jul 2020 19:40:46 -0400
+
+xorsearch (1.11.1) bionic; urgency=medium
+
+  * Initial Release.
+
+ -- REMnux Distribution (https://REMnux.org) <distro@remnux.org>  Fri, 03 Apr 2015 21:40:52 -0400

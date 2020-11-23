@@ -1,0 +1,47 @@
+#!/usr/bin/make -f
+
+DH_AUTO_OPTIONS         := -v -Smakefile --parallel
+package                 := $(shell dh_listpackages)
+export DESTDIR          := $(CURDIR)/debian/$(package)
+export UPX_UCLDIR       := /none
+export UPX_LZMADIR      := /usr/include/lzma
+
+include /usr/share/dpkg/architecture.mk
+
+DEB_BUILD_MAINT_OPTIONS     := hardening=+all
+DEB_CPPFLAGS_MAINT_APPEND   := -DWITH_UCL -D_FILE_OFFSET_BITS=64
+ifeq ($(DEB_HOST_ARCH_ENDIAN),big)
+  DEB_CPPFLAGS_MAINT_APPEND += -D__BIG_ENDIAN__=1
+endif
+
+DPKG_EXPORT_BUILDFLAGS  := 1
+include /usr/share/dpkg/buildflags.mk
+
+%:
+	dh "$@"
+
+override_dh_auto_build:
+	@echo "Starting build process ($(DEB_HOST_ARCH))"
+	dh_auto_build $(DH_AUTO_OPTIONS) --     \
+		      CXXFLAGS_OPTIMIZE=        \
+		      CHECK_WHITESPACE=         \
+		      UPX_VERSION_GITREV=       \
+	              exeext=                   \
+	              target=linux              \
+	              all
+
+	cd doc && mv upx.1 $(package).1
+
+override_dh_auto_clean:
+	dh_auto_clean $(DH_AUTO_OPTIONS) -- \
+	                exeext=
+	rm -rf doc/*.1 doc/*.ps
+
+override_dh_auto_install:
+	install -pm 0755 src/upx $(DESTDIR)/usr/bin/$(package)
+
+override_dh_installchangelogs:
+	dh_installchangelogs NEWS
+
+override_dh_installman:
+	dh_installman doc/*.1

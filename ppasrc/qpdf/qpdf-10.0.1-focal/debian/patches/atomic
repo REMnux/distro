@@ -1,0 +1,111 @@
+Description: link with -latomic if needed
+Origin: upstream, https://github.com/qpdf/qpdf/commit/66198f447f45a87718b6457756976baa8defb2fd
+Bug-Debian: http://bugs.debian.org/956400
+
+commit 66198f447f45a87718b6457756976baa8defb2fd
+Author: Jay Berkenbilt <ejb@ql.org>
+Date:   Fri Apr 10 13:30:00 2020 -0400
+
+    Use -latomic if needed with gcc
+
+Index: qpdf/autofiles.sums
+===================================================================
+--- qpdf.orig/autofiles.sums
++++ qpdf/autofiles.sums
+@@ -1,4 +1,4 @@
+-e764290be37a921ecba94755b6da22dd9e9b98644b8fdfdd0fa7f1331ce56a05  configure.ac
++c9b8555013e70c93572e0be5f5c7c03c6b7e0680de4870010945357a02909eaa  configure.ac
+ d3f9ee6f6f0846888d9a10fd3dad2e4b1258be84205426cf04d7cef02d61dad7  aclocal.m4
+ b0ce6d1dba8effa47d25154b2bb56eddafc997254a0f3f903cf9b6abffc03616  libqpdf/qpdf/qpdf-config.h.in
+ 5297971a0ef90bcd5563eb3f7127a032bb76d3ae2af7258bf13479caf8983a60  m4/ax_cxx_compile_stdcxx.m4
+Index: qpdf/configure
+===================================================================
+--- qpdf.orig/configure
++++ qpdf/configure
+@@ -16975,6 +16975,49 @@ ac_link='$CC -o conftest$ac_exeext $CFLA
+ ac_compiler_gnu=$ac_cv_c_compiler_gnu
+ 
+ 
++ac_ext=cpp
++ac_cpp='$CXXCPP $CPPFLAGS'
++ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
++ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
++ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
++
++{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to use -latomic" >&5
++$as_echo_n "checking whether to use -latomic... " >&6; }
++oLDFLAGS="$LDFLAGS"
++LDFLAGS="$LDFLAGS -Wl,--as-needed -latomic"
++cat confdefs.h - <<_ACEOF >conftest.$ac_ext
++/* end confdefs.h.  */
++#include <atomic>
++    int main()
++    {
++        static std::atomic<int> a{0};
++        a = a.fetch_add(1);
++        return 0;
++    }
++
++_ACEOF
++if ac_fn_cxx_try_link "$LINENO"; then :
++  qpdf_USE_ATOMIC=1
++else
++  qpdf_USE_ATOMIC=0
++fi
++rm -f core conftest.err conftest.$ac_objext \
++    conftest$ac_exeext conftest.$ac_ext
++if test "$qpdf_USE_ATOMIC" = "1"; then
++  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
++$as_echo "yes" >&6; }
++else
++  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
++$as_echo "no" >&6; }
++  LDFLAGS="$oLDFLAGS"
++fi
++ac_ext=c
++ac_cpp='$CPP $CPPFLAGS'
++ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
++ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
++ac_compiler_gnu=$ac_cv_c_compiler_gnu
++
++
+ if test "x$qpdf_OS_SECURE_RANDOM" = "x1"; then
+   OLIBS=$LIBS
+   LIBS="$LIBS Advapi32.lib"
+Index: qpdf/configure.ac
+===================================================================
+--- qpdf.orig/configure.ac
++++ qpdf/configure.ac
+@@ -240,6 +240,32 @@ for i in 0 1; do
+ done
+ AC_LANG_POP
+ 
++AC_LANG_PUSH([C++])
++AC_MSG_CHECKING(whether to use -latomic)
++dnl On some platforms with some versions of gcc, you have to link with
++dnl -latomic in order for std::atomic to work. Passing --as-needed
++dnl prevents unnecessary linking with -latomic.
++oLDFLAGS="$LDFLAGS"
++LDFLAGS="$LDFLAGS -Wl,--as-needed -latomic"
++AC_LINK_IFELSE([AC_LANG_SOURCE(
++  [[#include <atomic>
++    int main()
++    {
++        static std::atomic<int> a{0};
++        a = a.fetch_add(1);
++        return 0;
++    }
++   ]])],
++   [qpdf_USE_ATOMIC=1],
++   [qpdf_USE_ATOMIC=0])
++if test "$qpdf_USE_ATOMIC" = "1"; then
++  AC_MSG_RESULT(yes)
++else
++  AC_MSG_RESULT(no)
++  LDFLAGS="$oLDFLAGS"
++fi
++AC_LANG_POP
++
+ if test "x$qpdf_OS_SECURE_RANDOM" = "x1"; then
+   OLIBS=$LIBS
+   LIBS="$LIBS Advapi32.lib"

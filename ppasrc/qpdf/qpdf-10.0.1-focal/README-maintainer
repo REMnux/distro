@@ -1,0 +1,366 @@
+ROUTINE DEVELOPMENT
+
+**Remember to check pull requests as well as issues in github.**
+
+Default:
+
+./configure CXX="g++ --std=c++11" --enable-werror
+
+Debugging:
+
+./configure CXX="g++ --std=c++11" CFLAGS="-g" CXXFLAGS="-g" \
+   --enable-werror --disable-shared
+
+Profiling:
+
+./configure CXX="g++ --std=c++11" CFLAGS="-g -pg" CXXFLAGS="-g -pg" \
+   LDFLAGS="-pg" --enable-werror --disable-shared
+
+Then run `gprof gmon.out`. Note that gmon.out is not cumulative.
+
+Memory checks:
+
+./configure CFLAGS="-fsanitize=address -fsanitize=undefined -g" \
+   CXXFLAGS="-fsanitize=address -fsanitize=undefined -g" \
+   LDFLAGS="-fsanitize=address -fsanitize=undefined" \
+   CC=clang CXX="clang++ --std=c++11" \
+   --enable-werror --disable-shared
+
+
+GOOGLE OSS-FUZZ
+
+* See ../misc/fuzz (not in repo) for unfixed, downloaded fuzz test cases
+
+* qpdf project: https://github.com/google/oss-fuzz/tree/master/projects/qpdf
+
+* To test locally, see https://github.com/google/oss-fuzz/tree/master/docs/,
+  especially new_project_guide.md. Summary:
+
+  Clone the oss-fuzz project. From the root directory of the repository:
+
+  Add `-e GITHUB_FORK=fork -e GITHUB_BRANCH=branch` to build_fuzzers
+  from a qpdf fork/branch rather than qpdf/master.
+
+  python infra/helper.py build_image --pull qpdf
+  python infra/helper.py build_fuzzers [ --sanitizer memory|undefined|address ] qpdf
+  python infra/helper.py check_build qpdf
+  python infra/helper.py build_fuzzers --sanitizer coverage qpdf
+  python infra/helper.py coverage qpdf
+
+  To reproduce a test case, build with the correct sanitizer, then run
+
+  python infra/helper.py reproduce qpdf fuzzer testcase
+
+  where fuzzer is the fuzzer used in the crash.
+
+  The fuzzer is in build/out/qpdf. It can be run with a directory as
+  an argument to run against files in a directory. You can use
+
+  qpdf_fuzzer -merge=1 cur new >& /dev/null&
+
+  to add any files from new into cur if they increase coverage. You
+  need to do this with the coverage build (the one with
+  --sanitizer coverage)
+
+* General documentation: http://libfuzzer.info
+
+* Build status: https://oss-fuzz-build-logs.storage.googleapis.com/index.html
+
+* Project status: https://oss-fuzz.com/ (private -- log in with Google account)
+
+* Latest corpus:
+  gs://qpdf-backup.clusterfuzz-external.appspot.com/corpus/libFuzzer/qpdf_fuzzer/latest.zip
+
+
+CODING RULES
+
+* Avoid atoi. Use QUtil::string_to_int instead. It does
+  overflow/underflow checking.
+
+* Remember to avoid using `operator[]` with `std::string` or
+  `std::vector`. Instead, use `at()`. See README-hardening.md for
+  details.
+
+* Use QIntC for type conversions -- see casting policy in docs.
+
+* Use QPDF_DLL on all methods that are to be exported in the shared
+  library/DLL. Use QPDF_DLL_CLASS for all classes whose type
+  information is needed. This is important for exception classes and
+  it seems also for classes that are intended to be subclassed across
+  the shared library boundary.
+
+* Put private member variables in PointerHolder<Members> for all
+  public classes. Remember to use QPDF_DLL on ~Members().
+
+
+RELEASE PREPARATION
+
+* Each year, update copyright notices. Just do a case-insensitive
+  search for copyright. Don't forget copyright in manual. Also update
+  debian copyright in debian package. Last updated: 2020.
+
+* Check for open fuzz crashes at https://oss-fuzz.com
+
+* Check all open issues and pull requests in github and the
+  sourceforge trackers. See ~/scripts/github-issues. Don't forget pull
+  requests.
+
+* Check `TODO` file to make sure all planned items for the release are
+  done or retargeted.
+
+* Run a spelling checker over the source code to catch errors in
+  variable names, strings, and comments.
+
+  ispell -p ispell-words **/*.hh **/*.cc manual/* ChangeLog README* TODO
+
+* If needed, run large file and image comparison tests. Configure
+  options:
+
+--enable-test-compare-images --with-large-file-test-path=/path
+
+  For Windows, use a Windows style path, not an MSYS path for large files.
+
+* Test with clang. Pass `CC=clang CXX=clang++` to `./configure`. Test
+  with newer version of gcc if available.
+
+* Test 32-bit. Pass `CC=i686-linux-gnu-gcc CXX=i686-linux-gnu-g++` to
+  `./configure`. (Done in CI.)
+
+* Test build on a mac. (Done in CI.)
+
+* Test with address sanitizer as described above. (Done in CI with
+  gcc; test locally with clang.)
+
+* A small handful of additional files have been taken from autotools
+  programs. These should probably be updated from time to time.
+
+  * `config.guess`, `config.sub`, `ltmain.sh`, and the `m4` directory:
+    these were created by running `libtoolize -c`. To update, run
+    `libtoolize -f -c` or remove the files and rerun `libtoolize`. For
+    `config.guess` and `config.sub`, search for "latest" in the files,
+    and follow directions for updating them.
+
+  * Other files copied as indicated:
+    ```
+    cp /usr/share/automake-1.11/install-sh .
+    cp /usr/share/automake-1.11/mkinstalldirs .
+    cp /usr/share/aclocal/pkg.m4 m4
+    ```
+
+  The entire contents of the `m4` directory came from `libtool.m4`. If
+  we had some additional local parts, we could also add those to the
+  `m4` directory. In order for this to work, it is necessary to run
+  `aclocal -I m4` before running `autoheader` and `autoconf`. The
+  `autogen.sh` script handles this.
+
+* If any interfaces were added or changed, check C API to see whether
+  changes are appropriate there as well. If necessary, review the
+  casting policy in the manual, and ensure that integer types are
+  properly handled with QIntC or the appropriate cast.
+
+* Increment shared library version information as needed (`LT_*` in
+  `configure.ac`). Remember to rerun ./autogen.sh.
+
+* Performance test is included with binary compatibility steps. Even
+  if releasing a new major release and not doing binary compatibility
+  testing, do performance testing.
+
+* Test for performance and binary compatibility:
+  * Check out the last release
+  * ./configure --enable-werror && make -j$(nproc)
+  * Check out the current version
+  * ./performance_check | tee -a /tmp/perf
+  * ./configure --enable-werror && make -j$(nproc) build_libqpdf
+  * Checkout the last release
+  * make -k check NO_REBUILD=1
+  * Check out the current version
+  * make -j$(nproc)
+  * ./performance_check | tee -a /tmp/perf
+
+* Run pikepdf's test suite. Do this in a separate shell.
+
+cd ...qpdf-source-tree...
+export QPDF_SOURCE_TREE=$PWD
+export LD_LIBRARY_PATH=$QPDF_SOURCE_TREE/libqpdf/build/.libs
+cd /tmp/z
+git clone git@github.com:pikepdf/pikepdf
+virtualenv v
+source v/bin/activate
+cd pikepdf
+pip3 install -r requirements/test.txt
+rehash
+pip3 install .
+pytest -n auto
+
+* Update release notes in manual. Look at diffs and ChangeLog. Update
+  release date in `manual/qpdf-manual.xml`. Remember to ensure that
+  the entities at the top of the document are consistent with the
+  release notes for both version and release date.
+
+* Make sure version numbers are consistent in the following locations:
+  * configure.ac
+  * libqpdf/QPDF.cc
+  * manual/qpdf-manual.xml
+  * qpdf/qpdf.cc
+  `make_dist` verifies this consistency.
+
+* Run ./autogen.sh
+
+* Add a release entry to ChangeLog.
+
+
+CREATING A RELEASE
+
+* Push to master. The azure pipeline will create an artifact called
+  distribution which will contain all the distribution files. Download
+  these, verify the checksums from the job output, rename to remove
+  -ci from the names, and copy to the release archive area.
+
+* Sign the source distribution:
+
+version=x.y.z
+gpg --detach-sign --armor qpdf-$version.tar.gz
+
+* Build and test the debian package
+
+* Sign the releases. The release archive area should contain the
+  Windows binaries, the AppImage, the source tarball, and the source
+  tarball signature.
+
+\rm -f *.{md5,sha1,sha512}
+files=(*)
+for i in md5 sha1 sha512; do
+  ${i}sum ${files[*]} >| qpdf-$version.$i
+  gpg --clearsign --armor qpdf-$version.$i
+  mv qpdf-$version.$i.asc qpdf-$version.$i
+done
+chmod 444 *
+chmod 555 *.AppImage
+
+* When creating releases on github and sourceforge, remember to copy
+  `README-what-to-download.md` separately onto the download area if
+  needed.
+
+* Ensure that the master branch has been pushed to github. The
+  rev-parse command below should show the same commit hash for all its
+  arguments. Create and push a signed tag. This should be run with
+  HEAD pointing to the tip of master.
+
+git rev-parse master upstream/master @
+git tag -s release-qpdf-$version @ -m"qpdf $version"
+git push upstream release-qpdf-$version
+
+* In Azure Pipelines, retain the build that was used to generate the
+  release.
+
+* Create a github release after pushing the tag. `gcurl` is an alias
+  that includes the auth token.
+
+# Create release
+TOKEN=$(cat ~/.github-token)
+function gcurl() { curl -H "Authorization: token $TOKEN" ${1+"$@"}; }
+url=$(gcurl -s -XPOST https://api.github.com/repos/qpdf/qpdf/releases -d'{"tag_name": "release-qpdf-'$version'", "name": "qpdf '$version'", "draft": true}' | jq -r '.url')
+
+# Get upload url
+upload_url=$(gcurl -s $url | jq -r '.upload_url' | sed -E -e 's/\{.*\}//')
+echo $upload_url
+
+# Upload all the files. You can add a label attribute too, which
+# overrides the name.
+for i in *; do
+  mime=$(file -b --mime-type $i)
+  gcurl -H "Content-Type: $mime" --data-binary @$i "$upload_url?name=$i"
+done
+
+If needed, go onto github and make any manual updates such as
+indicating a pre-release, adding release notes, etc.
+
+# Publish release
+gcurl -XPOST $url -d'{"draft": false}'
+
+* Upload files to sourceforge.
+
+rsync -vrlcO ./ jay_berkenbilt,qpdf@frs.sourceforge.net:/home/frs/project/q/qp/qpdf/qpdf/$version/
+
+* On sourceforge, make the source package the default for all but
+  Windows, and make the 32-bit mingw build the default for Windows.
+
+* Publish a news item manually on sourceforge.
+
+* Update the web page to indicate the new version and to put the new
+  documentation in the `files` subdirectory of the website on
+  sourceforge.net.
+
+(cd /tmp; mkdir -p z; cd z; \
+ tar xf ~/Q/storage/releases/qpdf/qpdf/$version/qpdf-$version.tar.gz qpdf-$version/doc; \
+ scp -p qpdf-$version/doc/qpdf-* jay_berkenbilt,qpdf@frs.sourceforge.net:htdocs/files/)
+
+* Upload the debian package and Ubuntu ppa backports.
+
+* Email the qpdf-announce list.
+
+
+OTHER NOTES
+
+To construct a source distribution from a pristine checkout,
+`make_dist` does the following:
+
+./configure --enable-doc-maintenance --enable-werror
+make build_manual
+make distclean
+
+To create a source release of external libs, do an export from the
+version control system into a directory called `qpdf-external-libs`
+and just make a zip file of the result called
+`qpdf-external-libs-src.zip`. See the README.txt file there for
+information on creating binary external libs releases. Run this from
+the external-libs repository:
+
+git archive --prefix=external-libs/ HEAD . | (cd /tmp; tar xf -)
+cd /tmp
+zip -r qpdf-external-libs-src.zip external-libs
+
+When releasing on sourceforge, `external-libs` distributions go in
+`external-libs/yyyymmdd`, and qpdf distributions go in `qpdf/vvv`.
+
+For local iteration on the AppImage generation, it works to just
+./azure-pipelines/build-appimage and get the resulting AppImage from
+the distribution directory. You can also pass -e SKIP_TESTS=1
+build-appimage, which passes it along to to docker, to skip the test
+suite, which useful for rapid iteration.
+
+
+GENERAL BUILD STUFF
+
+QPDF uses autoconf and libtool but does not use automake. The only
+files distributed with the qpdf source distribution that are not
+controlled are `configure`, `libqpdf/qpdf/qpdf-config.h.in`,
+`aclocal.m4`, and some documentation. See above for the steps required
+to prepare a source distribution.
+
+If building or editing documentation, configure with
+`--enable-doc-maintenance`. This will ensure that all tools or files
+required to validate and build documentation are available.
+
+If you want to run `make maintainer-clean` or `make distclean` and you
+haven't run `./configure`, you can pass `CLEAN=1` to make on the
+command line to prevent it from complaining about configure not having
+been run.
+
+If you want to run checks without rerunning the build, pass
+`NO_REBUILD=1` to make. This can be useful for special testing
+scenarios such as validation of memory fixes or binary compatibility.
+
+
+LOCAL WINDOWS TESTING PROCEDURE
+
+This is what I do for routine testing on Windows.
+
+From Windows, git clone from my Linux clone, and unzip
+`external-libs`.
+
+Look at `make_windows_releases`. Set up path the same way and run
+whichever `./config-*` is appropriate for whichever compiler I need to
+test with. Start one of the Visual Studio native compiler shells, and
+from there, run one of the msys shells. The Visual Studio step is not
+necessary if just building with mingw.

@@ -1,0 +1,4 @@
+# control file for the uscan(1) tool
+version=4
+https://github.com/upx/upx/releases \
+	(?:.*/)upx-([\d\.]+)-src\.tar\.(?:xz|gz|bz2)
