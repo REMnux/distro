@@ -1,0 +1,22 @@
+Description: Use system-wide classpath
+Author: Johann Felix Soden <johfel@debian.org>
+--- a/build.xml
++++ b/build.xml
+@@ -13,7 +13,7 @@
+     <mkdir dir="build/classes"/>
+     <javac srcdir="java" destdir="build/classes">
+       <classpath>
+-        <fileset dir="lib" includes="*.jar"/>
++        <fileset dir="/usr/share/java" includes="*.jar"/>
+       </classpath>
+     </javac>
+     <copy todir="build/classes">
+@@ -40,7 +40,7 @@
+     <mkdir dir="build/test"/>
+     <javac srcdir="test" destdir="build/test">
+       <classpath>
+-        <fileset dir="lib" includes="*.jar"/>
++        <fileset dir="/usr/share/java" includes="*.jar"/>
+         <pathelement path="build/classes"/>
+       </classpath>
+     </javac>

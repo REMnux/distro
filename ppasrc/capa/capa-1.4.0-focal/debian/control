@@ -1,0 +1,12 @@
+Source: capa
+Section: utils
+Priority: optional
+Maintainer: REMnux Distribution <distro@remnux.org>
+Build-Depends: debhelper (>= 10)
+Standards-Version: 4.1.2
+Homepage: https://github.com/fireeye/capa
+
+Package: capa
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Detect suspicious capabilites in PE files.

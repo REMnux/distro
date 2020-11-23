@@ -1,0 +1,4 @@
+usr/lib/libemu.so.*
+usr/lib/libemu.so
+usr/lib/libemu.a
+tools/sctest/.libs/sctest /usr/bin

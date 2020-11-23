@@ -1,0 +1,4 @@
+burpsuite-community.jar opt/burpsuite-community
+burpsuite usr/bin
+burpsuite.desktop usr/share/applications/
+burpsuite.svg /usr/share/icons

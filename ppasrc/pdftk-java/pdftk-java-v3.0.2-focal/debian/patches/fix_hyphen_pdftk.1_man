@@ -1,0 +1,259 @@
+Description: Fix hyphens in the man file and adapt section.
+ For more information, see http://lintian.debian.org/tags/hyphen-used-as-minus-sign.html .
+Author: Johann Felix Soden <johfel@debian.org>
+diff --git a/pdftk.1 b/pdftk.1
+--- a/pdftk.1
++++ b/pdftk.1
+@@ -2,7 +2,7 @@
+ .\" First parameter, NAME, should be all caps
+ .\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
+ .\" other parameters are allowed: see man(7), man(1)
+-.TH PDFTK 1 "May 11, 2018"
++.TH pdftk.pdftk-java 1 "May 11, 2018"
+ .\" Please adjust this date whenever revising the manpage.
+ .\"
+ .\" Some roff macros, for reference:
+@@ -19,13 +19,13 @@
+ .SH NAME
+ pdftk \- A handy tool for manipulating PDF
+ .SH SYNOPSIS
+-\fBpdftk\fR \fI<input PDF files | - | PROMPT>\fR
++\fBpdftk\fR \fI<input PDF files | \- | PROMPT>\fR
+ .br
+      [ \fBinput_pw\fR \fI<input PDF owner passwords | PROMPT>\fR ]
+ .br
+      [ \fI<operation>\fR \fI<operation arguments>\fR ]
+ .br
+-     [ \fBoutput\fR \fI<output filename | - | PROMPT>\fR ]
++     [ \fBoutput\fR \fI<output filename | \- | PROMPT>\fR ]
+ .br
+      [ \fBencrypt_40bit\fR | \fBencrypt_128bit\fR ]
+ .br
+@@ -66,7 +66,7 @@ Where:
+        \fBattach_files\fR | \fBunpack_files\fR ]
+ .br
+ 
+-For Complete Help: \fBpdftk --help\fR
++For Complete Help: \fBpdftk \-\-help\fR
+ .br
+ .SH DESCRIPTION
+ If PDF is electronic paper, then pdftk is an electronic staple-remover, hole-punch, binder, secret-decoder-ring, and X-Ray-glasses.  Pdftk is a simple tool for doing everyday things with PDF documents.  Use it to:
+@@ -107,9 +107,9 @@ A summary of options is included below.
+ \fB\-\-help\fR, \fB\-h\fR
+ Show this summary of options.
+ .TP
+-.B <input PDF files | - | PROMPT>
++.B <input PDF files | \- | PROMPT>
+ A list of the input PDF files. If you plan to combine these PDFs (without
+-using handles) then list files in the order you want them combined.  Use \fB-\fR 
++using handles) then list files in the order you want them combined.  Use \fB\-\fR 
+ to pass a single PDF into pdftk via stdin.
+ Input files can be associated with handles, where a
+ handle is one or more upper-case letters:
+@@ -153,7 +153,7 @@ applying all of the output options, like encryption and compression.
+ .B cat [<page ranges>]
+ Assembles (catenates) pages from input PDFs to create a new PDF. Use \fBcat\fR to merge PDF pages or to split PDF pages from documents. You can also use it to rotate PDF pages. Page order in the new PDF is specified by the order of the given page ranges. Page ranges are described like this:
+ 
+-\fI<input PDF handle>\fR[\fI<begin page number>\fR[\fB-\fR\fI<end page number>\fR[\fI<qualifier>\fR]]][\fI<page rotation>\fR]
++\fI<input PDF handle>\fR[\fI<begin page number>\fR[\fB\-\fR\fI<end page number>\fR[\fI<qualifier>\fR]]][\fI<page rotation>\fR]
+ 
+ Where the handle identifies one of the input PDF files, and
+ the beginning and ending page numbers are one-based references
+@@ -164,11 +164,11 @@ If a PDF handle is given but no pages are specified, then the entire PDF is used
+ 
+ If the handle is omitted from the page range, then the pages are taken from the first input PDF.
+ 
+-The \fBeven\fR qualifier causes pdftk to use only the even-numbered PDF pages, so \fB1-6even\fR yields pages 2, 4 and 6 in that order.  \fB6-1even\fR yields pages 6, 4 and 2 in that order.
++The \fBeven\fR qualifier causes pdftk to use only the even-numbered PDF pages, so \fB1\-6even\fR yields pages 2, 4 and 6 in that order.  \fB6\-1even\fR yields pages 6, 4 and 2 in that order.
+ 
+ The \fBodd\fR qualifier works similarly to the \fBeven\fR.
+ 
+-The page rotation setting can cause pdftk to rotate pages and documents.  Each option sets the page rotation as follows (in degrees): \fBnorth\fR: 0, \fBeast\fR: 90, \fBsouth\fR: 180, \fBwest\fR: 270, \fBleft\fR: -90, \fBright\fR: +90, \fBdown\fR: +180. \fBleft\fR, \fBright\fR, and \fBdown\fR make relative adjustments to a page's rotation.
++The page rotation setting can cause pdftk to rotate pages and documents.  Each option sets the page rotation as follows (in degrees): \fBnorth\fR: 0, \fBeast\fR: 90, \fBsouth\fR: 180, \fBwest\fR: 270, \fBleft\fR: \-90, \fBright\fR: +90, \fBdown\fR: +180. \fBleft\fR, \fBright\fR, and \fBdown\fR make relative adjustments to a page's rotation.
+ 
+ If no arguments are passed to cat, then pdftk combines all input PDFs in the
+ order they were given to create the output.
+@@ -181,43 +181,43 @@ order they were given to create the output.
+ .br
+ * Reference a single page by omitting the ending page number.
+ .br
+-* The handle may be used alone to represent the entire PDF document, e.g., B1-end is the same as B.
++* The handle may be used alone to represent the entire PDF document, e.g., B1\-end is the same as B.
+ .br
+-* You can reference page numbers in reverse order by prefixing them with the letter \fBr\fR. For example, page r1 is the last page of the document, r2 is the next-to-last page of the document, and rend is the first page of the document. You can use this prefix in ranges, too, for example r3-r1 is the last three pages of a PDF.
++* You can reference page numbers in reverse order by prefixing them with the letter \fBr\fR. For example, page r1 is the last page of the document, r2 is the next-to-last page of the document, and rend is the first page of the document. You can use this prefix in ranges, too, for example r3\-r1 is the last three pages of a PDF.
+ 
+ .B Page Range Examples without Handles:
+ .br
+-\fB1-endeast\fR - rotate entire document 90 degrees
++\fB1\-endeast\fR \- rotate entire document 90 degrees
+ .br
+-\fB5 11 20\fR - take single pages from input PDF
++\fB5 11 20\fR \- take single pages from input PDF
+ .br
+-\fB5-25oddwest\fR - take odd pages in range, rotate 90 degrees
++\fB5\-25oddwest\fR \- take odd pages in range, rotate 90 degrees
+ .br
+-\fB6-1\fR - reverse pages in range from input PDF
++\fB6\-1\fR \- reverse pages in range from input PDF
+ 
+ .B Page Range Examples Using Handles:
+ .br
+ Say \fBA=in1.pdf B=in2.pdf\fR, then:
+ .br
+-\fBA1-21\fR - take range from in1.pdf
++\fBA1\-21\fR \- take range from in1.pdf
+ .br
+-\fBBend-1odd\fR - take all odd pages from in2.pdf in reverse order
++\fBBend\-1odd\fR \- take all odd pages from in2.pdf in reverse order
+ .br
+-\fBA72\fR - take a single page from in1.pdf
++\fBA72\fR \- take a single page from in1.pdf
+ .br
+-\fBA1-21 Beven A72\fR - assemble pages from both in1.pdf and in2.pdf
++\fBA1\-21 Beven A72\fR \- assemble pages from both in1.pdf and in2.pdf
+ .br
+-\fBAwest\fR - rotate entire in1.pdf document 90 degrees
++\fBAwest\fR \- rotate entire in1.pdf document 90 degrees
+ .br
+-\fBB\fR - use all of in2.pdf
++\fBB\fR \- use all of in2.pdf
+ .br
+-\fBA2-30evenleft\fR - take the even pages from the range, remove 90 degrees from each page's rotation
++\fBA2\-30evenleft\fR \- take the even pages from the range, remove 90 degrees from each page's rotation
+ .br
+-\fBA A\fR - catenate in1.pdf with in1.pdf
++\fBA A\fR \- catenate in1.pdf with in1.pdf
+ .br
+-\fBAevenwest Aoddeast\fR - apply rotations to even pages, odd pages from in1.pdf
++\fBAevenwest Aoddeast\fR \- apply rotations to even pages, odd pages from in1.pdf
+ .br
+-\fBAwest Bwest Bdown\fR - catenate rotated documents
++\fBAwest Bwest Bdown\fR \- catenate rotated documents
+ .TP
+ .B shuffle [<page ranges>]
+ Collates pages from input PDFs to create a new PDF.  Works like the \fBcat\fR operation except that it takes one page at a time from each page range to assemble the output PDF.  If one range runs out of pages, it continues with the remaining ranges.  Ranges can use all of the features described above for \fBcat\fR, like reverse page ranges, multiple ranges from a single PDF, and page rotation.  This feature was designed to help collate PDF pages after scanning paper documents.
+@@ -236,11 +236,11 @@ pdftk in.pdf burst owner_pw foopass
+ .B rotate [<page ranges>]
+ Takes a single input PDF and rotates just the specified pages.  All other pages remain unchanged.  The page order remains unchaged.  Specify the pages to rotate using the same notation as you would with \fBcat\fR, except you omit the pages that you aren't rotating:
+ 
+-[\fI<begin page number>\fR[\fB-\fR\fI<end page number>\fR[\fI<qualifier>\fR]]][\fI<page rotation>\fR]
++[\fI<begin page number>\fR[\fB\-\fR\fI<end page number>\fR[\fI<qualifier>\fR]]][\fI<page rotation>\fR]
+ 
+ The qualifier can be \fBeven\fR or \fBodd\fR, and the page rotation can be \fBnorth\fR, \fBsouth\fR, \fBeast\fR, \fBwest\fR, \fBleft\fR, \fBright\fR, or \fBdown\fR.
+ 
+-Each option sets the page rotation as follows (in degrees): \fBnorth\fR: 0, \fBeast\fR: 90, \fBsouth\fR: 180, \fBwest\fR: 270, \fBleft\fR: -90, \fBright\fR: +90, \fBdown\fR: +180. \fBleft\fR, \fBright\fR, and \fBdown\fR make relative adjustments to a page's rotation.
++Each option sets the page rotation as follows (in degrees): \fBnorth\fR: 0, \fBeast\fR: 90, \fBsouth\fR: 180, \fBwest\fR: 270, \fBleft\fR: \-90, \fBright\fR: +90, \fBdown\fR: +180. \fBleft\fR, \fBright\fR, and \fBdown\fR make relative adjustments to a page's rotation.
+ 
+ The given order of the pages doesn't change the page order in the output.
+ .TP
+@@ -249,9 +249,9 @@ Reads a single input PDF file and generates an FDF file suitable for \fBfill_for
+ out of it to the given output
+ filename or (if no output is given) to stdout.  Does not create a new PDF.
+ .TP
+-.B fill_form <FDF data filename | XFDF data filename | - | PROMPT>
++.B fill_form <FDF data filename | XFDF data filename | \- | PROMPT>
+ Fills the single input PDF's form fields with the data from an FDF file, XFDF file or stdin. Enter the data filename
+-after \fBfill_form\fR, or use \fB-\fR to pass the data via stdin, like so:
++after \fBfill_form\fR, or use \fB\-\fR to pass the data via stdin, like so:
+ 
+ pdftk form.pdf fill_form data.fdf output form.filled.pdf
+ 
+@@ -265,25 +265,25 @@ then the plain text field data is what you'll see.
+ 
+ Also see the \fBflatten\fR and \fBneed_appearances\fR options.
+ .TP
+-.B background <background PDF filename | - | PROMPT>
++.B background <background PDF filename | \- | PROMPT>
+ Applies a PDF watermark to the background of a single input PDF.  Pass the background PDF's
+ filename after \fBbackground\fR like so:
+ 
+ pdftk in.pdf background back.pdf output out.pdf
+ 
+ Pdftk uses only the first page from the background PDF and applies it to every page of the
+-input PDF.  This page is scaled and rotated as needed to fit the input page.  You can use \fB-\fR
++input PDF.  This page is scaled and rotated as needed to fit the input page.  You can use \fB\-\fR
+ to pass a background PDF into pdftk via stdin.
+ 
+-If the input PDF does not have a transparent background (such as a PDF created from page scans) then the resulting background won't be visible -- use the \fBstamp\fR operation instead.
++If the input PDF does not have a transparent background (such as a PDF created from page scans) then the resulting background won't be visible \- use the \fBstamp\fR operation instead.
+ .TP
+-.B multibackground <background PDF filename | - | PROMPT>
++.B multibackground <background PDF filename | \- | PROMPT>
+ Same as the \fBbackground\fR operation, but applies each page of the background PDF to the corresponding page of the input PDF.  If the input PDF has more pages than the stamp PDF, then the final stamp page is repeated across these remaining pages in the input PDF.
+ .TP
+-.B stamp <stamp PDF filename | - | PROMPT>
++.B stamp <stamp PDF filename | \- | PROMPT>
+ This behaves just like the \fBbackground\fR operation except it overlays the stamp PDF page \fIon top\fR of the input PDF document's pages.  This works best if the stamp PDF page has a transparent background.
+ .TP
+-.B multistamp <stamp PDF filename | - | PROMPT>
++.B multistamp <stamp PDF filename | \- | PROMPT>
+ Same as the \fBstamp\fR operation, but applies each page of the background PDF to the corresponding page of the input PDF.  If the input PDF has more pages than the stamp PDF, then the final stamp page is repeated across these remaining pages in the input PDF.
+ .TP
+ .B dump_data
+@@ -306,7 +306,7 @@ Reads a single input PDF file and reports annotation information to the given ou
+ filename or (if no output is given) to stdout. Non-ASCII characters are encoded
+ as XML numerical entities. Does not create a new PDF.
+ .TP
+-.B update_info <info data filename | - | PROMPT>
++.B update_info <info data filename | \- | PROMPT>
+ Changes the bookmarks and metadata in a single PDF's Info dictionary to match
+ the input data file. The input data file uses the same syntax as the
+ output from \fBdump_data\fR. Non-ASCII characters should be encoded as XML
+@@ -322,7 +322,7 @@ For example:
+ 
+ pdftk in.pdf update_info in.info output out.pdf
+ .TP
+-.B update_info_utf8 <info data filename | - | PROMPT>
++.B update_info_utf8 <info data filename | \- | PROMPT>
+ Same as \fBupdate_info\fR except that the input is encoded as UTF-8.
+ .TP
+ .B attach_files <attachment filenames | PROMPT> [to_page <page number | PROMPT>]
+@@ -345,9 +345,9 @@ or, interactively:
+ pdftk report.pdf unpack_files output PROMPT
+ .RE
+ .TP
+-.B [output <output filename | - | PROMPT>]
++.B [output <output filename | \- | PROMPT>]
+ The output PDF filename may not be set to the name of an input filename. Use
+-\fB-\fR to output to stdout.
++\fB\-\fR to output to stdout.
+ When using the \fBdump_data\fR operation, use \fBoutput\fR to set the name of the
+ output data file. When using the \fBunpack_files\fR operation, use \fBoutput\fR to set
+ the name of an output directory.  When using the \fBburst\fR operation, you can use \fBoutput\fR
+@@ -442,7 +442,7 @@ pdftk A=even.pdf B=odd.pdf shuffle A B output collated.pdf
+ .br
+ or if odd.pdf is in reverse order:
+ .br
+-pdftk A=even.pdf B=odd.pdf shuffle A Bend-1 output collated.pdf
++pdftk A=even.pdf B=odd.pdf shuffle A Bend\-1 output collated.pdf
+ .TP
+ .B Decrypt a PDF
+ pdftk secured.pdf input_pw foopass output unsecured.pdf
+@@ -468,11 +468,11 @@ or (using wildcards):
+ pdftk *.pdf cat output combined.pdf
+ .TP
+ .B Remove page 13 from in1.pdf to create out1.pdf
+-pdftk in.pdf cat 1-12 14-end output out1.pdf
++pdftk in.pdf cat 1\-12 14\-end output out1.pdf
+ .br
+ or:
+ .br
+-pdftk A=in1.pdf cat A1-12 A14-end output out1.pdf
++pdftk A=in1.pdf cat A1\-12 A14\-end output out1.pdf
+ .TP
+ .B Apply 40-bit encryption to output, revoking all permissions (the default).  Set the owner PW to 'foopass'.
+ pdftk 1.pdf 2.pdf cat output 3.pdf encrypt_40bit owner_pw foopass
+@@ -496,10 +496,10 @@ pdftk in.pdf burst owner_pw foopass allow DegradedPrinting
+ pdftk in.pdf dump_data output report.txt
+ .TP
+ .B Rotate the first PDF page to 90 degrees clockwise
+-pdftk in.pdf cat 1east 2-end output out.pdf
++pdftk in.pdf cat 1east 2\-end output out.pdf
+ .TP
+ .B Rotate an entire PDF document to 180 degrees
+-pdftk in.pdf cat 1-endsouth output out.pdf
++pdftk in.pdf cat 1\-endsouth output out.pdf
+ .SH NOTES
+ This is a port of pdftk to java. See
+ .br

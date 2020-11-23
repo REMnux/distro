@@ -1,0 +1,13 @@
+Name = What is this?
+Author = chrisu
+Description = ProcDOT plugin to explain the current node
+Version = 1.0
+Type = ContextMenuItemForGraph
+Architecture = Linux64BitExe
+File = whatisthis
+Priority = 9
+RunHidden = 1
+RunExclusively = 1
+CanOverrideOtherPlugins = 0
+CanOverrideProcdot = 0
+CanBeVerified = 1

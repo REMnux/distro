@@ -1,0 +1,41 @@
+Source: pdftk-java
+Section: text
+Priority: optional
+Maintainer: Johann Felix Soden <johfel@debian.org>
+Build-Depends: debhelper (>= 9),
+               ant,
+               libbcprov-java,
+               libcommons-lang3-java,
+Standards-Version: 4.2.1
+Homepage: https://gitlab.com/pdftk-java/pdftk
+Vcs-Git: https://gitlab.com/johfel/pdftk.git
+Vcs-Browser: https://gitlab.com/johfel/pdftk
+
+Package: pdftk-java
+Architecture: all
+Depends: ${misc:Depends},
+         libbcprov-java,
+         libcommons-lang3-java,
+         default-jre-headless | java8-runtime-headless
+Provides: pdftk
+Replaces: pdftk (<< 2.02-5~)
+Breaks: pdftk (<< 2.02-5~)
+Suggests: xpdf-utils
+Description: pdftk port to java - a tool for manipulating PDF documents
+ If PDF is electronic paper, then PDFtk is an electronic stapler-remover,
+ hole-punch, binder, secret-decoder-ring, and X-Ray-glasses. PDFtk is a
+ simple tool for doing everyday things with PDF documents. Keep one in the
+ top drawer of your desktop and use it to:
+  - Merge PDF documents
+  - Split PDF pages into a new document
+  - Decrypt input as necessary (password required)
+  - Encrypt output as desired
+  - Fill PDF Forms with FDF Data and/or Flatten Forms
+  - Apply a Background Watermark
+  - Report PDF on metrics, including metadata and bookmarks
+  - Update PDF Metadata
+  - Attach Files to PDF Pages or the PDF Document
+  - Unpack PDF Attachments
+  - Burst a PDF document into single pages
+  - Uncompress and re-compress page streams
+  - Repair corrupted PDF (where possible)

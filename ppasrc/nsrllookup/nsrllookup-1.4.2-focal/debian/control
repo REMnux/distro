@@ -1,0 +1,27 @@
+Source: nsrllookup
+Section: utils
+Priority: optional
+Maintainer: Robert J. Hansen <rjh@sixdemonbag.org>
+Build-Depends: cmake,
+               debhelper (>=11~),
+               dh-python,
+               gcc (>=9),
+               libboost-filesystem1.71-dev,
+               libboost-program-options1.71-dev,
+               libboost-system1.71-dev,
+               python3-all
+Standards-Version: 4.1.4
+Homepage: https://rjhansen.github.io/nsrllookup
+X-Python3-Version: >= 3.6
+
+Package: nsrllookup
+Architecture: amd64
+Multi-Arch: foreign
+Depends: libboost-filesystem1.71.0:amd64,
+         libboost-program-options1.71.0:amd64,
+         libboost-system1.71.0:amd64,
+         ${misc:Depends},
+         ${python3:Depends},
+         ${shlibs:Depends}
+Description: fast NSRL RDS lookups
+ Command-line client to interface with an nsrlsvr instance.

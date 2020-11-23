@@ -1,0 +1,3 @@
+version=4
+opts="filenamemangle=s/.*\/archive\/v(\d\S+)\/pdftk.*\.tar/pdftk-java_$1\.tar/g , compression=xz , repack" \
+  https://gitlab.com/pdftk-java/pdftk/tags?sort=updated_desc .*/archive/v(\d\S+)/.*\.tar

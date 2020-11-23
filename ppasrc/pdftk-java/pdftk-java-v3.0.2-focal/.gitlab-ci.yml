@@ -1,0 +1,23 @@
+image: openjdk:11
+
+before_script:
+  - apt-get update -yqq
+  - apt-get install ant ivy -yqq
+
+php-pdftk:
+  stage: test
+  script:
+    - ant -lib /usr/share/java
+    - echo -e '#!/bin/bash\njava -cp' `pwd`'/build/jar/pdftk.jar:'`pwd`'/lib/bcprov-jdk15on-1.51.jar:'`pwd`'/lib/commons-lang3-3.7.jar com.gitlab.pdftk_java.pdftk "$@"' > /usr/bin/pdftk
+    - chmod +x /usr/bin/pdftk
+    - apt-get install phpunit composer -yqq
+    - git clone https://github.com/marcvinyals/php-pdftk
+    - cd php-pdftk
+    - composer install
+    - pdftk --version
+    - phpunit
+
+test:
+  stage: test
+  script:
+    - ant -lib /usr/share/java test

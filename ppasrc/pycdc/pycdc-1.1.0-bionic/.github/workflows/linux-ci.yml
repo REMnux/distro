@@ -1,0 +1,17 @@
+name: Linux-CI
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Configure and Build
+        run: |
+          mkdir build && cd build
+          cmake -DCMAKE_BUILD_TYPE=Debug ..
+          make -j2
+      - name: Test
+        run: |
+          cd build
+          make check

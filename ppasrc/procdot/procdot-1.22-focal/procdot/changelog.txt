@@ -1,0 +1,247 @@
+Build 57 (Version 1.22) --------------------------------------------------------------
+* Fixed: Files without a "create" event can have a "delete" event now (=> new build for procdot2dot)
+* Fixed: Mousewheel working again under Win7
+* Fixed: A crash due to inconsistent rename-objects under specific and rare filtering conditions
+* Changed: Plugins-"Please wait"-dialog now only appears for plugins declared as hidden
+* New: Graph can now also be scrolled and zoomed by keyboard (PgUp, PgDn, PgUp+Ctrl, PgDn+Ctrl, +, -, *)
+
+Build 56 (Version 1.21) --------------------------------------------------------------
+* Changed: Massive tuning regarding Scintilla activities (addresses PCAP plugin performance issues)
+* Changed: Removed plugin engine environment variable PROCDOTPLUGIN_GraphFilePng
+* Changed: Verification-Run for plugins only once per check (instead of twice so far)
+* Changed: Animation mode now "cares" for the proper font-colors in terms of the current frame/animation progress
+* New: TXT-Resultfile for plugins understand "stylesheets" and direct styling of sections now
+* New: License information dialogue via main-menu
+* New: Plugin engine environment variable PROCDOTPLUGIN_ResultIMG to handle image-based results
+* New: Plugin engine environment variable PROCDOTPLUGIN_PluginEngineVersion for version specific plugin features
+* New: Plugin engine environment variable PROCDOTPLUGIN_AnimationMode to indicate if currently in animation mode
+* New: Plugin engine environment variable PROCDOTPLUGIN_AnimationMode_CurrentFrame to provide the current frame number
+* New: Plugin engine environment variable PROCDOTPLUGIN_AnimationMode_CurrentFrame_Timestamp to provide the current frames timestamp as a progressive double
+* New: Plugin engine environment variable PROCDOTPLUGIN_AnimationMode_CurrentFrame_TimestampString to provide the current frames timestamp as it's shown in the GUI
+* New: Plugin engine environment variable PROCDOTPLUGIN_AnimationMode_CurrentFrame_TimestampOriginalString to provide the current frames original timestamp
+* New: Plugin engine environment variable PROCDOTPLUGIN_AnimationMode_CurrentFrame_StatusMessage to provide the current frames status message as shown in the GUI
+* New: Plugin engine environment variable PROCDOTPLUGIN_TempFolder to provide a temp-folder which gets deleted at ProcDOT exit and is easy to exclude through antivirus
+* New: Plugin engine environment variable PROCDOTPLUGIN_HomeFolder to provide ProcDOTs home-folder for plugins to store data/configuration
+* New: Plugin engine environment variable PROCDOTPLUGIN_Preferences to provide ProcDOTs preference file - just for the sake of completeness
+* New: Plugin engine environment variable PROCDOTPLUGIN_CurrentNode_fontcolor to provide (the so far missing) font-color of the current node
+* New: What-is-this? plugin to provide information (general and specific) for specific nodes 
+* New: Brian Maloney's PCAP plugins are now bundled to ProcDOT by default due to their precious enhancement to the tool as a whole => Thx Brian!
+       * Follow TCP Stream
+       * Extract File(s) From Flow
+       * Open Packets in Wireshark
+* New: Server- and File list plugins are bundled to ProcDOT by default
+* Note: Brians Plugins - In case of any issue on those please contact Brian directly! Please find updates to his plugins at his Github.
+
+Build 55 (Version 1.2) ---------------------------------------------------------------
+* Fixed: Plugins are only called if they haven't been deactivated
+* Fixed: No more Linewrapped node-labels
+* Fixed: Dynamic OS-independent autofitting dialogues (most of them)
+* Changed: Updated quick-help
+* Changed: Performance optimizations for builtin text-viewer
+
+Build 54 (Version 1.2 beta 1) --------------------------------------------------------
+
+Build 53 (Version 1.2 alpha)
+* Changed: Better structured GUI layout
+* New: Crossplatform GUI layout engine
+
+Build 52 (Version 1.2 alpha) ---------------------------------------------------------
+* Fixed: Left double-click no more resets zoom after Box-Zoom
+* Fixed: ProcDOT doesn't get "unresponsive" anymore during long plugin runs (but GUI is necessarily disabled)
+* Fixed: Crash when empty graph
+* New: Faster rendering when zoomed into huge graphs (by only drawing visible stuff)
+* New: When an exclusively running plugin takes longer than 1 second to run an according wait-dialog appears
+
+Build 51 (Version 1.2 alpha) ---------------------------------------------------------
+* Fixed: Proper node in context-menu and -plugins during animation
+* Fixed: Switching sessions clears stored zoom for left double-click now
+* Fixed: Some redundant frames in RLE mode
+* Fixed: Updated legend
+* Fixed: (Linux) Progress dialog when generating graphs behaves correctly now
+* Changed: Mousewheel zoom considers graph-size and zooms in 10ths
+* Changed: Zoom-out limit to a minimum of "fit"
+* Changed: No more zoom field in status-bar as not necessary any more
+
+Build 50 (Version 1.2 alpha) ---------------------------------------------------------
+* Fixed: White background of new edge-label-style
+* Fixed: Mouse clicks now do an exact hit in huge graphs
+* Fixed: Proper rename-edge when compressed mode and categorizable file
+* Changed: Vastly improved smart-zoom performance (left double-click)
+* New: Target fontsize for smart-zoom in options (left double-click)
+* New: Hovered nodes smart-zoom
+* New: Box-Zoom when holding Control, Shift, or Alt while pressing left mouse button and draging with mouse
+
+Build 49 (Version 1.2 alpha) ---------------------------------------------------------
+* Changed: For simplification reasons in Windows batch scripting the environment variable PROCDOTPLUGIN_VerificationRun is set to zero for the actual run of a plugin that can be verified
+* Changed: The name of the environment variable CurrentNode_Details_IP-Address has been changed to CurrentNode_Details_IP_Address due to restrictions under Linux (thx to Brian Maloney)
+* Changed: Plugins now will be executed using the plugins-directory as the working directory
+* New: Native rendering
+* New: Option for totally hiding all (so far) unvisited graph-parts during animation
+* New: Left double-click smart-zooms to readable fontsize
+
+Build 48 (Version 1.1) ---------------------------------------------------------
+* Fixed: All special-character scenarios with filters should now be handled consistently
+* New: Enhanced bugreporter
+* New: Thicker edge highlighting
+* New: Added plugin environment variable "PROCDOTPLUGIN_SessionFile" to hold the session-file (.pd)
+* New: Added plugin environment variable "PROCDOTPLUGIN_SessionSavePending" to hold 0/1 for the save-pending info
+* New: Added plugin environment variable "PROCDOTPLUGIN_Path2WindumpExecutable"
+* New: Added plugin environment variable "PROCDOTPLUGIN_Path2DotExecutable"
+* New: Added plugin environment variable "PROCDOTPLUGIN_GraphFileDot4Render" to hold the .dot-file which is/was the basis for rendering
+
+Build 47 (Version 1.1) ---------------------------------------------------------
+* Fixed: Reused TIDs are now matched correctly
+* Fixed: With "Process Start"- and "Thread Create"-events the TID was also added to the new process
+* Fixed: Problems with filter manager and characters like "|" and "="
+* Fixed: The fix in build 46 working for Windows triggered a "PNG not found"-bug under Linux
+* New: Consider "Process Exit"s as edges
+* New: Consider file rename operations as edges
+* New: Edge label modes (find it under options)
+* New: Now "old" processes can also be chosen as launcher
+
+Build 46 (Version 1.1) ---------------------------------------------------------
+* Fixed: Temporary paths/files with included blanks prevent successful execution of dot (thx to Adhityo Seno Aji for reporting)
+
+Build 45 (Version 1.1) ---------------------------------------------------------
+* Changed: Workingfiles in temp-folder have now randomly generated names instead of fixed ones
+* New: Multiple instances of ProcDOT are possible now. However, do not generate graphs in parallel (this behavior may change in a later build, though)!
+* New: Bugreporter - An easy way to create complete bug-reports
+* New: Other TCP/UDP operations are now considered as send (accept is handled as receive)
+* New: Files that have been written by a process and are read by another one tag the according process as relevant
+* New: Registry values being set which look like an executable file (i.e. abc.exe) tag the according process as relevant
+
+Build 44 (Version 1.1) ---------------------------------------------------------
+* Fixed: "'" in paths messed up .dot syntax (thx to bartblaze for reporting)
+* Changed: For better usability compressed mode doesn't compress autostart registry-keys anymore
+* Changed: Some more file extensions have been added to compressed mode
+
+Build 43 (Version 1.1) ---------------------------------------------------------
+* Fixed: Performance issues when generating graphs (depending on the actual content of the procmon logs)
+* New: Plugin path can be modified/specifically set via "pluginspath" keyword in preferences file
+
+Build 42 (Version 1.1) ---------------------------------------------------------
+* Fixed: Crash because of not ignoring Plugins that have been internally deactivated during the initial verification step
+* Fixed: RelevantBecauseOfProcmonLines is now showing the correct linenumber(s)
+* Fixed: Show original timestamp for frames was not stored
+* Fixed: Zeroing of original timestamps
+* New: Full Unicode support (not only replacing UTF-8 characters with "@" as it was done so far, however, the latter is still available by clicking the unicode/ascii button close to the Procmon file selection)
+* New: Logoutput during graph generation (can be expanded/viewed by a click on the "+") specifically for cases with graphs with many nodes where the "dot"-program can take really long to finish
+* New: Graph generation can be cancelled
+* New: Consider current DPI settings
+
+Build 41 (Version 1.1 beta) ----------------------------------------------------
+* Fixed: OnlyInPcap attribute (server nodes) is now correct
+* Fixed: Add filter for IP/Domain sometimes showed wrong caption
+* Fixed: Problems with Scintilla sharing
+* New: Now IP addresses only in PCAP without being a result of an DNS request are shown
+* New: IP addresses only in PCAP are now visually tagged by a cluster
+* New: All timestamps are now treated according to the set option original/nulled
+* New: Automatically loaded/stored layouts now consider the current desktop scenario in terms of desktops/monitors and their actual resolutions
+* New: Short filename to long filename (SFn2LFn) file is now obsolete due to an automation algorithm
+
+Build 40 (Version 1.1 beta) ----------------------------------------------------
+* Fixed: Mainmenuitem plugins were usable though deactivation due to automatical configuration check
+* Fixed: Lots of bugs with listview windows
+* Fixed: Some bugs with dynamic layout engine
+* New: "loads" edges visualize additionally loaded modules besides the
+       "based on" ones (relevant for DLL injection stuff)
+* New: Plugins can now output results in TXT format using the environment
+       variable "PROCDOTPLUGIN_ResultTXT"
+* New: Plugins can now output results in CSV format using the environment
+       variable "PROCDOTPLUGIN_ResultCSV"
+* New: Plugins now also support a "Description" (field)
+* New: Opt-in for update-check also for betas
+
+Build 39 (Version 1.1 beta) ----------------------------------------------------
+* Fixed: Missing IP address in details of servers when no domain is available
+* Fixed: UTF-8 handling (previously saved launchers may need to be re-selected)
+         (thx to Rob Ayers for reporting)
+* Fixed: Some bugs with ListIconRequester control
+* Changed: Add filter window now has its initial focus on the ok button
+* New: Hint markers for seconds and 5 seconds in the timeline
+* New: Option to hide hint markers for seconds and 5 seconds in timeline
+* New: Frame timestamps in the statusbar
+* New: Option to switch frame timestamps between original and zeroed
+* New: Plugin engine
+* New: Plugin manager
+* New: Bitmap exporter
+* New: Session based filters and global filters
+* New: Filter manager
+* New: Manual
+
+Build 32-38 --------------------------------------------------------------------
+Internal dev-builds
+
+Build 31 (Version 1.0) ---------------------------------------------------------
+* Fixed: Order of the file-types in the selection dialog for PCAP or TXT
+         (thx to Rob Ayers for reporting)
+* Changed: Titles of detail windows
+* Changed: "\\" to "\" in path labels
+* Fixed: The current approach of internally converting PCAP to TXT sometimes
+         leads to using an accordingly old TXT file
+         (thx to Rob Ayers for reporting)
+
+Build 30 -----------------------------------------------------------------------
+Internal dev-build
+
+Build 29 -----------------------------------------------------------------------
+* Fixed: Additional columns in Procmon CSVs are ignored now to not fool ProcDOT 
+         anymore - Fixed launcher signature
+         (thx to Rob Ayers for reporting)
+
+Build 28 -----------------------------------------------------------------------
+* Fixed: Additional columns in Procmon CSVs are ignored now to not fool ProcDOT 
+         anymore
+         (thx to Rob Ayers for reporting)
+* New: Added .ico files to category "GRAFX"
+
+Build 27 -----------------------------------------------------------------------
+Internal dev-build
+
+Build 26 -----------------------------------------------------------------------
+* Fixed: LastReadTimes
+* Fixed: Bug with internal relevance-flags when handling injections
+* Fixed: Corrected original linenumbers
+* Fixed: <F1> now works again for displaying the legend window
+* Changed: Removed disabling of filter string gadget
+* Changed: Performance boost for "procmon2dot"
+* Changed: No more sticky windows
+* Changed: Main window state is saved/restored for current desktop resolution
+* New: Render option "Read only files" which let one also display files that are
+  only read. So, ie to detect stealing of data or even loading of DLLs (incl.
+  multistaged). => Of course this produces a lot more noise but also more truth
+  (loaded DLLs, based-on for modules that already existed, etc.) => because of
+  the noise I decided to have this option deactivated by default, so you have to
+  activate it on demand.
+* New: Items in the details dialog can now be epanded or copied to clipboard by
+  a right-click (cell, line, column, table)
+* New: Searchfield for processname in launcher-selection dialog
+
+Build 25 -----------------------------------------------------------------------
+* New: Autorecognition for column-order of Procmon-CSVs
+      (thx to llothsedai for reporting)
+
+Build 24 -----------------------------------------------------------------------
+* Keep main window responsive to Windows messages during execution of component
+  programs
+* Put a border around progress requester
+* Revised zoom algorithms (real 10%-steps)
+* A right doubleclick now fits the graph to the canvas
+* Graphs can now be smaller than the canvas
+* Implemented a caching for zoom steps
+* Created an according message in the improbable case of a crash
+* Fixed a crash based on malformed registry keys
+  (thx to Michal Mistina for reporting and testing)
+
+Build 23 -----------------------------------------------------------------------
+Internal dev-build
+
+Build 22 -----------------------------------------------------------------------
+* Compiler update
+* Better node/name-matching for files being set as registry values
+* Clearing timeline when switching to another session
+* String search (CTRL+F) now also considers detail attributes of nodes
+* New feature RenderOptions to reduce/filter the resulting graph
+* Revised some error messages to be more precise
+* Added Procmon format check to "Refresh" button
+* Put more stuff into readme.txt

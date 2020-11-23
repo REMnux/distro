@@ -1,0 +1,15 @@
+#!/bin/bash
+
+if [ ! `which java` ]; then
+  echo "Java runtime environment is not installed."
+  echo "Please install the 'default-jre' package."
+  echo "Exiting."
+  exit 1
+fi
+
+if [ ! -f /opt/portex/portex_2.10-2.0.9_FAT.jar ]; then
+  echo "Cannot locate the portex jar file. Exiting."
+  exit 2
+fi
+
+java -jar /opt/portex/portex_2.10-2.0.9_FAT.jar ${*}

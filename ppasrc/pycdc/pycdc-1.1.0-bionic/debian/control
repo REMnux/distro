@@ -1,0 +1,13 @@
+Source: pycdc
+Section: utils
+Priority: optional
+Maintainer: REMnux Distribution (https://REMnux.org) <distro@remnux.org>
+Build-Depends: debhelper (>= 8.0.0), cmake, python-minimal
+Standards-Version: 3.9.4
+Homepage: https://github.com/zrax/pycdc
+Vcs-Git: git://github.com/zrax/pycdc.git
+
+Package: pycdc
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: C++ python bytecode disassembler and decompiler

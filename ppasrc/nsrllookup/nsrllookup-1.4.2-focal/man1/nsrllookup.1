@@ -1,0 +1,82 @@
+.Dd September 15, 2019
+.Dt NSRLLOOKUP 1
+.Os
+.Sh NAME
+.Nm nsrllookup
+.Nd command-line interface to NSRL servers
+.Sh SYNOPSIS
+.Nm nsrllookup
+.Op Fl b
+.Op Fl h
+.Op Fl k
+.Op Fl p Ar port
+.Op Fl s Ar server
+.Op Fl u
+.Op Fl v
+.Sh DESCRIPTION
+nsrllookup is a tool for interacting with NSRL query servers,
+supporting version 2 of the NSRL query protocol.
+.Pp
+It is normally used as a filter in a chain of tools, not as
+a standalone program.
+.Pp
+By default it attempts to communicate with a server running on
+.Ic nsrllookup.com
+at port 9120.  This may be overruled with the
+.Ar server
+and
+.Ar port
+arguments.
+.Sh OPTIONS
+.Bl -tag -width Ds
+.It Fl b
+show the URL for the bug tracker
+.It Fl h
+print a summary of nsrllookup usage, then exit
+.It Fl k
+only show matching ("known") files
+.It Fl p Ar port
+specify what port to query on (default: 9120)
+.It Fl s Ar server
+specify an NSRL query server (default:
+.Ic nsrllookup.com
+)
+.It Fl u
+only show non-matching ("unknown") files
+.It Fl v
+show version information
+.El
+.Sh EXAMPLES
+To check
+.Ic FILENAME
+to see if it's listed in NIST's NSRL RDS, querying against the
+publicly-available
+.Ic nsrllookup.com
+server:
+.Pp
+md5sum
+.Ic FILENAME
+| nsrllookup -k
+.Pp
+If the hash is present, the output from md5sum will be
+displayed to standard output: otherwise, it's suppressed.
+.Pp
+To recursively check
+.Ic PATH
+against a query server running on
+.Ic nsrllookup.com
+, writing out all matching files:
+.Pp
+md5deep -r
+.Ic PATH
+| nsrllookup -k
+.Pp
+(Please note that you will need the md5sum and/or md5deep tools installed to use these examples.)
+.Sh SEE ALSO
+nsrlsvr (1)
+.Sh ENCODINGS
+nsrllookup tries to be encoding-agnostic.  The Windows-1252 character set and the Latin-1 subset of UTF-8 are known to work fairly well: UTF-16 is known to sometimes make it blow up.
+.Sh BUGS
+nsrllookup doesn't always play nice with UTF-16.
+.Sh AUTHOR
+Robert J. Hansen <rob@hansen.engineering>

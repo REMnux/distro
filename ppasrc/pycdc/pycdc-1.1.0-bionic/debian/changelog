@@ -1,0 +1,11 @@
+pycdc (1.1.0) bionic; urgency=medium
+
+  * Updated to latest upstream release and for bionic 
+
+ -- REMnux Distribution <distro@remnux.org>  Sun, 28 Jun 2020 14:05:37 -0400
+
+pycdc (1.0.0-1) trusty; urgency=medium
+
+  * Initial Release.
+
+ -- REMnux Distribution (https://REMnux.org) <distro@remnux.org>  Tue, 09 Jun 2015 08:25:16 -0400

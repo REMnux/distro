@@ -1,0 +1,12 @@
+Source: portex
+Section: utils
+Priority: optional
+Maintainer: REMnux Distribution <distro@remnux.org>
+Build-Depends: debhelper (>= 10)
+Standards-Version: 4.1.2
+Homepage: https://github.com/katjahahn/PortEx
+
+Package: portex
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, default-jre
+Description: Statically analyze PE files.

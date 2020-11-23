@@ -1,0 +1,6 @@
+#!/bin/sh -e
+
+
+cd /opt/jd-gui-files; rm -f ./jd-gui.jar; rm -fr ./ext; xdg-desktop-menu uninstall ./*.desktop
+
+

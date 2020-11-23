@@ -1,0 +1,2 @@
+obj-x86_64-linux-gnu/pycdc usr/bin
+obj-x86_64-linux-gnu/pycdas usr/bin
