@@ -1,0 +1,17 @@
+Description: Remove check for fontconfig from configure.
+ Should remove the depends on libfontconfig. This is not needed as long
+ as no pdf2swf is build.
+Author: Christian Welzel <gawain@camlann.de>
+Last-Update: 2012-04-12
+
+--- swftools.orig/configure.in
++++ swftools/configure.in
+@@ -285,7 +285,7 @@
+ 
+ RFX_CHECK_FREETYPE
+ 
+-RFX_CHECK_FONTCONFIG
++# RFX_CHECK_FONTCONFIG
+ 
+ RFX_CHECK_FFTW
+ 

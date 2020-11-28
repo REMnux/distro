@@ -1,0 +1,236 @@
+Description: Add missing m4 macros for autoconf
+ The upstream source tarball misses some m4 macros to rebuild configure.
+ These macros are taken from upstream git repository.
+Author: Christian Welzel <gawain@camlann.de>
+Last-Update: 2012-02-05
+
+--- /dev/null
++++ swftools/m4/fftw.m4
+@@ -0,0 +1,52 @@
++AC_DEFUN([RFX_CHECK_FFTW],
++[
++  OLDCPPFLAGS="${CPPFLAGS}"
++  OLDLIBS="${LIBS}"
++  	
++  AC_CHECK_LIB(fftw3f, fftwf_plan_dft_r2c_2d, [HAVE_LIBFFTW3=1],)
++  AC_CHECK_HEADERS(fftw3.h,[HAVE_FFTW3_H=1])
++  
++  if test "x${HAVE_LIBFFTW3}" != "x";then
++    if test "x${HAVE_FFTW3_H}" != "x";then
++      HAVE_FFTW3=1
++    fi
++  fi
++  
++  if test "x${HAVE_FFTW3}" = "x1"; then 
++    LIBS="$LIBS -lfftw3f"
++    AC_MSG_CHECKING([whether we can compile the fftw3 test program])
++  
++    cat > conftest.c << EOF
++    #include <fftw3.h>
++    
++    int main()
++    {
++	char*data = fftw_malloc(sizeof(fftwf_complex)*600*800);
++    	fftwf_plan plan = fftwf_plan_dft_2d(600, 800, (fftwf_complex*)data, (fftwf_complex*)data, FFTW_FORWARD, FFTW_ESTIMATE);
++	plan = fftwf_plan_dft_r2c_2d(600, 800, (float*)data, (fftwf_complex*)data, FFTW_ESTIMATE);
++	plan = fftwf_plan_dft_c2r_2d(600, 800, (fftwf_complex*)data, (float*)data, FFTW_ESTIMATE);
++    	fftwf_execute(plan);
++    	fftwf_destroy_plan(plan);
++    }
++EOF
++    
++    ac_link='$CC $CPPFLAGS $CFLAGS conftest.c $LDFLAGS $LIBS -o conftest${ac_exeext}'
++    if { (eval echo fftw3.m4:71: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
++      AC_MSG_RESULT(yes)
++      AC_DEFINE([HAVE_FFTW3], [1], [Define if fftw3 is available])
++    else
++      echo "configure: failed program was:" >&5
++      cat conftest.c >&5
++      HAVE_FFTW3=0
++      AC_MSG_RESULT(no)
++    fi
++    rm -f conftest*
++  fi
++  
++  # if the above didn't work out, reset all changes to the compiler variables.
++  if test "x${HAVE_FFTW3}" "!=" "x1"; then 
++      CPPFLAGS=$OLDCPPFLAGS
++      LIBS=$OLDLIBS
++  fi 
++])
++
+--- /dev/null
++++ swftools/m4/lowercase.m4
+@@ -0,0 +1,17 @@
++AC_DEFUN([RFX_CHECK_LOWERCASE_UPPERCASE],
++[
++AC_MSG_CHECKING([whether the filesystem normalizes file names])
++
++echo test1 > __abcdefghijklmnopqrstuvwxyz.txt
++echo test2 > __ABCDEFGHIJKLMNOPQRSTUVWXYZ.txt
++if test `cat __abcdefghijklmnopqrstuvwxyz.txt` = "test2";then
++    AC_MSG_RESULT(yes)
++    AC_DEFINE([LOWERCASE_UPPERCASE], [1], [Define if the file system is case invariant])
++else
++    AC_MSG_RESULT(no)
++fi
++
++rm -f __abcdefghijklmnopqrstuvwxyz.txt
++rm -f __ABCDEFGHIJKLMNOPQRSTUVWXYZ.txt
++])
++
+--- /dev/null
++++ swftools/m4/opengl.m4
+@@ -0,0 +1,55 @@
++AC_DEFUN([RFX_CHECK_OPENGL],
++[
++OLDCPPFLAGS="${CPPFLAGS}"
++OLDLIBS="${LIBS}"
++	
++AC_CHECK_LIB(GL, glBegin)
++AC_CHECK_LIB(GLU, gluBeginSurface)
++AC_CHECK_LIB(glut, glutInit)
++AC_CHECK_HEADERS(GL/gl.h GL/glut.h)
++
++cat > conftest.c << EOF
++#include <GL/gl.h>
++#include <GL/glu.h>
++#include <GL/glut.h>
++
++int main(int argc, char*argv[])
++{
++    glutInit(&argc, argv);
++    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
++    glutInitWindowSize(320,200);
++    glutInitWindowPosition(0,0);
++    glutCreateWindow("main");
++    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
++    glShadeModel(GL_SMOOTH);
++    glEnable (GL_LINE_SMOOTH);
++    glEnable (GL_POLYGON_SMOOTH);
++    glEnable (GL_BLEND);
++    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
++    glHint (GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
++    glHint (GL_POLYGON_SMOOTH_HINT, GL_DONT_CARE);
++}
++EOF
++
++AC_MSG_CHECKING([whether we can compile the opengl test program])
++
++ac_link='$CC $CPPFLAGS $CFLAGS conftest.c $LDFLAGS $LIBS -o conftest${ac_exeext}'
++if { (eval echo opengl.m4:71: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
++    AC_MSG_RESULT(yes)
++    HAVE_OPENGL=1
++    AC_DEFINE([HAVE_OPENGL], [1], [Defined if opengl is available])
++else
++    echo "configure: failed program was:" >&5
++    cat conftest.c >&5
++    HAVE_OPENGL=
++    AC_MSG_RESULT(no)
++fi
++rm -f conftest*
++
++# if the above didn't work out, reset all changes to the compiler variables.
++if test "x${HAVE_OPENGL}" "!=" "x1"; then 
++    CPPFLAGS=$OLDCPPFLAGS
++    LIBS=$OLDLIBS
++fi 
++])
++
+--- /dev/null
++++ swftools/m4/ruby.m4
+@@ -0,0 +1,94 @@
++AC_DEFUN([RFX_CHECK_RUBY],
++[
++AC_PATH_PROG([RUBY], [ruby],,)
++
++RUBY_CPPFLAGS=""
++RUBY_LDFLAGS=""
++RUBY_LIBS=""
++
++rubylib=ruby18
++
++AC_MSG_CHECKING([for ruby's include directory])
++if test "x$RUBY" '!=' "x";then
++    rubyinc=`$RUBY -e 'require "rbconfig";puts Config::expand(Config::CONFIG.send("\x5b\x5d", "archdir"))' 2>/dev/null`
++    if test -d $rubyinc;then
++	AC_MSG_RESULT($rubyinc)
++
++	# If we got a sensible archdir, we also ask ruby to supply us with CPPFLAGS
++	# and LDFLAGS.
++	AC_MSG_CHECKING([for ruby's cpp flags])
++	rubycpp=`$RUBY -e 'require "rbconfig";puts Config::expand(Config::CONFIG.send("\x5b\x5d", "CPPFLAGS"))' 2>/dev/null`
++	AC_MSG_RESULT($rubycpp)
++	
++	AC_MSG_CHECKING([for ruby's ld flags])
++	rubyld=`$RUBY -e 'require "rbconfig";puts Config::expand(Config::CONFIG.send("\x5b\x5d", "LIBRUBYARG_SHARED"))' 2>/dev/null`
++	rubyld2=`$RUBY -e 'require "rbconfig";v=Config::expand(Config::CONFIG.send("\x5b\x5d", "LIBRUBY_LDSHARED"));puts v.gsub(/^g?cc/,"")' 2>/dev/null`
++	AC_MSG_RESULT("$rubyld $rubyld2")
++	
++	AC_MSG_CHECKING([for ruby library name])
++	rubylib=`$RUBY -e 'require "rbconfig";puts Config::expand(Config::CONFIG.send("\x5b\x5d", "RUBY_SO_NAME"))' 2>/dev/null`
++	AC_MSG_RESULT($rubylib)
++	
++	RUBY_CPPFLAGS="$rubycpp -I$rubyinc $RUBY_CPPFLAGS"
++	RUBY_LDFLAGS="$rubyld $rubyld2 $RUBY_LDFLAGS"
++	RUBY_INSTALLDIR="$rubyinc"
++    else
++	AC_MSG_RESULT('unknown')
++    fi
++else
++    AC_MSG_RESULT('unknown')
++fi
++
++#OLDLDFLAGS="$LDFLAGS"
++#LDFLAGS="$LDFLAGS $RUBY_LDFLAGS"
++#AC_CHECK_LIB($rubylib, rb_define_method, HAVE_RUBY_LIB=1,)
++#LDFLAGS="$OLDLDFLAGS"
++
++OLDCPPFLAGS="$CPPFLAGS"
++CPPFLAGS="$CPPFLAGS $RUBY_CPPFLAGS"
++AC_CHECK_HEADERS([ruby.h],[HAVE_RUBY_H=1])
++CPPFLAGS="$OLDCPPFLAGS"
++
++AC_MSG_CHECKING([whether we should compile the ruby module])
++if test "x${HAVE_RUBY_H}" '!=' "x";then
++    #RUBY_LIBS="$RUBY_LIBS -l$rubylib"
++
++    cat > conftest.c << EOF
++#include <ruby.h>
++static VALUE foobar;
++VALUE foobar_set_foo(VALUE module, VALUE _key, VALUE _value)
++{
++    return Qnil;
++}
++int Init_foobar()
++{
++    foobar = rb_define_module("foobar");
++    rb_define_module_function(foobar, "set_foo", foobar_set_foo, 2);
++    return 0;
++}
++int main() {return 0;}
++EOF
++    ac_link='$CC $SHARED $CPPFLAGS $RUBY_CPPFLAGS $CFLAGS conftest.c $LDFLAGS $RUBY_LDFLAGS $LIBS $RUBY_LIBS -o conftest${SLEXT}'
++    if { (eval echo ruby.m4: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${SLEXT}; then
++	RUBY_OK=yes
++    else
++        echo "configure: failed program was:" >&5
++        cat conftest.c >&5
++    fi
++    rm -f conftest*
++fi
++
++if test "x${RUBY_OK}" '=' "xyes"; then 
++    AC_MSG_RESULT([yes])
++    AC_SUBST(RUBY_LIBS)
++    AC_SUBST(RUBY_CPPFLAGS)
++    AC_SUBST(RUBY_LDFLAGS)
++    AC_SUBST(RUBY_INSTALLDIR)
++else
++    AC_MSG_RESULT([no])
++    RUBY_CPPFLAGS=""
++    RUBY_LDFLAGS=""
++    RUBY_LIBS=""
++    RUBY_INSTALLDIR=""
++fi
++])

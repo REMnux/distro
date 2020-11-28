@@ -1,0 +1,88 @@
+# --------------------- init --------------------------
+
+# shells, skripts, tools etc.
+SHELL = @SHELL@
+mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+@SET_MAKE@
+
+# compiling
+DEFS=@DEFS@
+INCLUDES=
+DEP=@CC@ -MM $(DEFS) $(INCLUDES) @CPPFLAGS@
+C=@CC@ -c $(DEFS) $(INCLUDES) @CPPFLAGS@ @CFLAGS@
+CC=@CXX@ -c $(DEFS) $(INCLUDES) @CPPFLAGS@ @CXXFLAGS@
+L=@CC@ $(DEFS)
+LL=@CXX@ $(DEFS)
+AR=@AR@
+LIBTOOL=@LIBTOOL@
+SC=$(LIBTOOL) @CC@ -c $(DEFS) $(INCLUDES) @CPPFLAGS@ @CFLAGS@
+SCC=$(LIBTOOL) @CXX@ -c $(DEFS) $(INCLUDES) @CPPFLAGS@ @CXXFLAGS@
+SL=$(LIBTOOL) --mode=link @CC@ $(DEFS) -rpath $(libdir)
+SLL=$(LIBTOOL) --mode=link @CXX@ $(DEFS) -rpath $(libdir)
+LIBS= @LDFLAGS@ @LIBS@
+CXXLIBS=@CXXLIBS@
+transform = @program_transform_name@
+CPPFLAGS=@CPPFLAGS@
+
+PYTHON_LIB=@PYTHON_LIB@
+PYTHON_INCLUDES=@PYTHON_INCLUDES@
+PYTHON_INSTALL_PATH=@PYTHON_INSTALL_PATH@
+PYTHON_EXECUTABLE=@PYTHON_EXECUTABLE@
+
+RUBY_CPPFLAGS=@RUBY_CPPFLAGS@
+RUBY_LDFLAGS=@RUBY_LDFLAGS@
+RUBY_LIBS=@RUBY_LIBS@
+RUBY_INSTALLDIR=@RUBY_INSTALLDIR@
+
+# libtool stuff
+OBJEXT=@OBJEXT@
+EXEEXT=@EXEEXT@
+AREXT=@AREXT@
+SHARED=@SHARED@
+E=$(EXEEXT)
+O=$(OBJEXT)
+A=$(AREXT)
+SLEXT=@SLEXT@
+ECHO=@ECHO@
+RANLIB=@RANLIB@
+STRIP=@STRIP@
+
+# installing
+LN_S = @LN_S@
+PACKAGE = @PACKAGE@
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+UNINSTALL_DATA = rm -f
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+bindir = @bindir@
+datadir = @datadir@
+libdir = @libdir@
+includedir = @includedir@
+sysconfdir = @sysconfdir@
+pkgdatadir = $(datadir)/@PACKAGE@
+
+# man pages
+mandir = @mandir@
+man1dir = $(mandir)/man1
+
+# ------------------- defines -------------------------
+
+INSTALL_BIN = echo installing $$file to $(bindir);$(INSTALL_PROGRAM) $$file $(bindir)/`echo $$file|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`
+UNINSTALL_BIN = ff=`echo $$file|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`;echo rm -f $(bindir)/$$ff;rm -f $(bindir)/$$ff
+INSTALL_MAN1 = ff=$(srcdir)/$$file.1; inst=`echo $$file | sed '$(transform)'`.1; echo "$(INSTALL_DATA) $$ff $(man1dir)/$$inst"; $(INSTALL_DATA) $$ff $(man1dir)/$$inst
+UNINSTALL_MAN1 = ff=$(srcdir)/$$file.1; inst=`echo $$file | sed '$(transform)'`.1; echo "rm -f $(man1dir)/$$inst"; rm -f $(man1dir)/$$inst
+
+#%.o: %.c
+#	$(C) $< -o $@
+
+#%: %.o
+#	$(L) $< -o $@ ../lib/librfxswf.a $(LIBS) 
+
+#%.o: %.cc
+#	$(CC) -DDATADIR=\"$(pkgdatadir)\" -I../lib -Ittf2pt1 -Ixpdf $< -o $@
+
+# GNU Makefile stuff
+
+.SUFFIXES:

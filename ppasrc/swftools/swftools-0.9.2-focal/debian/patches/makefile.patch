@@ -1,0 +1,22 @@
+## 04-makefile.patch by Simo Kauppi <swk@nic.fi>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: This patch adds the LDFLAGS to linker in Makefile.common.in to pass
+## DP: the -WL,-z defs parameters.
+## DP: This patch also removes the libart from the lib/Makefile.in and
+## DP: src/Makefile.in, because we use the Debian libart instead of the
+## DP: one included in the upstream tar ball.
+
+--- swftools.orig/Makefile.common.in
++++ swftools/Makefile.common.in
+@@ -11,8 +11,8 @@
+ DEP=@CC@ -MM $(DEFS) $(INCLUDES) @CPPFLAGS@
+ C=@CC@ -c $(DEFS) $(INCLUDES) @CPPFLAGS@ @CFLAGS@
+ CC=@CXX@ -c $(DEFS) $(INCLUDES) @CPPFLAGS@ @CXXFLAGS@
+-L=@CC@ $(DEFS)
+-LL=@CXX@ $(DEFS)
++L=@CC@ $(DEFS) $(LDFLAGS)
++LL=@CXX@ $(DEFS) $(LDFLAGS)
+ AR=@AR@
+ LIBTOOL=@LIBTOOL@
+ SC=$(LIBTOOL) @CC@ -c $(DEFS) $(INCLUDES) @CPPFLAGS@ @CFLAGS@

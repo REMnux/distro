@@ -1,0 +1,53 @@
+.TH wav2swf "1" "April 2012" "wav2swf" "swftools"
+.SH NAME
+wav2swf \- convert a WAV file to an SWF animation.
+
+.SH Synopsis
+.B wav2swf [\-o filename] file.wav
+
+.SH DESCRIPTION
+Takes a wav file and converts it to a swf movie.
+
+.SH OPTIONS
+.TP
+\fB\-h\fR, \fB\-\-help\fR 
+    Print short help message and exit
+.TP
+\fB\-V\fR, \fB\-\-version\fR 
+    Print version info and exit
+.TP
+\fB\-o\fR, \fB\-\-output\fR \fIfilename\fR
+    Explicitly specify output file. (Otherwise, output will go to output.swf)
+.TP
+\fB\-r\fR, \fB\-\-framerate\fR \fIfps\fR
+    Set file framerate to \fIfps\fR frames per second.
+.TP
+\fB\-s\fR, \fB\-\-samplerate\fR \fIsps\fR
+    Set samplerate to \fIsps\fR frames per second (default: 11025).
+.TP
+\fB\-d\fR, \fB\-\-definesound\fR 
+    Store the sound as DEFINESOUND tag, not as streaming sound. Allows for
+    looping.
+.TP
+\fB\-l\fR, \fB\-\-loop\fR n
+    Loop the sound n times.
+.TP
+\fB\-C\fR, \fB\-\-cgi\fR 
+    For use as CGI- prepend http header, write to stdout.
+.TP
+\fB\-S\fR, \fB\-\-stop\fR 
+    Stop the movie at frame 0, and start the sound at 1, so that the
+    sound will not play until a "GotoFrame(1)" is issued.
+    (For use with flashsound.js).
+.TP
+\fB\-E\fR, \fB\-\-end\fR 
+    Stop the movie at the end frame
+.TP
+\fB\-b\fR, \fB\-\-bitrate\fR \fIbps\fR
+    Set mp3 bitrate to \fIbps\fR (default: 32)
+.TP
+\fB\-v\fR, \fB\-\-verbose\fR 
+    Be more verbose. (Use more than one -v for greater effect)
+.SH AUTHOR
+
+Matthias Kramm <kramm@quiss.org>

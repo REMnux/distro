@@ -1,0 +1,199 @@
+top_builddir = ..
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+include ../Makefile.common
+
+all: librfxswf$(A) libgfxpdf$(A) libbase$(A) libgfx$(A) libgfxswf$(A)
+
+lame_objects = lame/psymodel.$(O) lame/fft.$(O) lame/newmdct.$(O) lame/quantize.$(O) lame/takehiro.$(O) lame/reservoir.$(O) lame/quantize_pvt.$(O) lame/vbrquantize.$(O) lame/encoder.$(O) lame/id3tag.$(O) lame/version.$(O) lame/tables.$(O) lame/util.$(O) lame/bitstream.$(O) lame/set_get.$(O) lame/VbrTag.$(O) lame/lame.$(O)
+lame_in_source = @lame_in_source@
+
+h263_objects = h.263/dct.$(O) h.263/h263tables.$(O) h.263/swfvideo.$(O)
+
+as12compiler_objects = action/assembler.$(O) action/compile.$(O) action/lex.swf4.$(O) action/lex.swf5.$(O) action/libming.$(O) action/swf4compiler.tab.$(O) action/swf5compiler.tab.$(O) action/actioncompiler.$(O)
+as12compiler_in_source = $(as12compiler_objects)
+
+as3compiler_objects = as3/abc.$(O) as3/pool.$(O) as3/files.$(O) as3/opcodes.$(O) as3/code.$(O) as3/registry.$(O) as3/builtin.$(O) as3/tokenizer.yy.$(O) as3/parser.tab.$(O) as3/scripts.$(O) as3/compiler.$(O) as3/import.$(O) as3/expr.$(O) as3/parser_help.$(O) as3/state.$(O) as3/common.$(O) as3/initcode.$(O) as3/assets.$(O)
+gfxpoly_objects = gfxpoly/active.$(O) gfxpoly/convert.$(O) gfxpoly/poly.$(O) gfxpoly/renderpoly.$(O) gfxpoly/stroke.$(O) gfxpoly/wind.$(O) gfxpoly/xrow.$(O) gfxpoly/moments.$(O)
+
+rfxswf_modules =  modules/swfbits.c modules/swfaction.c modules/swfdump.c modules/swfcgi.c modules/swfbutton.c modules/swftext.c modules/swffont.c modules/swftools.c modules/swfsound.c modules/swfshape.c modules/swfobject.c modules/swfdraw.c modules/swffilter.c modules/swfrender.c h.263/swfvideo.c modules/swfalignzones.c
+
+base_objects=q.$(O) base64.$(O) utf8.$(O) png.$(O) jpeg.$(O) wav.$(O) mp3.$(O) os.$(O) bitio.$(O) log.$(O) mem.$(O) xml.$(O) ttf.$(O) kdtree.$(O) graphcut.$(O)
+devices=devices/dummy.$(O) devices/file.$(O) devices/render.$(O) devices/text.$(O) devices/record.$(O) devices/ops.$(O) devices/polyops.$(O) devices/bbox.$(O) devices/rescale.$(O) @DEVICE_OPENGL@ @DEVICE_PDF@
+filters=filters/alpha.$(O) filters/remove_font_transforms.$(O) filters/one_big_font.$(O) filters/vectors_to_glyphs.$(O) filters/remove_invisible_characters.$(O) filters/flatten.$(O) filters/rescale_images.$(O)
+gfx_objects=gfximage.$(O) gfxtools.$(O) gfxfont.$(O) gfxfilter.$(O) $(devices) $(filters)
+
+rfxswf_objects=modules/swfaction.$(O) modules/swfbits.$(O) modules/swfbutton.$(O) modules/swfcgi.$(O) modules/swfdraw.$(O) modules/swfdump.$(O) modules/swffilter.$(O) modules/swffont.$(O) modules/swfobject.$(O) modules/swfrender.$(O) modules/swfshape.$(O) modules/swfsound.$(O) modules/swftext.$(O) modules/swftools.$(O) modules/swfalignzones.$(O)
+
+%.$(O): %.c 
+	$(C) $< -o $@
+lame/%.$(O): lame/%.c
+	$(C) $< -o $@
+action/%.$(O): action/%.c
+	$(C) $< -o $@
+as3/%.$(O): as3/%.c
+	$(C) $< -o $@
+gfxpoly/%.$(O): gfxpoly/%.c
+	$(C) $< -o $@
+
+bitio.$(O): bitio.c bitio.h
+	$(C) bitio.c -o $@
+drawer.$(O): drawer.c drawer.h
+	$(C) drawer.c -o $@
+q.$(O): q.c q.h $(top_builddir)/config.h
+	$(C) q.c -o $@
+utf8.$(O): utf8.c utf8.h $(top_builddir)/config.h
+	$(C) utf8.c -o $@
+mem.$(O): mem.c mem.h $(top_builddir)/config.h
+	$(C) mem.c -o $@
+png.$(O): png.c png.h $(top_builddir)/config.h
+	$(C) png.c -o $@
+jpeg.$(O): jpeg.c jpeg.h $(top_builddir)/config.h
+	$(C) jpeg.c -o $@
+mp3.$(O): mp3.c mp3.h $(top_builddir)/config.h
+	$(C) mp3.c -o $@
+wav.$(O): wav.c wav.h $(top_builddir)/config.h
+	$(C) wav.c -o $@
+xml.$(O): xml.c xml.h bitio.h
+	$(C) xml.c -o $@
+graphcut.$(O): graphcut.c graphcut.h
+	$(C) graphcut.c -o $@
+ttf.$(O): ttf.c ttf.h
+	$(C) ttf.c -o $@
+os.$(O): os.c os.h $(top_builddir)/config.h
+	$(C) -DSWFTOOLS_DATADIR=\"$(pkgdatadir)\" os.c -o $@
+modules/swfaction.$(O): modules/swfaction.c rfxswf.h
+	$(C) modules/swfaction.c -o $@
+modules/swfbits.$(O): modules/swfbits.c rfxswf.h
+	$(C) modules/swfbits.c -o $@
+modules/swfbutton.$(O): modules/swfbutton.c rfxswf.h
+	$(C) modules/swfbutton.c -o $@
+modules/swfcgi.$(O): modules/swfcgi.c rfxswf.h
+	$(C) modules/swfcgi.c -o $@
+modules/swfdraw.$(O): modules/swfdraw.c rfxswf.h
+	$(C) modules/swfdraw.c -o $@
+modules/swfdump.$(O): modules/swfdump.c rfxswf.h
+	$(C) modules/swfdump.c -o $@
+modules/swffilter.$(O): modules/swffilter.c rfxswf.h
+	$(C) modules/swffilter.c -o $@
+modules/swfalignzones.$(O): modules/swfalignzones.c rfxswf.h
+	$(C) modules/swfalignzones.c -o $@
+modules/swffont.$(O): modules/swffont.c rfxswf.h
+	$(C) modules/swffont.c -o $@
+modules/swfobject.$(O): modules/swfobject.c rfxswf.h
+	$(C) modules/swfobject.c -o $@
+modules/swfrender.$(O): modules/swfrender.c rfxswf.h
+	$(C) modules/swfrender.c -o $@
+modules/swfshape.$(O): modules/swfshape.c rfxswf.h
+	$(C) modules/swfshape.c -o $@
+modules/swfsound.$(O): modules/swfsound.c rfxswf.h
+	$(C) modules/swfsound.c -o $@
+modules/swftext.$(O): modules/swftext.c rfxswf.h
+	$(C) modules/swftext.c -o $@
+modules/swftools.$(O): modules/swftools.c rfxswf.h
+	$(C) modules/swftools.c -o $@
+gfximage.$(O): gfximage.c gfximage.h gfxdevice.h $(top_builddir)/config.h
+	$(C) gfximage.c -o $@
+gfxtools.$(O): gfxtools.c gfxtools.h $(top_builddir)/config.h
+	$(C) gfxtools.c -o $@
+gfxfont.$(O): gfxfont.c gfxfont.h ttf.h $(top_builddir)/config.h
+	$(C) gfxfont.c -o $@
+gfxfilter.$(O): gfxfilter.c gfxfilter.h ttf.h $(top_builddir)/config.h
+	$(C) gfxfilter.c -o $@
+gfxwindow.$(O): gfxwindow_win32.c gfxwindow_unix.c gfxwindow.c gfxwindow.h
+	$(C) gfxwindow.c -o $@
+
+log.$(O): log.c log.h
+	$(C) log.c -o $@
+
+rfxswf.$(O): rfxswf.c rfxswf.h drawer.h bitio.h log.h $(top_builddir)/config.h
+	$(C) rfxswf.c -o $@
+
+#$(as12compiler_objects):
+#	cd action;$(MAKE) all;cd ..
+
+h.263/dct.$(O):  h.263/dct.c h.263/dct.h
+	$(C) h.263/dct.c -o h.263/dct.$(O)
+h.263/h263tables.$(O): h.263/h263tables.c h.263/h263tables.h
+	$(C) h.263/h263tables.c -o h.263/h263tables.$(O)
+h.263/swfvideo.$(O): h.263/swfvideo.c h.263/h263tables.h h.263/dct.h
+	$(C) h.263/swfvideo.c -o h.263/swfvideo.$(O)
+
+devices/swf.$(O):  devices/swf.c devices/swf.h
+	$(C) devices/swf.c -o devices/swf.$(O)
+devices/file.$(O):  devices/file.c devices/file.h
+	$(C) devices/file.c -o devices/file.$(O)
+devices/dummy.$(O):  devices/dummy.c devices/dummy.h
+	$(C) devices/dummy.c -o devices/dummy.$(O)
+devices/render.$(O):  devices/render.c devices/render.h
+	$(C) devices/render.c -o devices/render.$(O)
+devices/opengl.$(O):  devices/opengl.c devices/opengl.h
+	$(C) devices/opengl.c -o devices/opengl.$(O)
+devices/polyops.$(O):  devices/polyops.c devices/polyops.h gfxpoly.h
+	$(C) devices/polyops.c -o devices/polyops.$(O)
+devices/record.$(O):  devices/record.c devices/record.h
+	$(C) devices/record.c -o devices/record.$(O)
+devices/text.$(O):  devices/text.c devices/text.h
+	$(C) devices/text.c -o devices/text.$(O)
+devices/ops.$(O):  devices/ops.c devices/ops.h
+	$(C) devices/ops.c -o devices/ops.$(O)
+devices/rescale.$(O):  devices/rescale.c devices/rescale.h
+	$(C) devices/rescale.c -o devices/rescale.$(O)
+devices/bbox.$(O):  devices/bbox.c devices/bbox.h
+	$(C) devices/bbox.c -o devices/bbox.$(O)
+devices/lrf.$(O):  devices/lrf.c devices/lrf.h
+	$(C) devices/lrf.c -o devices/lrf.$(O)
+
+filters/alpha.$(O): filters/alpha.c gfxfilter.h
+	$(C) filters/alpha.c -o filters/alpha.$(O)
+filters/flatten.$(O): filters/flatten.c gfxfilter.h
+	$(C) filters/flatten.c -o filters/flatten.$(O)
+filters/remove_font_transform.$(O): filters/remove_font_transform.c gfxfilter.h
+	$(C) filters/remove_font_transform.c -o filters/remove_font_transform.$(O)
+filters/remove_invisible_characters.$(O): filters/remove_invisible_characters.c gfxfilter.h
+	$(C) filters/remove_invisible_characters.c -o filters/remove_invisible_characters.$(O)
+filters/rescale_images.$(O): filters/rescale_images.c gfxfilter.h
+	$(C) filters/rescale_images.c -o filters/rescale_images.$(O)
+
+readers/swf2.$(O): readers/swf.c readers/swf.h
+	$(C) readers/swf.c -o readers/swf2.$(O)
+readers/image.$(O): readers/image.c readers/image.h
+	$(C) readers/image.c -o readers/image.$(O)
+
+libbase$(A): $(base_objects) Makefile
+	rm -f libbase$(A)
+	$(AR) r libbase$(A) $(base_objects)
+	$(RANLIB) libbase$(A)
+
+libgfxswf$(A): devices/swf.$(O) readers/swf2.$(O) readers/image.$(O)
+	rm -f libgfxswf$(A)
+	$(AR) r libgfxswf$(A) devices/swf.$(O) readers/swf2.$(O) readers/image.$(O)
+	$(RANLIB) libgfxswf$(A)
+
+libgfx$(A): $(gfx_objects) $(gfxpoly_objects) Makefile
+	rm -f libgfx$(A)
+	$(AR) r libgfx$(A) $(gfx_objects) $(gfxpoly_objects)
+	$(RANLIB) libgfx$(A)
+
+librfxswf$(A): Makefile $(rfxswf_objects) rfxswf.$(O) drawer.$(O) $(lame_in_source) $(h263_objects) $(as12compiler_in_source) $(as3compiler_objects) Makefile
+	rm -f librfxswf$(A)
+	$(AR) r librfxswf$(A) $(rfxswf_objects) rfxswf.$(O) drawer.$(O) $(lame_in_source) $(h263_objects) $(as12compiler_in_source) $(as3compiler_objects)
+	$(RANLIB) librfxswf$(A)
+
+libgfxpdf$(A): pdf/VectorGraphicOutputDev.cc pdf/VectorGraphicOutputDev.h pdf/pdf.cc pdf/pdf.h
+	cd pdf;$(MAKE) libgfxpdf
+
+tests: png.test.c
+	$(L) png.test.c -o png.test $(LIBS)
+
+install:
+uninstall:
+
+clean: 
+	rm -f *.o *.obj *.lo *.a *.lib *.la gmon.out
+	for dir in modules filters devices swf as3 readers art h.263 gfxpoly;do rm -f $$dir/*.o $$dir/*.obj $$dir/*.lo $$dir/*.a $$dir/*.lib $$dir/*.la $$dir/gmon.out;done
+	cd lame && $(MAKE) clean && cd .. || true
+	cd action && $(MAKE) clean && cd ..
+	cd python && $(MAKE) clean && cd ..
+	cd pdf && $(MAKE) clean && cd ..
+

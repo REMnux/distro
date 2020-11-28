@@ -1,0 +1,631 @@
+dnl Process this file with autoconf to produce a configure script.
+
+dnl old autoconf
+AC_INIT(src/)
+
+dnl new autoconf
+dnl AC_INIT
+dnl AC_CONFIG_SRCDIR([src/])
+
+# ------------------- option parsing -------------------------------
+
+DEBUG=
+CHECKMEM=
+PROFILING=
+ENABLE_WARNINGS=
+OPTIMIZE=
+USE_POPPLER=
+DISABLE_LAME=
+
+AC_ARG_ENABLE(checkmem,
+[  --enable-checkmem       turn on ccmalloc debugging], CHECKMEM=true)
+AC_ARG_ENABLE(debug,
+[  --enable-debug          turn on debugging], DEBUG=true)
+AC_ARG_ENABLE(profiling,
+[  --enable-profiling      turn on profiling], PROFILING=true)
+AC_ARG_ENABLE(warnings,
+[  --enable-warnings	   turn on compiler warnings], ENABLE_WARNINGS=true)
+AC_ARG_ENABLE(optimizations,
+[  --enable-optimizations  turn on compiler optimizations (recommended for avi2swf)], OPTIMIZE=true)
+AC_ARG_ENABLE(poppler,
+[  --enable-poppler       link againist libpoppler], USE_POPPLER=true)
+AC_ARG_ENABLE(lame,
+[  --disable-lame          "don't compile any L.A.M.E. mp3 encoding code in"],
+
+if test "x$enable_lame" = "xno";then
+    DISABLE_LAME=yes
+fi,DISABLE_LAME=)
+
+PACKAGE=swftools
+VERSION=0.9.2+git20130725
+
+# ------------------------------------------------------------------
+
+if test "x${srcdir}" != "x."; then
+    echo "--srcdir is not supported"
+    exit 1
+fi
+
+WARNINGS="-Wimplicit -Wreturn-type -Wno-write-strings -Wformat"
+if test "x$ENABLE_WARNINGS" '!=' "x";then
+    WARNINGS="-Wall -Wno-unused -Wno-format -Wno-redundant-decls -Wno-write-strings -D_FORTIFY_SOURCE=2 "
+fi
+
+if test "x$CHECKMEM" '!=' "x";then
+    DEBUG=yes
+fi
+if test "x$PROFILING" '!=' "x";then
+    DEBUG=yes
+fi
+if test "x$DEBUG" '!=' "x";then
+    if test "x$PROFILING" = "x";then
+        CFLAGS="$WARNINGS -O2 -g $CFLAGS"
+        CXXFLAGS="$WARNINGS -O2 -g $CXXFLAGS"
+        LDFLAGS="-g $LDFLAGS"
+    else
+        CFLAGS="$WARNINGS -O2 -g -pg $CFLAGS"
+        CXXFLAGS="$WARNINGS -O2 -g -pg $CXXFLAGS"
+        LDFLAGS="-g -pg $LDFLAGS"
+    fi
+else if test "x$OPTIMIZE" '!=' "x"; then
+    CFLAGS="$WARNINGS -O3 -fomit-frame-pointer -Winline $CFLAGS"
+    CXXFLAGS="$WARNINGS -O3 -fomit-frame-pointer -Winline $CXXFLAGS"
+else
+    CFLAGS="$WARNINGS -O -fomit-frame-pointer $CFLAGS"
+    CXXFLAGS="$WARNINGS -O -fomit-frame-pointer $CXXFLAGS"
+fi
+fi
+
+CFLAGS="-fPIC $CFLAGS"
+CXXFLAGS="-fPIC $CFLAGS"
+
+#OLDGCC=1
+#if test "x$OLDGCC" '!=' "x";then
+#     #CFLAGS="$CFLAGS --std=c89 -ansi -pendantic"
+#     #CXXFLAGS="$CXXFLAGS --std=c89 -ansi -pendantic"
+#     CFLAGS="$CFLAGS -ansi -pendantic"
+#     CXXFLAGS="$CXXFLAGS -ansi -pendantic"
+#fi
+
+export PACKAGE VERSION CFLAGS CXXFLAGS
+
+dnl Checks for programs.
+
+AC_CANONICAL_HOST
+
+SLEXT="so"
+SHARED="-shared"
+MACOSX=
+case $host_os in
+    *darwin* ) 
+	MACOSX=yes
+	CFLAGS="$CFLAGS"
+	CXXFLAGS="$CXXFLAGS -fno-rtti"
+	SHARED="-bundle"
+	SLEXT="bundle"
+	if test -d /opt/local/include && test -d /opt/local/lib; then
+	    CPPFLAGS="${CPPFLAGS} -I/opt/local/include"
+	    LDFLAGS="${LDFLAGS} -L/opt/local/lib"
+	fi
+	# Use fink packages if available.
+	#if test -d /sw/include && test -d /sw/lib; then
+	#    CPPFLAGS="${CPPFLAGS} -I/sw/include"
+	#    LDFLAGS="${LDFLAGS} -L/sw/lib"
+	#fi
+	;;
+esac
+
+AC_SUBST(SHARED)
+
+dnl Checks for programs.
+ AC_PROG_CC
+ AC_PROG_CXX
+
+
+RFX_CHECK_OLDGCC
+
+if test "x$GCC_IS_OK" '=' "x";then
+    echo "***************************************************"
+    echo "* Your gcc is too old to compile this!"
+    echo "* "
+    echo "* The last version compileable by this compiler is "
+    echo "* swftools 0.7.0, which you can download from "
+    echo "* http://www.swftools.org/swftools-0.7.0.tar.gz "
+    echo "* ."
+    echo "* Newer versions require at least gcc 3.0.0 "
+    echo "***************************************************"
+    exit 1
+fi
+    
+if test "x$CHECKMEM" '!=' "x";then
+    CC="ccmalloc $CC"
+    CXX="ccmalloc $CXX"
+    #echo running again
+    #unset ac_cv_prog_CC
+    #unset ac_cv_prog_CXX
+    #AC_PROG_CC
+    #AC_PROG_CXX
+fi
+ AC_PROG_CPP
+
+ AC_PROG_RANLIB
+ AC_PROG_MAKE_SET
+ AC_PROG_INSTALL
+ AC_PROG_LN_S
+ AC_CHECK_PROGS(UNCOMPRESS, gzip uncompress compress, )
+
+dnl PKG_PROG_PKG_CONFIG
+
+dnl Checks for system services
+OBJEXT="o"
+AREXT=".a"
+CXXLIBS="-lstdc++"
+
+AC_EXEEXT
+
+if test "x$EXEEXT" = "x.exe";then
+    OBJEXT="obj"
+    AREXT=".lib"
+    CXXLIBS=""
+fi
+AC_SUBST(OBJEXT)
+AC_SUBST(AREXT)
+
+RFX_CHECK_MING
+
+if test "x${MINGW}" != "xyes"; then
+    # no mingW
+    AC_DEFINE([O_BINARY], [0], [Not defined on mingw])
+else
+    # mingW
+    SLEXT="dll"
+    CXXLIBS=""
+fi
+export SLEXT
+AC_SUBST(SLEXT)
+AC_SUBST(CXXLIBS)
+
+# The following tries to make use of includes and libraries in
+# /usr/local, too. Notice: A -I/usr/local/include might break
+# things (MingW, cross-compiling etc.) in the same way as -I/usr/include, 
+# especially on systems which link /usr/local to /usr, so it has yet
+# to be seen how useful this is.
+if test -d /usr/local/lib; then
+    LDFLAGS="$LDFLAGS -L/usr/local/lib"
+fi
+if test -d /usr/local/include; then
+# Leave that alone. It's causing trouble e.g. with gcc 3.2 on gentoo.
+#   CPPFLAGS="$CPPFLAGS -I/usr/local/include"
+    echo > /dev/null
+fi
+if test "$prefix" != "NONE" -a "$prefix" != "/usr/local" -a "$prefix" != "/usr/local/"; then
+    # if the user has a special prefix (like /opt), there might also be $prefix/lib
+    # and $prefix/include, which should be included in our search paths for libraries
+    # and includes.
+    LDFLAGS="$LDFLAGS -L${libdir}"
+    CPPFLAGS="$CPPFLAGS -I${includedir}"
+    # TODO- test whether gcc still works after this
+fi
+
+#Mac OS:
+#LDFLAGS "-L/sw/lib" ; CPPFLAGS "-I/sw/include -I/sw/include/lame"
+
+
+# this must be done after (I believe) AC_PROG_MAKE_SET
+if test "x$DEBUG" '!=' "x" -o "x$STRIP" = "x";then
+    if test "$MACOSX";then
+	STRIP=dsymutil
+    else
+	STRIP="@echo debug enabled, not stripping "
+    fi
+    export STRIP
+    AC_SUBST(STRIP)
+fi
+
+dnl Checks for libraries.
+ AC_CHECK_LIB(m, sin,, 
+ echo "Error: Math library not found.";
+ exit;
+ )
+ AC_CHECK_LIB(z, deflate,, ZLIBMISSING=true)
+
+if test "x$ZLIBMISSING" = "xtrue";then
+    echo 
+    echo "ERROR:"
+    echo "You need zlib to compile swftools"
+    echo
+    exit
+fi
+
+AC_CHECK_LIB(pdf, PDF_open_file,, PDFLIBMISSING=true)
+AC_CHECK_LIB(jpeg, jpeg_write_raw_data,, JPEGLIBMISSING=true)
+AC_CHECK_LIB(ungif, DGifOpen,, UNGIFMISSING=true)
+if test "$UNGIFMISSING";then
+    UNGIFMISSING=
+    AC_CHECK_LIB(gif, DGifOpen,, UNGIFMISSING=true)
+fi
+AC_CHECK_LIB(zzip, zzip_file_open,, ZZIPMISSING=true)
+
+RFX_CHECK_BYTEORDER
+AC_SUBST(WORDS_BIGENDIAN)
+RFX_CHECK_SYSTEM_BACKTICKS
+AC_SUBST(SYSTEM_BACKTICKS)
+
+AC_ARG_PROGRAM
+
+dnl Checks for header files.
+ AC_CONFIG_HEADER(config.h)
+ AC_HEADER_DIRENT
+ AC_HEADER_STDC
+
+ AC_CHECK_HEADERS(zlib.h gif_lib.h io.h jpeglib.h assert.h signal.h pthread.h sys/stat.h sys/mman.h sys/types.h dirent.h sys/bsdtypes.h sys/ndir.h sys/dir.h ndir.h time.h sys/time.h sys/resource.h pdflib.h zzip/lib.h)
+
+AC_DEFINE_UNQUOTED([PACKAGE], ["$PACKAGE"], [Name of package])
+AC_DEFINE_UNQUOTED([VERSION], ["$VERSION"], [Version number of package])
+AC_SUBST(PACKAGE)
+AC_SUBST(VERSION)
+
+AC_SUBST(HAVE_UNISTD_H)
+AC_SUBST(EXEEXT)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+ AC_C_CONST
+ AC_C_INLINE
+ AC_TYPE_OFF_T
+ AC_TYPE_SIZE_T
+ AC_STRUCT_TM
+ AC_CHECK_TYPE(boolean,int) #needed for jpeglib
+ AC_CHECK_FUNCS(popen mkstemp stat mmap lrand48 rand srand48 srand bcopy bzero time getrusage mallinfo open64 calloc)
+
+AC_CHECK_SIZEOF([signed char])
+AC_CHECK_SIZEOF([signed short])
+AC_CHECK_SIZEOF([signed])
+AC_CHECK_SIZEOF([signed long long])
+AC_CHECK_SIZEOF([void*])
+
+RFX_CHECK_FREETYPE
+
+RFX_CHECK_FONTCONFIG
+
+RFX_CHECK_FFTW
+
+# RFX_CHECK_OPENGL
+# if test "$HAVE_OPENGL";then
+#     DEVICE_OPENGL='devices/opengl.$(O)'
+#     AC_SUBST(DEVICE_OPENGL)
+# fi
+AC_SUBST(DEVICE_OPENGL)
+
+lame_in_source= 
+lame_makefile=
+if test "x${DISABLE_LAME}" = "xtrue"; then
+    echo "*" Disabling lame support...
+else
+    # old lame code at lib/lame
+    if test -f lib/lame/Makefile.in; then
+	lame_in_source='$(lame_objects)'
+	lame_makefile="lib/lame/Makefile"
+	CPPFLAGS="$CPPFLAGS -Ilame -Ilib/lame"
+	AC_DEFINE([HAVE_LAME], [1], [have/use internal l.a.m.e. mp3 library])
+    else
+	if test -d /usr/include/lame; then
+	    CPPFLAGS="$CPPFLAGS -I /usr/include/lame"
+	else
+	    if test -d /usr/local/include/lame; then
+		CPPFLAGS="$CPPFLAGS -I /usr/local/include/lame"
+	    fi
+	fi
+	AC_CHECK_LIB(mp3lame, lame_init,, NO_LIBMP3LAME=1)
+        HASLAMEHEADER=
+	AC_CHECK_HEADERS(lame.h,HASLAMEHEADER=1)
+	if test "x$NO_LIBMP3LAME" "!=" "x1" -a "x$HASLAMEHEADER" '!=' "x";then
+	    AC_DEFINE([HAVE_LAME], [1])
+	fi
+    fi
+fi
+AC_SUBST(lame_in_source)
+
+xpdf_in_source=
+splash_in_source=
+xpdf_include=
+
+if test "x$USE_POPPLER" = "xtrue"; then
+    AC_DEFINE([HAVE_POPPLER],[1],[use poppler])
+    #PKG_CHECK_MODULES([POPPLER],[poppler poppler-splash],,[poppler_pkgconfig=no])
+    if test "x$poppler_pkgconfig" = "xno"; then
+        AC_LANG_PUSH([C++])
+        AC_CHECK_HEADERS([OutputDev.h],[
+           AC_CHECK_LIB([poppler],[main],,[])
+        ],[AC_MSG_ERROR([No poppler library found. This library is required.])])
+        AC_LANG_POP
+    else
+        CPPFLAGS="$CPPFLAGS $POPPLER_CFLAGS"
+        LIBS="$LIBS $POPPLER_LIBS"
+        AC_DEFINE([HAVE_POPPLER], [1])
+    fi
+else
+    splash_in_source='$(splash_objects)'
+    xpdf_in_source='$(xpdf_objects)'
+    xpdf_include=' -I xpdf '
+fi
+
+AC_SUBST([xpdf_in_source])
+AC_SUBST([splash_in_source])
+AC_SUBST([xpdf_include])
+
+# ------------------------------------------------------------------
+
+RFX_CHECK_LOWERCASE_UPPERCASE
+RFX_CHECK_AVI2SWF
+if test "x${AVIFILE}" = "xtrue"; then
+    VIDEO_LIBS="$VIDEO_LIBS $AVIFILE_LIBS"
+    VIDEO_CFLAGS="$VIDEO_CFLAGS $AVIFILE_CFLAGS"
+    AC_DEFINE([HAVE_AVIFILE], [1], [Define if avifile is present])
+fi
+
+if test "x${WIN32}" != "x"; then
+    #AC_CHECK_LIB(avifil32, AVIFileInit,AVIFIL32=true)
+    #if test "x${AVIFIL32}" != "x"; then
+    #  VIDEO_LIBS="$VIDEO_LIBS -lavifil32"
+    #fi
+    VIDEO_LIBS="$VIDEO_LIBS -lavifil32"
+    AVIFIL32=true
+fi
+
+AC_SUBST(VIDEO_LIBS)
+AC_SUBST(VIDEO_CFLAGS)
+# ------------------------------------------------------------------
+
+if test "x${UNCOMPRESS}" = "xgzip"; then
+    AC_DEFINE([USE_GZIP], [1], [Define if gzip is present])
+fi
+AC_SUBST(USE_GZIP)
+
+# ------------------------------------------------------------------
+
+RFX_CHECK_RUBY
+
+if test "x$RUBY_OK" '!=' "xyes";then
+    if test -d "lib/ruby/";then
+	echo all install uninstall clean: > lib/ruby/Makefile
+    fi
+    # fail silently- the most users won't have any need for the
+    # ruby interface anyway
+else
+    if test -f "lib/ruby/Makefile.in";then
+	rubygfx="lib/ruby/Makefile"
+    fi
+fi
+
+# ------------------------------------------------------------------
+
+AC_MSG_CHECKING([for missing libraries])
+
+if test "x$ZLIBMISSING" = "xtrue";then
+    MISSINGLIBS="${MISSINGLIBS} zlib"
+    DISABLEPNG2SWF=true
+    PARTIAL=true
+fi
+if test "x$JPEGLIBMISSING" = "xtrue";then
+    MISSINGLIBS="${MISSINGLIBS} jpeglib"
+    DISABLEPDF2SWF=true
+    DISABLEJPEG2SWF=true
+    PARTIAL=true
+fi
+if test "x$PDFLIBMISSING" = "xtrue";then
+    DISABLEPDF2PDF=true;
+fi
+#if test "x$T1LIBMISSING" = "xtrue";then
+#    MISSINGLIBS="${MISSINGLIBS} t1lib"
+#fi
+if test "x$UNGIFMISSING" = "xtrue";then
+    DISABLEGIF2SWF=true
+    MISSINGLIBS="${MISSINGLIBS} ungif"
+    PARTIAL=true
+fi
+
+if test "x${ac_cv_header_pdflib_h}" '!=' "xyes";then
+    DISABLEPDF2PDF=true;
+fi
+if test "x${ac_cv_header_jpeglib_h}" '!=' "xyes"; then
+    DISABLEPDF2SWF=true;
+    DISABLEJPEG2SWF=true;
+    MISSINGLIBS="${MISSINGLIBS} jpeglib.h"
+    PARTIAL=true
+fi
+if test "x$HAVE_FREETYPE" '!=' "x1"; then
+    DISABLEPDF2SWF=true;
+    MISSINGLIBS="${MISSINGLIBS} freetype"
+    PARTIAL=true
+fi
+#if test "x${ac_cv_header_t1lib_h}" '!=' "xyes"; then
+#    MISSINGLIBS="${MISSINGLIBS} t1lib.h"
+#fi
+if test "x${ac_cv_header_gif_lib_h}" '!=' "xyes"; then
+    DISABLEGIF2SWF=true
+    MISSINGLIBS="${MISSINGLIBS} gif_lib.h"
+    PARTIAL=true
+fi
+if test "x${ac_cv_header_zlib_h}" '!=' "xyes"; then
+    DISABLEPNG2SWF=true;
+    MISSINGLIBS="${MISSINGLIBS} zlib.h"
+    PARTIAL=true
+fi
+#if test "x${AVIFILE}" '!=' "xtrue" -a "x${AVIFIL32}" '!=' "xtrue"; then
+#    MISSINGLIBS="${MISSINGLIBS} avifile"
+#fi
+
+AC_MSG_RESULT(${MISSINGLIBS})
+
+# ------------------------------------------------------------------
+
+RFX_CHECK_PYTHON
+
+if test "x$PYTHON_OK" '!=' "xyes" -o "$DISABLEPDF2SWF";then
+    echo all install uninstall clean: > lib/python/Makefile
+    # fail silently- the most users won't have any need for the
+    # python interface anyway
+else
+    pythongfx="lib/python/Makefile"
+fi
+
+# ------------------------------------------------------------------
+
+if test "x${MISSINGLIBS}" '!=' "x"; then
+  echo "***************************************************"
+  echo "* The following headers/libraries are missing: " ${MISSINGLIBS}
+fi
+
+avi2swf="avi2swf/Makefile"
+if test "x${AVIFILE}" '!=' "xtrue" -a "x${AVIFIL32}" '!=' "xtrue"; then
+ #don't whine, avi2swf is outdated anyway
+ #echo "* Disabling avi2swf tool..."
+ echo all install uninstall clean: > avi2swf/Makefile
+ avi2swf=
+fi
+
+pdf2swf_makefile="lib/pdf/Makefile"
+PDF2SWF='pdf2swf$(E)'
+LIBPDF='libpdf$(A)'
+
+if test "x${DISABLEPDF2SWF}" = "xtrue"; then
+  echo "* Disabling pdf2swf tool..."
+  rm -f lib/pdf/Makefile
+  echo all install uninstall clean libpdf libgfxpdf: > lib/pdf/Makefile
+  pdf2swf_makefile=""
+  PDF2SWF=
+  LIBPDF=
+fi
+AC_SUBST(PDF2SWF)
+AC_SUBST(LIBPDF)
+
+PDF2PDF='pdf2pdf$(E)'
+DEVICE_PDF='devices/pdf.$(O)'
+if test "x${DISABLEPDF2PDF}" = "xtrue"; then
+  #echo "* Disabling pdf2pdf tool..."
+  PDF2PDF=
+  DEVICE_PDF=
+fi
+AC_SUBST(DEVICE_PDF)
+AC_SUBST(PDF2PDF)
+
+if test "x${ZLIBMISSING}" = "xtrue"; then
+  echo
+  echo "* Warning! Without zlib, you will not be able to read"
+  echo "* or write compressed Flash MX files!"
+fi
+
+JPEG2SWF='jpeg2swf$(E)'
+if test "x${DISABLEJPEG2SWF}" = "xtrue"; then
+  echo "* Disabling jpeg2swf tool..."
+  JPEG2SWF=
+fi
+export JPEG2SWF
+AC_SUBST(JPEG2SWF)
+
+GIF2SWF='gif2swf$(E)'
+if test "x${DISABLEGIF2SWF}" = "xtrue"; then
+  echo "* Disabling gif2swf tool..."
+  GIF2SWF=
+fi
+export GIF2SWF
+AC_SUBST(GIF2SWF)
+
+PNG2SWF='png2swf$(E)'
+if test "x${DISABLEPNG2SWF}" = "xtrue"; then
+  echo "* Disabling png2swf tool..."
+  PNG2SWF=
+fi
+export PNG2SWF
+AC_SUBST(PNG2SWF)
+
+if test "x${MISSINGLIBS}" '!=' "x"; then
+  if test "x${PARTIAL}" '=' "x"; then
+    echo "* (never mind)"
+  fi
+  echo "***************************************************"
+fi
+
+# ------------------------------------------------------------------
+
+AH_TOP([
+#ifndef __config_h__
+#define __config_h__
+])
+
+AH_BOTTOM([
+#ifdef HAVE_ZLIB_H
+#ifdef HAVE_LIBZ
+#define HAVE_ZLIB
+#endif
+#endif
+
+#ifdef HAVE_JPEGLIB_H
+#ifdef HAVE_LIBJPEG
+#define HAVE_JPEGLIB
+#endif
+#endif
+
+#ifdef HAVE_FT2BUILD_H
+#define HAVE_FREETYPE_H 1
+#endif
+
+#ifdef HAVE_GL_GL_H
+#ifdef HAVE_GL_GLUT_H
+#ifdef HAVE_OPENGL
+#define USE_OPENGL
+#endif
+#endif
+#endif
+
+#ifdef HAVE_POPPLER
+#define GString GooString
+#define GHash GooHash
+#define GHashIter GooHashIter
+#endif
+
+#ifdef HAVE_ZZIP_LIB_H
+#ifdef HAVE_LIBZZIP
+#define HAVE_ZZIP 1
+#endif
+#endif
+
+// supply a substitute calloc function if necessary
+#ifndef HAVE_CALLOC
+#define calloc rfx_calloc_replacement
+#endif
+
+#endif // __config_h__
+])
+
+if test -f "release.in"; then release_in="./release"; fi
+if test -f "Makefile.new.in"; then mk_in="./Makefile.new"; fi
+FILES="$release_in $mk_in Makefile.common ${avi2swf} Makefile lib/Makefile lib/action/Makefile src/Makefile ${pdf2swf_makefile} swfs/Makefile ${pythongfx} ${rubygfx} ${lame_makefile} lib/readers/Makefile"
+AC_OUTPUT(${FILES})
+
+dnl new autoconf
+dnl AC_CONFIG_FILES([${FILES}])
+dnl AC_OUTPUT
+
+#
+# On development trees, create snapshots of config.status
+#
+if test -f snapshot -a "x$CHECKMEM" = "x" -a "x$PROFILING" = "x";then
+    if test "x${MINGW}" = "xyes"; then
+	echo cp config.status config.status.win32
+	cp config.status config.status.win32
+    else
+	if test "x$DEBUG" '=' "x" -a "x$OPTIMIZE"  '=' "x";then
+	    echo cp config.status config.status.linux
+	    cp config.status config.status.linux
+	fi
+	if test "x$DEBUG" '!=' "x" -a "x$OPTIMIZE"  '=' "x";then
+	    echo cp config.status config.status.debug
+	    cp config.status config.status.debug
+	fi
+	if test "x$DEBUG"    = "x" -a "x$OPTIMIZE" '!=' "x"; then
+	    echo cp config.status config.status.optimize
+	    cp config.status config.status.optimize
+	fi
+    fi
+fi

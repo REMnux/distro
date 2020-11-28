@@ -1,0 +1,124 @@
+#!/usr/bin/make -f
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+SRC_VERSION = $(shell dpkg-parsechangelog | sed -ne 's/^Version: \(\([0-9]\+\):\)\?\(.*\)-.*/\3/p')
+ORIG_VERSION = $(shell echo $(SRC_VERSION) | sed -ne 's/+ds1//p')
+ORIGTAR = swftools_$(ORIG_VERSION).orig.tar.gz
+ORIGDIR = swftools_$(ORIG_VERSION).orig
+DEBTAR = swftools_$(SRC_VERSION).orig.tar.gz
+
+# These are used for cross-compiling and for saving the configure script
+# from having to guess our platform (since we know it already)
+DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+
+#CPPFLAGS:=$(shell dpkg-buildflags --get CPPFLAGS)
+#CFLAGS:=$(shell dpkg-buildflags --get CFLAGS)
+#CXXFLAGS:=$(shell dpkg-buildflags --get CXXFLAGS)
+#LDFLAGS:=$(shell dpkg-buildflags --get LDFLAGS)
+
+# --enable-warnings sets CFLAGS to
+# "-Wall -Wno-unused -Wno-format -Wno-redundant-decls"
+# --enable-debug sets CFLAGS to "-O2 -g"
+# in the configure script
+#ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
+#	CFLAGS = -g
+#	CFGFLAGS = --enable-warnings
+#else
+#	CFGFLAGS = --enable-warnings --enable-debug
+#endif
+
+%:
+	dh $@
+
+clean:
+	dh_testdir
+	dh_testroot
+	[ ! -f Makefile ] || $(MAKE) distclean
+	rm -f core
+	rm -f python*-stamp
+	rm -f aclocal.m4 config.h config.log lib/action/Makefile swfs/Makefile lib/pdf/Makefile lib/swf/Makefile
+	rm -f _pypath.py _pypath.txt
+	rm -rf lib/python/usr
+#	[ ! -f configure.dist ] || mv configure.dist configure
+	dh_autotools-dev_restoreconfig
+	dh_clean
+
+override_dh_auto_configure:
+	dh_autotools-dev_updateconfig
+#	mv configure configure.dist
+	aclocal -I m4
+	autoconf
+#	LDFLAGS+="-Wl,-z,defs"
+	./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr --disable-poppler $(shell dpkg-buildflags --export=configure) 
+
+#override_dh_auto_build:
+#	# Add libart stuff into the Makefile.common
+#	cp Makefile.common Makefile.common.bak
+#	echo "C += $(LIBART_CFLAGS)" >>Makefile.common
+#	echo "CC += $(LIBART_CFLAGS)" >>Makefile.common
+#	echo "LIBS += $(LIBART_LIBS)" >>Makefile.common
+#	$(MAKE)
+#	$(MAKE) -C lib
+
+#	mv Makefile.common.bak Makefile.common
+
+#	$(MAKE) -C src
+#	$(MAKE) -C swfs
+
+#	cp Makefile.common Makefile.common.bak
+#	$(foreach pp, $(python_versions), $(call build_python,$(pp),$(pp)/$(call py_sitename, $(pp))))
+#	mv Makefile.common.bak Makefile.common
+
+override_dh_auto_install:
+	dh_auto_install -- prefix=$(CURDIR)/debian/tmp/usr
+	mkdir -p debian/tmp/usr/lib
+	mkdir -p debian/tmp/usr/include/rfxswf
+	/usr/bin/install -m 644 lib/librfxswf.a debian/tmp/usr/lib/
+	/usr/bin/install -m 644 config.h lib/rfxswf.h lib/bitio.h lib/drawer.h lib/mem.h lib/types.h debian/tmp/usr/include/rfxswf/
+	sed -i s/"\(#include \"\.\)\.\(\/config\.h\"\)"/"\1\2"/ debian/tmp/usr/include/rfxswf/rfxswf.h
+#	cp -r lib/python/usr debian/tmp/
+
+override_dh_strip:
+	dh_strip --dbg-package=swftools-dbg
+
+get-orig-source:
+	uscan --no-conf --force-download --rename --download-current-version --destdir=.
+	mkdir -p _unpack
+	tar -xzf $(ORIGTAR) -C _unpack
+	find _unpack  -maxdepth 1 -name "swftools*" -type d -exec mv \{} _unpack/swftools_$(ORIG_VERSION).orig \;
+	rm -rf _unpack/$(ORIGDIR)/lib/pdf/xpdf
+	rm -rf _unpack/$(ORIGDIR)/avi2swf
+	tar -czf $(DEBTAR) -C _unpack $(ORIGDIR)
+	rm -rf _unpack
+
+get-git-orig-source: git-checkout
+	$(eval GIT_VERSION := $(shell cd git-tmp && git rev-parse --short HEAD))
+	$(eval GIT_DATE := $(shell cd git-tmp && git show -s --format="%ci" $(GIT_VERSION) | cut -d " " -f 1 | sed -e 's/-//g'))
+	sed -e 's/VERSION=0\.9\.2/VERSION=0\.9\.2\+git$(GIT_DATE)/g' git-tmp/configure.in > git-tmp/configure.in.2
+	mv git-tmp/configure.in.2 git-tmp/configure.in
+	grep -v xpdf git-tmp/release.in > git-tmp/release.in.2
+	sed -e 's/\/lib\/pdf\/aconf\.h \\/\/lib\/pdf\/aconf\.h"/g' git-tmp/release.in.2 > git-tmp/release.in
+	cd git-tmp && aclocal -I m4
+	cd git-tmp && autoconf
+	cd git-tmp && configure
+	cd git-tmp && chmod u+x release
+	cd git-tmp && release
+	mv git-tmp/swftools-0.9.2+git$(GIT_DATE).tar.gz .
+	rm -rf git-tmp
+	mkdir -p _unpack
+	tar -xzf swftools-0.9.2+git$(GIT_DATE).tar.gz -C _unpack
+	find _unpack  -maxdepth 1 -name "swftools*" -type d -exec mv \{} _unpack/swftools_0.9.2+git$(GIT_DATE).orig \;
+	rm -rf _unpack/swftools_0.9.2+git$(GIT_DATE).orig/lib/pdf/xpdf
+	rm -rf _unpack/swftools_0.9.2+git$(GIT_DATE).orig/avi2swf
+	tar -czf swftools_0.9.2+git$(GIT_DATE).orig.tar.gz -C _unpack swftools_0.9.2+git$(GIT_DATE).orig
+	rm -rf _unpack
+	@echo "Git-Version: " $(GIT_VERSION)
+
+git-checkout:
+	mkdir -p git-tmp
+	git clone git://git.swftools.org/swftools git-tmp
+
+.PHONY: git-checkout

@@ -1,0 +1,61 @@
+.TH swfextract "1" "January 2003" "swfdump" "swftools"
+.SH NAME
+swfextract - a tool for extracting data out of swf files.
+.SH Synopsis
+.B swfextract
+[\fIoptions\fR] [\fIfile.swf\fR]
+.SH DESCRIPTION
+swfextracts allows to extract swf movieclips and objects out of swf files.
+.PP
+SWF files are animation files which can be displayed in Web Browsers using
+the Flash Plugin.
+.SH OPTIONS
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Print short help message and exit
+.TP
+\fB\-o\fR, \fB\-\-output\fR \fIfilename\fR
+Write output to file \fIfilename\fR
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+Print version info and exit
+.TP
+\fB\-i\fR, \fB\-\-id\fR \fIids\fR
+\fIids\fR is a range of IDs to extract. E.g. 1-10,14
+.TP
+\fB\-j\fR, \fB\-\-jpegs\fR \fIids\fR
+\fIids\fR is a range of JPEG IDs to extract. E.g. 1-2,3,14-
+.TP
+\fB\-p\fR, \fB\-\-pngs\fR \fIids\fR
+\fIids\fR is a range of PNG IDs to extract. E.g. -10,20-30
+.TP
+\fB\-f\fR, \fB\-\-frame\fR \fIframes\fR
+\fIframes\fR is a range of frames to extract. E.g. 1-10,20-30,40-
+.TP
+\fB\-n\fR, \fB\-\-name\fR \fIname\fR
+Set the name of the object to extract to \fIname\fR.
+.TP
+\fB\-w\fR, \fB\-\-hollow\fR
+Copy empty frames to the output file, too.
+.TP
+\fB\-P\fR, \fB\-\-placeobject\fR
+Copy original placeobject tag for the given object into the
+output file (Use with -i). This means that the object is
+at the same position in the generated movie as in the
+original movie.
+.TP
+\fB\-j\fR, \fB\-\-jpegs\fR \fIrange\fR
+Extract jpeg pictures in \fIrange\fR
+.TP
+\fB\-p\fR, \fB\-\-pngs\fR \fIrange\fR
+Extract png pictures in \fIrange\fR
+.TP
+\fB\-m\fR, \fB\-\-mp3\fR
+Extract main mp3 stream (There may be substreams in the
+Movieclips, as well. To extract these, first extract the 
+Movieclips with \fB-i\fR and then use \fB-m\fR)
+
+.SH AUTHOR
+
+Matthias Kramm <kramm@quiss.org>
+

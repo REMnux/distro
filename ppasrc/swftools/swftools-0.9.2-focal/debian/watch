@@ -1,0 +1,8 @@
+version=3
+
+# http://www.swftools.org/swftools-2012-02-04-0819.tar.gz
+opts=\
+dversionmangle=s/\+ds1[~]*//,\
+uversionmangle=s/(\d+)-(\d+)-(\d+)-(\d+)/0.9.1+$1$2$3$4/,\
+downloadurlmangle=s/.*0.9.1\+(\d{4})(\d{2})(\d{2})(\d{4}).*/http:\/\/www.swftools.org\/swftools-$1-$2-$3-$4.tar.gz/\
+  http://www.swftools.org/download.html (?:.*/)?swftools-([\d.-]+)\.tar\.gz

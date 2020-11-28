@@ -1,0 +1,10 @@
+add-missing-m4.patch
+add-swfrender-manpage.patch
+remove-pdf2swf.patch
+remove-avi2swf.patch
+manpages.patch
+makefile.patch
+spelling.patch
+remove-fontconfig.patch
+giflib5.patch
+Fix-an-integer-overflow-issue-in-png.c.patch
