@@ -1,0 +1,12 @@
+Source: bddisasm
+Section: utils
+Priority: optional
+Maintainer: REMnux Distribution <distro@remnux.org>
+Build-Depends: debhelper (>= 10)
+Standards-Version: 4.1.2
+Homepage: https://github.com/bitdefender/bddisasm
+
+Package: bddisasm
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: The Bitdefender disassembler (bddisasm) is a lightweight, x86/x64 only instruction decoder with shellcode emulation capabilities.
