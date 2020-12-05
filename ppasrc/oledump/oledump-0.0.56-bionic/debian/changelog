@@ -1,4 +1,10 @@
-oledump (0.0.55-focal) focal; urgency=medium
+oledump (0.0.56) bionic; urgency=medium
+
+  * Updated to latest upstream version.
+
+ -- REMnux Distribution <distro@remnux.org>  Sat, 05 Dec 2020 12:30:11 -0500
+
+oledump (0.0.55) bionic; urgency=medium
 
   * Updated to latest upstream version.
 
