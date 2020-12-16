@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python2
 
 """
 This is a version of fakedns based on the original scripted by Francisco Santos, which was published at
@@ -55,7 +55,7 @@ class DNSQuery:
 
 # Let user know how to use this program
 def usage():
-    print "Usage:" + sys.argv[0] + " [-a <IP Address>] [-f <Configuration File>]"
+    print "Usage:" + sys.argv[0] + " [-a <IP Address>] [-I <IP Addresss>] [-f <Configuration File>]"
     print ""
     print "      Configuration file consists of lines containing either a Fully Qualified Domain Name"
     print "      or the Domain Name with the hostname removed. When the hostname is removed any hostname"
@@ -80,6 +80,8 @@ def usage():
     print "All other requests will resolve to either the default ip address " + ip + "or the address set with"
     print "the -a option."
     print ""
+    print "If you have multiple NICs, you can specify on which ip address to bind with the -I option."
+    print ""
     sys.exit(1)
     
 if __name__ == '__main__':
@@ -91,13 +93,15 @@ if __name__ == '__main__':
     resolvedDomains = {} # Dictionary to map domains/subdomains to specific ip addresses
     resolvedFQDNs = {}   # Dictionary to map fully qualified domain names to specific ip addresses
     try:
-        opts, args = getopt.getopt(sys.argv[1:],"a:f:")
+        opts, args = getopt.getopt(sys.argv[1:],"a:I:f:")
     except getopt.GetoptError as err:
         usage()
  
     for option, option_value in opts:
         if option == "-a":
             ip = option_value
+        elif option == '-I':
+            first_ip = option_value
         elif option == "-f":
             for line in open(option_value, 'r'):
                 tokens = line.split()
