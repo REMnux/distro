@@ -1,3 +1,9 @@
+ghidra (9.2.1-focal) focal; urgency=medium
+
+  * Upgraded to latest upstream release.
+
+ -- REMnux Distribution <distro@remnux.org>  Mon, 21 Dec 2020 20:16:51 -0500
+
 ghidra (9.2-1-focal) focal; urgency=medium
 
   * Initial Release.
