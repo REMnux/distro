@@ -1,0 +1,11 @@
+flare-floss (1.7.0) bionic; urgency=medium
+
+  * Upgraded to latest upstream version.
+
+ -- REMnux Distribution <distro@remnux.org>  Mon, 08 Feb 2021 21:19:07 -0500
+
+flare-floss (1.6.1) bionic; urgency=medium
+
+  * Initial Release.
+
+ -- REMnux Distribution <distro@remnux.org>  Thu, 09 Jul 2020 19:57:46 -0400
