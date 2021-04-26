@@ -2,8 +2,8 @@
 
 __description__ = 'Analyze OLE files (Compound Binary Files)'
 __author__ = 'Didier Stevens'
-__version__ = '0.0.57'
-__date__ = '2020/12/12'
+__version__ = '0.0.60'
+__date__ = '2021/02/23'
 
 """
 
@@ -98,17 +98,20 @@ History:
   2020/05/21: 0.0.50 fixed typos man page
   2020/07/18: 0.0.51 small fix ASCII dump: 0x7F is not printable
   2020/07/25: 0.0.52 added support for pyzipper
-  2020/08/??: 0.0.53 added ole plugin class 
+  2020/08/??: 0.0.53 added ole plugin class
   2020/08/28: added support to select streams by name
   2020/08/30: fixed & updated raw VBA decompression
   2020/09/05: 0.0.54 added extra info parameter %MODULEINFO%
   2020/09/29: bugfix for Python 2 (mro)
-  2020/11/08: 0.0.55: added support for -v with --jsonoutput; added ! indicator
+  2020/11/08: 0.0.55 added support for -v with --jsonoutput; added ! indicator
   2020/12/04: 0.0.56 Python 3 Fixes
   2020/12/12: 0.0.57 refactoring Translate
+  2021/01/09: 0.0.58 updated man
+  2021/02/06: 0.0.59 small change to XML detection logic
+  2021/02/23: 0.0.60 small change PIP message
 
 Todo:
-  add support for pyzipper
+
 """
 
 import optparse
@@ -148,8 +151,7 @@ try:
     import olefile
 except ImportError:
     print('This program requires module olefile.\nhttp://www.decalage.info/python/olefileio\n')
-    if sys.version >= '2.7.9':
-        print("You can use PIP to install olefile like this: pip install olefile\npip is located in Python's Scripts folder.\n")
+    print("You can use PIP to install olefile like this: pip install olefile\npip is located in Python's Scripts folder.\n")
     exit(-1)
 
 try:
@@ -403,7 +405,7 @@ To have an overview of embedded OLE files, use option "-f l" (letter l) like thi
 C:\Demo>oledump.py -f l Drawing1vba.dwg
 Position of potential embedded OLE files:
  1 0x00008090
- 
+
 This will report the position of every (potential) embedded OLE file inside the input file. Here you can see that there is one file at position 0x8090.
 You can then select this file and analyze it, using -f 1 (integer 1):
 
@@ -414,7 +416,7 @@ C:\Demo>oledump.py -f 1 Drawing1vba.dwg
   4:      1896 'VBA_Project/VBA/_VBA_PROJECT'
   5:       315 'VBA_Project/VBA/dir'
   6:        16 'VBA_Project_Version'
-  
+
 And then you can use option -s to select streams and analyze them.
 
 Analyzing the content of streams (and VBA macros) can be quite challenging. To help with the analysis, oledump provides support for plugins and YARA rules.
@@ -636,6 +638,17 @@ zcat sample.gz | oledump.py
 With option -T (--headtail), output can be truncated to the first 10 lines and last 10 lines of output.
 
 With option -j, oledump will output the content of the ole file as a JSON object that can be piped into other tools that support this JSON format. When option -v is used together with option -j, the produced JSON object contains decompressed VBA code.
+
+Overview of indicators:
+ M: Macro (attributes and code)
+ m: macro (attributes without code)
+ E: Error (code that throws an error when decompressed)
+ !: Unusual macro (code without attributes)
+ O: object (embedded file)
+ .: storage
+ R: root entry
+
+More info: https://blog.didierstevens.com/2020/11/15/oledump-indicators/
 
 The return codes of oledump are:
  -1 when an error occured
@@ -2196,7 +2209,7 @@ def OLEDump(filename, options):
         else:
             data = oStringIO.read()
             oStringIO.seek(0)
-            if b'<?xml' in data:
+            if b'<?xml' in data and not b"<assembly xmlns='urn:schemas-microsoft-com:asm.v1' manifestVersion='1.0'>" in data:
                 try:
                     oXML = xml.dom.minidom.parse(oStringIO)
                 except:
