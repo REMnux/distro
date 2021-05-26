@@ -1,0 +1,3 @@
+AndroidProjectCreator-1.5-stable-jar-with-dependencies.jar /opt/AndroidProjectCreator/
+library /opt/AndroidProjectCreator/
+AndroidProjectCreator /usr/bin/

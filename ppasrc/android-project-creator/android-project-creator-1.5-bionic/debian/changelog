@@ -1,0 +1,11 @@
+android-project-creator (1.5-1) bionic; urgency=medium
+
+  * Updated to match the latest upstream version. 
+
+ -- REMnux Distribution <distro@remnux.org>  Wed, 26 May 2021 11:40:44 -0400
+
+android-project-creator (1.4) bionic; urgency=medium
+
+  * Initial Release.
+
+ -- REMnux Distribution <distro@remnux.org>  Wed, 29 Jul 2020 17:43:43 -0400

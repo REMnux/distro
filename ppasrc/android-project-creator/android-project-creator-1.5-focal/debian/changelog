@@ -1,0 +1,11 @@
+android-project-creator (1.5-1-focal) focal; urgency=medium
+
+  * Updated to use the latest upstream version. 
+
+ -- REMnux Distribution <distro@remnux.org>  Wed, 26 May 2021 11:27:48 -0400
+
+android-project-creator (1.4-1-focal) focal; urgency=medium
+
+  * Initial Release.
+
+ -- REMnux Distribution <distro@remnux.org>  Wed, 29 Jul 2020 17:43:43 -0400
