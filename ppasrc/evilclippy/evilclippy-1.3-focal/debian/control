@@ -1,0 +1,12 @@
+Source: evilclippy
+Section: utils
+Priority: optional
+Maintainer: REMnux Distribution <distro@remnux.org>
+Build-Depends: debhelper (>= 10)
+Standards-Version: 4.1.2
+Homepage: https://github.com/outflanknl/EvilClippy
+
+Package: evilclippy
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Modify aspects of Microsoft Office documents.
