@@ -1,0 +1,62 @@
+#!/bin/bash
+
+#
+# tracesc
+#
+# Version 1.0
+#
+# This is a wrapper script to run Evan Dygert's runsc32.exe and runsc64.exe tools,
+# which are designed to execute shellcode, in Wine. The wrapper invokes one of these
+# tools, depending on the specified -b parameter, directing Wine to display detailed
+# debug information, which helps observe what the shellcode is doing.
+#
+# WARNING! This wrapper will actually execute the shellcode on the system, which
+# might lead to your system becoming infected. Only use this wrapper in an properly
+# configured, isolated laboratory environment, which you can return to a pristine state
+# at the end of your analysis.
+#
+# For details about the underlying runsc tool, see:
+# https://github.com/edygert/runsc
+#
+
+usage() { echo "Usage: tracesc [-b <32|64>] [-f <filename>]" 1>&2; exit 1; }
+
+while getopts ":b:f:" o; do
+    case "${o}" in
+        b)
+            b=${OPTARG}
+            ((b == 32 || b == 64)) || usage
+            ;;
+        f)
+            f=${OPTARG}
+            ;;
+        *)
+            usage
+            ;;
+    esac
+done
+shift $((OPTIND-1))
+
+if [ -z "${b}" ] || [ -z "${f}" ]; then
+    usage
+fi
+
+if [ ! -f "${f}" ]; then
+    echo "File not found: ${f}" 1>&2;
+    exit 2;
+fi
+
+exec 2>&1
+if [ "${b}" == "32" ]; then
+    if [ ! -f "/opt/runsc/runsc32.exe" ]; then
+        echo "/opt/runsc/runsc32.exe not found" 1>&2;
+        exit 3;
+    fi
+    WINEDEBUG=+relay wine /opt/runsc/runsc32.exe -n -f "${f}" 
+else
+    if [ ! -f "/opt/runsc/runsc64.exe" ]; then
+        echo "/opt/runsc/runsc64.exe not found" 1>&2;
+        exit 4;
+    fi
+    WINEDEBUG=+relay wine /opt/runsc/runsc64 -n -f "${f}" 
+fi

@@ -1,0 +1,12 @@
+Source: runsc
+Section: utils
+Priority: optional
+Maintainer: REMnux Distribution <distro@remnux.org>
+Build-Depends: debhelper (>= 10)
+Standards-Version: 4.1.2
+Homepage: https://github.com/edygert/runsc
+
+Package: runsc
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Trace the execution of shellcode.
