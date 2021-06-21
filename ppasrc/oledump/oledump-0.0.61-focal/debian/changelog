@@ -1,16 +1,22 @@
-oledump (0.0.60) bionic; urgency=medium
+oledump (0.0.61-focal) focal; urgency=medium
+
+  * Updated to latest upstream version. 
+
+ -- REMnux Distribution <distro@remnux.org>  Mon, 21 Jun 2021 08:32:19 -0400
+
+oledump (0.0.60-focal) focal; urgency=medium
 
   * Updated to latest upstream version.
 
- -- REMnux Distribution <distro@remnux.org>  Mon, 26 Apr 2021 16:52:11 -0400
+ -- REMnux Distribution <distro@remnux.org>  Mon, 26 Apr 2021 16:55:06 -0400
 
-oledump (0.0.57) bionic; urgency=medium
+oledump (0.0.57-focal) focal; urgency=medium
 
-  * Updated to latest upstream version.
+  * Updated to latest upstream version. 
 
- -- REMnux Distribution <distro@remnux.org>  Sat, 12 Dec 2020 13:36:42 -0500
+ -- REMnux Distribution <distro@remnux.org>  Sat, 12 Dec 2020 13:35:09 -0500
 
-oledump (0.0.56) bionic; urgency=medium
+oledump (0.0.56-focal) focal; urgency=medium
 
   * Updated to latest upstream version.
 
