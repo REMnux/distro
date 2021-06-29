@@ -1,2 +1,0 @@
-runsc opt/
-tracesc usr/bin

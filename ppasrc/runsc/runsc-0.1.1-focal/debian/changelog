@@ -1,0 +1,11 @@
+runsc (0.1.1-focal) focal; urgency=medium
+
+  * Added runsc32 and runsc64 wrappers.
+
+ -- REMnux Distribution <distro@remnux.org>  Tue, 29 Jun 2021 09:40:05 -0400
+
+runsc (0.1-focal) focal; urgency=medium
+
+  * Initial Release.
+
+ -- REMnux Distribution <distro@remnux.org>  Mon, 14 Jun 2021 22:32:43 -0400
