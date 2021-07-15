@@ -1,3 +1,9 @@
+runsc (0.1.2-focal) focal; urgency=medium
+
+  * Updated .exe files to use the latest versions. 
+
+ -- REMnux Distribution <distro@remnux.org>  Thu, 15 Jul 2021 09:59:27 -0400
+
 runsc (0.1.1-focal) focal; urgency=medium
 
   * Added runsc32 and runsc64 wrappers.

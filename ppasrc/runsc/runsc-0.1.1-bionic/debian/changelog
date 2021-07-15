@@ -1,3 +1,9 @@
+runsc (0.11.2-bionic) bionic; urgency=medium
+
+  * Updated .exe files to use the latest versions. 
+
+ -- REMnux Distribution <distro@remnux.org>  Thu, 15 Jul 2021 10:00:35 -0400
+
 runsc (0.11.1-bionic) bionic; urgency=medium
 
   * Added runsc32 and runsc64 wrappers. 
