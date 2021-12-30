@@ -1,0 +1,17 @@
+burpsuite-community (2021.10.3) bionic; urgency=medium
+
+  * Updated to latest upstream release. 
+
+ -- REMnux Distribution <distro@remnux.org>  Thu, 30 Dec 2021 11:20:10 -0500
+
+burpsuite-community (2020.6) bionic; urgency=medium
+
+  *  Updated to latest upstream release.
+
+ -- REMnux Distribution <distro@remnux.org>  Fri, 10 Jul 2020 20:19:43 -0400
+
+burpsuite-community (2020.4.1-6) bionic; urgency=medium
+
+  * Initial Release.
+
+ -- REMnux Distribution <distro@remnux.org>  Thu, 21 May 2020 00:22:14 -0400
