@@ -22,14 +22,14 @@ Nuvola Icons - LGPL 2.1:
 Apache License 2.0:
 
 	lib/cglib-nodep-2.2.jar
+	lib/log4j-api-2.17.1.jar
 	lib/commons-collections4-4.1.jar
+	lib/log4j-core-2.17.1.jar
 	lib/commons-text-1.6.jar
+	lib/gson-2.8.9.jar
 	lib/guava-19.0.jar
-	lib/log4j-api-2.17.0.jar
 	lib/commons-lang3-3.9.jar
 	lib/commons-io-2.6.jar
-	lib/gson-2.8.6.jar
-	lib/log4j-core-2.17.0.jar
 
 Crystal Clear Icons - LGPL 2.1:
 
