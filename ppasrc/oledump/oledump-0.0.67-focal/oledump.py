@@ -1,9 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 __description__ = 'Analyze OLE files (Compound Binary Files)'
 __author__ = 'Didier Stevens'
-__version__ = '0.0.61'
-__date__ = '2021/06/20'
+__version__ = '0.0.67'
+__date__ = '2022/05/11'
 
 """
 
@@ -110,6 +110,12 @@ History:
   2021/02/06: 0.0.59 small change to XML detection logic
   2021/02/23: 0.0.60 small change PIP message
   2021/06/20: 0.0.61 updated man
+  2021/08/11: 0.0.62 fix return code bug for multiple OLE files inside OOXML container
+  2022/02/21: 0.0.63 Python 3 fix
+  2022/03/04: 0.0.64 added option -u
+  2022/04/26: 0.0.65 added message for pyzipper
+  2022/05/03: 0.0.66 small refactoring
+  2022/05/11: 0.0.67 added PrintUserdefinedProperties
 
 Todo:
 
@@ -137,11 +143,6 @@ if sys.version_info[0] >= 3:
     from io import BytesIO as DataIO
 else:
     from cStringIO import StringIO as DataIO
-
-try:
-    import dslsimulationdb
-except ImportError:
-    dslsimulationdb = None
 
 try:
     import yara
@@ -612,6 +613,8 @@ To include extra data with each use of oledump, define environment variable OLED
 
 Sometimes during the analysis of an OLE file, you might come across compressed data inside the stream. For example, an indicator of ZLIB compressed DATA is byte 0x78.
 Option --decompress instructs oledump to search for compressed data inside the selected stream, and then decompress it. If this fails, the original data is displayed.
+
+Option -u can be used to include unused data found in the last sector of a stream, after the stream data.
 
 oledump can handle several types of files. OLE files are supported, but also the new Office Open XML standard: these are XML files inside a ZIP container, but VBA macros are still stored as OLE files inside the ZIP file. In such case, the name of the OLE file inside the ZIP file will be displayed, and the indices will be prefixed by a letter (A for the first OLE file, B for the second OLE file, ...).
 Example:
@@ -1418,7 +1421,7 @@ def ParseCutTerm(argument):
         oMatch = re.match(r"\[u?\'(.+?)\'\](\d+)?([+-](?:0x[0-9a-f]+|\d+))?", argument)
     else:
         if len(oMatch.group(1)) % 2 == 1:
-            raise Exception("Uneven length hexadecimal string")
+            raise Exception('Uneven length hexadecimal string')
         else:
             return CUTTERM_FIND, (binascii.a2b_hex(oMatch.group(1)), int(Replace(oMatch.group(2), {None: '1'})), ParseInteger(Replace(oMatch.group(3), {None: '0'}))), argument[len(oMatch.group(0)):]
     if oMatch == None:
@@ -1491,7 +1494,7 @@ def CutData(stream, cutArgument):
             return ['', None, None]
         positionBegin += valueLeft[2]
     else:
-        raise Exception("Unknown value typeLeft")
+        raise Exception('Unknown value typeLeft')
 
     if typeRight == CUTTERM_NOTHING:
         positionEnd = len(stream)
@@ -1509,7 +1512,7 @@ def CutData(stream, cutArgument):
             positionEnd += len(valueRight[0])
         positionEnd += valueRight[2]
     else:
-        raise Exception("Unknown value typeRight")
+        raise Exception('Unknown value typeRight')
 
     return [stream[positionBegin:positionEnd], positionBegin, positionEnd]
 
@@ -1680,22 +1683,42 @@ def OLE10HeaderPresent(data):
     version, data = ReadWORD(data)
     return version ==2
 
-def OLEGetStreams(ole, storages):
+def GetUnusedData(ole, fname):
+    sid = ole._find(fname)
+    entry = ole.direntries[sid]
+    if entry.size < ole.minisectorcutoff:
+        increase = ole.minisectorsize
+    else:
+        increase = ole.sectorsize
+    currentsize = entry.size
+    lendata = currentsize
+    while True:
+        currentsize += increase
+        data = ole._open(entry.isectStart, currentsize).read()
+        if len(data) == lendata:
+            return data[entry.size:]
+        else:
+            lendata = len(data)
+
+def OLEGetStreams(ole, storages, unuseddata):
     olestreams = []
     if storages:
-        olestreams.append([0, [ole.root.name], ole.root.entry_type, ole.root.clsid, ''])
+        olestreams.append([0, [ole.root.name], ole.root.entry_type, ole.root.clsid, '', 0])
     for fname in ole.listdir(storages=storages):
+        unusedData = b''
         if ole.get_type(fname) == 1:
-            data = ''
+            data = b''
         else:
             data = ole.openstream(fname).read()
-        olestreams.append([0, fname, ole.get_type(fname), ole.getclsid(fname), data])
+            if unuseddata:
+                unusedData = GetUnusedData(ole, fname)
+        olestreams.append([0, fname, ole.get_type(fname), ole.getclsid(fname), data + unusedData, len(unusedData)])
     for sid in range(len(ole.direntries)):
         entry = ole.direntries[sid]
         if entry is None:
             entry = ole._load_direntry(sid)
             if entry.entry_type == 2:
-                olestreams.append([1, entry.name, entry.entry_type, '', ole._open(entry.isectStart, entry.size).read()])
+                olestreams.append([1, entry.name, entry.entry_type, '', ole._open(entry.isectStart, entry.size).read(), 0])
     return olestreams
 
 def SelectPart(stream, part, moduleinfodata):
@@ -1774,6 +1797,15 @@ def ParseVBADIR(ole):
                             vbadirinfo.append(moduleinfo)
     return vbadirinfo
 
+def PrintUserdefinedProperties(ole, streamname):
+    if not 'get_userdefined_properties' in dir(ole):
+        return
+    userdefinedproperties = ole.get_userdefined_properties(streamname)
+    if len(userdefinedproperties) > 0:
+        print('User defined properties:')
+        for userdefinedproperty in userdefinedproperties:
+            print(' %s: %s' % (userdefinedproperty['property_name'], userdefinedproperty['value']))
+
 def OLESub(ole, data, prefix, rules, options):
     global plugins
     global pluginsOle
@@ -1792,6 +1824,8 @@ def OLESub(ole, data, prefix, rules, options):
                     print(' %s: %s %s' % (attribute, value, LookupCodepage(value)))
                 else:
                     print(' %s: %s' % (attribute, value))
+        PrintUserdefinedProperties(ole, ['\x05SummaryInformation'])
+
         print('Properties DocumentSummaryInformation:')
         for attribute in metadata.DOCSUM_ATTRIBS:
             value = getattr(metadata, attribute)
@@ -1800,19 +1834,21 @@ def OLESub(ole, data, prefix, rules, options):
                     print(' %s: %s %s' % (attribute, value, LookupCodepage(value)))
                 else:
                     print(' %s: %s' % (attribute, value))
+        PrintUserdefinedProperties(ole, ['\x05DocumentSummaryInformation'])
+
         return (returnCode, 0)
 
     if options.jsonoutput:
         object = []
         counter = 1
         if options.vbadecompress:
-            for orphan, fname, entry_type, entry_clsid, stream in OLEGetStreams(ole, options.storages):
+            for orphan, fname, entry_type, entry_clsid, stream, sizeUnusedData in OLEGetStreams(ole, options.storages, options.unuseddata):
                 vbacode = SearchAndDecompress(stream, '')
                 if vbacode != '':
                     object.append({'id': counter, 'name': PrintableName(fname), 'content': C2SIP3(binascii.b2a_base64(vbacode.encode())).strip('\n')})
                 counter += 1
         else:
-            for orphan, fname, entry_type, entry_clsid, stream in OLEGetStreams(ole, options.storages):
+            for orphan, fname, entry_type, entry_clsid, stream, sizeUnusedData in OLEGetStreams(ole, options.storages, options.unuseddata):
                 object.append({'id': counter, 'name': PrintableName(fname), 'content': C2SIP3(binascii.b2a_base64(stream)).strip('\n')})
                 counter += 1
         print(json.dumps({'version': 2, 'id': 'didierstevens.com', 'type': 'content', 'fields': ['id', 'name', 'content'], 'items': object}))
@@ -1831,20 +1867,27 @@ def OLESub(ole, data, prefix, rules, options):
         for oPluginOle in objectsPluginOle:
             oPluginOle.PreProcess()
 
-        for orphan, fname, entry_type, entry_clsid, stream in OLEGetStreams(ole, options.storages):
+        for orphan, fname, entry_type, entry_clsid, stream, sizeUnusedData in OLEGetStreams(ole, options.storages, options.unuseddata):
             indicator = ' '
             macroPresent = False
             if options.info:
                 moduleinfo = ' ' * 12
             else:
                 moduleinfo = ''
-            lengthString = '       '
+            if options.unuseddata:
+                lengthString = '            '
+            else:
+                lengthString = '       '
             if entry_type == 5:
                 indicator = 'R'
             elif entry_type == 1:
                 indicator = '.'
             elif entry_type == 2:
-                lengthString = '%7d' % len(stream)
+                if options.unuseddata:
+                    lengthString = '%d(%d)' % (len(stream), sizeUnusedData)
+                    lengthString = '%12s' % lengthString
+                else:
+                    lengthString = '%7d' % len(stream)
                 moduleinfodata = dModuleinfo.get(''.join([c + '\x00' for c in fname[-1]]), None)
                 if options.info and moduleinfodata != None:
                     moduleinfo = '%d+%d' % (moduleinfodata[6], len(stream) - moduleinfodata[6])
@@ -1866,7 +1909,7 @@ def OLESub(ole, data, prefix, rules, options):
             if not options.quiet:
                 line = '%3s: %s %s%s %s' % (index, indicator, lengthString, moduleinfo, PrintableName(fname, orphan))
                 if indicator.lower() == 'm' and options.vbadecompress:
-                    streamForExtra = SearchAndDecompress(stream)
+                    streamForExtra = SearchAndDecompress(stream).encode()
                 else:
                     streamForExtra = stream
                 if options.calc:
@@ -1996,7 +2039,7 @@ def OLESub(ole, data, prefix, rules, options):
         else:
             selection = options.select
             part = ''
-        for orphan, fname, entry_type, entry_clsid, stream in OLEGetStreams(ole, options.storages):
+        for orphan, fname, entry_type, entry_clsid, stream, sizeUnusedData in OLEGetStreams(ole, options.storages, options.unuseddata):
             if selection == 'a' or ('%s%d' % (prefix, counter)) == selection.upper() or prefix == 'A' and str(counter) == selection or PrintableName(fname).lower() == selection.lower():
                 StdoutWriteChunked(HeadTail(DumpFunction(DecompressFunction(DecodeFunction(decoders, options, CutData(SelectPart(stream, part, dModuleinfo.get(''.join([c + '\x00' for c in fname[-1]]), None)), options.cut)[0]))), options.headtail))
                 selectionCounter += 1
@@ -2035,11 +2078,6 @@ def YARACompile(ruledata):
                 dFilepaths[filename] = filename
         return yara.compile(filepaths=dFilepaths, externals={'streamname': '', 'VBA': False}), ','.join(dFilepaths.values())
 
-def FilenameInSimulations(filename):
-    if dslsimulationdb == None:
-        return False
-    return filename in dslsimulationdb.dSimulations
-
 def PrintWarningSelection(select, selectionCounter):
     if select != '' and selectionCounter == 0:
         print('Warning: no stream was selected with expression %s' % select)
@@ -2053,7 +2091,7 @@ def CreateZipFileObject(arg1, arg2):
 def OLEDump(filename, options):
     returnCode = 0
 
-    if filename != '' and not FilenameInSimulations(filename) and not os.path.isfile(filename):
+    if filename != '' and not os.path.isfile(filename):
         print('Error: %s is not a file.' % filename)
         return returnCode
 
@@ -2136,18 +2174,13 @@ def OLEDump(filename, options):
             oStringIO = DataIO(sys.stdin.buffer.read())
         else:
             oStringIO = DataIO(sys.stdin.read())
-    elif FilenameInSimulations(filename):
-        oZipfile = CreateZipFileObject(dslsimulationdb.GetSimulation(filename), 'r')
-        oZipContent = oZipfile.open(oZipfile.infolist()[0], 'r', C2BIP3(options.password))
-        zipContent = oZipContent.read()
-        if zipContent.startswith('Neut'):
-            zipContent = OLEFILE_MAGIC + zipContent[4:]
-        oStringIO = DataIO(zipContent)
-        oZipContent.close()
-        oZipfile.close()
     elif filename.lower().endswith('.zip'):
         oZipfile = CreateZipFileObject(filename, 'r')
-        oZipContent = oZipfile.open(oZipfile.infolist()[0], 'r', C2BIP3(options.password))
+        try:
+            oZipContent = oZipfile.open(oZipfile.infolist()[0], 'r', C2BIP3(options.password))
+        except NotImplementedError:
+            print('This ZIP file is possibly not readable with module zipfile.\nTry installing module pyzipper: pip install pyzipper')
+            return returnCode
         oStringIO = DataIO(oZipContent.read())
         oZipContent.close()
         oZipfile.close()
@@ -2200,7 +2233,8 @@ def OLEDump(filename, options):
                         if not options.quiet and not options.jsonoutput:
                             print('%s: %s' % (letter, info.filename))
                     ole = olefile.OleFileIO(DataIO(content))
-                    returnCode, selectionCounter = OLESub(ole, content, letter, rules, options)
+                    returnCodeSub, selectionCounter = OLESub(ole, content, letter, rules, options)
+                    returnCode = max(returnCode, returnCodeSub)
                     selectionCounterTotal += selectionCounter
                     oleFileFound = True
                     ole.close()
@@ -2242,7 +2276,8 @@ def OLEDump(filename, options):
                                             break
                                     print('%s: %s' % (letter, nameValue))
                             ole = olefile.OleFileIO(DataIO(content))
-                            returnCode, selectionCounter = OLESub(ole, content, letter, rules, options)
+                            returnCodeSub, selectionCounter = OLESub(ole, content, letter, rules, options)
+                            returnCode = max(returnCode, returnCodeSub)
                             PrintWarningSelection(options.select, selectionCounter)
                             ole.close()
             elif data.startswith(ACTIVEMIME_MAGIC):
@@ -2296,6 +2331,7 @@ def Main():
     oParser.add_option('--storages', action='store_true', default=False, help='Include storages in report')
     oParser.add_option('-f', '--find', type=str, default='', help='Find D0CF11E0 MAGIC sequence (use l for listing, number for selecting)')
     oParser.add_option('-j', '--jsonoutput', action='store_true', default=False, help='produce json output')
+    oParser.add_option('-u', '--unuseddata', action='store_true', default=False, help='Include unused data after end of stream')
     oParser.add_option('--password', default=MALWARE_PASSWORD, help='The ZIP password to be used (default %s)' % MALWARE_PASSWORD)
     (options, args) = oParser.parse_args()
 

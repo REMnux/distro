@@ -1,3 +1,15 @@
+oledump (0.0.67c-focal) focal; urgency=medium
+
+  * Fixed Python version.
+
+ -- REMnux Distribution <distro@remnux.org>  Fri, 27 May 2022 02:13:04 -0400
+
+oledump (0.0.67b-focal) focal; urgency=medium
+
+  * Updated to latest upstream version. 
+
+ -- REMnux Distribution <distro@remnux.org>  Fri, 27 May 2022 01:43:38 -0400
+
 oledump (0.0.61-focal) focal; urgency=medium
 
   * Updated to latest upstream version. 
