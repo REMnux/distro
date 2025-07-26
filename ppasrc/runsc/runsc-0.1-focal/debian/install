@@ -1,0 +1,4 @@
+runsc opt/
+tracesc usr/bin
+runsc32 usr/bin
+runsc64 usr/bin

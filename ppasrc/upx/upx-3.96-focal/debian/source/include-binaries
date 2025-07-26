@@ -1,0 +1,10 @@
+debian/tests/data/775451-assert149.elf
+debian/tests/data/775451-assert150.elf
+debian/tests/data/775455-crash.elf
+debian/tests/data/873260-crash.upx
+debian/tests/data/882401-segfault-macho
+debian/tests/data/899190-poc1
+debian/tests/data/899190-poc2
+debian/tests/data/907426-poc_free
+debian/tests/data/933232-poc-buffer-overflow
+debian/tests/data/933232-poc-integer-overflow

@@ -1,0 +1,4 @@
+# hardening-check says this is from memmove
+qpdf: hardening-no-fortify-functions usr/bin/qpdf
+# hardening-check says this is from fread
+qpdf: hardening-no-fortify-functions usr/bin/zlib-flate

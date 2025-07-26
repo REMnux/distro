@@ -1,0 +1,37 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+export DEB_MAKE_CHECK_TARGET = check
+
+%:
+	dh $@
+
+override_dh_compress:
+	dh_compress --exclude=qpdf-manual --exclude=.css --exclude examples/
+
+override_dh_auto_clean:
+	make distclean CLEAN=1
+
+override_dh_auto_configure:
+	dh_auto_configure -- \
+	  --libdir="\$${prefix}/lib/$(DEB_HOST_MULTIARCH)" \
+	  --enable-crypto-gnutls --disable-implicit-crypto \
+	  --enable-show-failed-test-output --disable-check-autofiles
+
+override_dh_install:
+	dh_install
+	mkdir -p debian/libqpdf-dev/usr/share/doc/libqpdf-dev/examples
+	cp -p examples/*.cc examples/*.c \
+		debian/libqpdf-dev/usr/share/doc/libqpdf-dev/examples
+	cp -p README.md debian/libqpdf-dev/usr/share/doc/libqpdf-dev/README.md
+	mkdir -p debian/qpdf/usr/share/bash-completion/completions
+	cp completions/bash/qpdf \
+		debian/qpdf/usr/share/bash-completion/completions/qpdf
+	mkdir -p debian/qpdf/usr/share/zsh/vendor-completions
+	cp completions/zsh/_qpdf \
+		debian/qpdf/usr/share/zsh/vendor-completions/_qpdf
+	dh_missing --list-missing -X.la

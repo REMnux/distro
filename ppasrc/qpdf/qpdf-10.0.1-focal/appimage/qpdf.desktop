@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Terminal=true
+Exec=qpdf
+Name=qpdf
+Comment=Structural, content-preserving transformations on PDF files
+Icon=qpdf
+Categories=Utility;

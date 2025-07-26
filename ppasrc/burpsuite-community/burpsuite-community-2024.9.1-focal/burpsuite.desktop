@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Burp Suite Community Edition
+GenericName="Burp Suite Community Edition"
+Comment="Investigate website interactions using a web proxy"
+Exec=java -jar /opt/burpsuite-community/burpsuite-community.jar
+Icon=burpsuite
+Terminal=false
+Type=Application
+Categories=Development;Network;

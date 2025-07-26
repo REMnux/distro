@@ -1,0 +1,73 @@
+#!/usr/bin/env perl
+require 5.008;
+use warnings;
+use strict;
+
+chdir("dct") or die "chdir testdir failed: $!\n";
+
+require TestDriver;
+
+# This test suite does light verification of DCT by running some data
+# through a round trip with one encoding system. The
+# examples/pdf-create program also exercises DCT but does so more
+# fully.
+
+my $td = new TestDriver('dct');
+
+cleanup();
+
+my $checked_data = 0;
+foreach my $d (['rawdata', '400 256 gray', 0],
+               ['big-rawdata', '1024 576 rgb', 0.2])
+{
+    my ($in, $args, $mismatch_fraction) = @$d;
+    $td->runtest("compress",
+                 {$td->COMMAND => "dct_compress $in a.jpg $args"},
+                 {$td->STRING => "", $td->EXIT_STATUS => 0});
+    $td->runtest("decompress",
+                 {$td->COMMAND => "dct_uncompress a.jpg out"},
+                 {$td->STRING => "", $td->EXIT_STATUS => 0});
+    # Compare
+    my @raw = get_data($in);
+    my @processed = get_data('out');
+    my $bytes = scalar(@raw);
+    if ($td->runtest("bytes in data",
+                     {$td->STRING => scalar(@processed)},
+                     {$td->STRING => $bytes}))
+    {
+        ++$checked_data;
+        my $mismatch = 0;
+        for (my $i = 0; $i < scalar(@raw); ++$i)
+        {
+            my $delta = abs(ord($raw[$i]) - ord($processed[$i]));
+            if ($delta > 10)
+            {
+                ++$mismatch;
+            }
+        }
+        my $threshold = int($mismatch_fraction * $bytes);
+        $td->runtest("data is close enough",
+                     {$td->STRING => $mismatch <= $threshold ? 'pass' : 'fail'},
+                     {$td->STRING => 'pass'});
+    }
+}
+
+cleanup();
+
+$td->report(6 + $checked_data);
+
+sub cleanup
+{
+    system("rm -f a.jpg out");
+}
+
+sub get_data
+{
+    my $file = shift;
+    local $/ = undef;
+    open(F, "<$file") || die;
+    binmode(F);
+    my $data = <F>;
+    close(F);
+    split('', $data);
+}

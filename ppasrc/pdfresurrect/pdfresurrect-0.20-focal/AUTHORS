@@ -1,0 +1,24 @@
+Matt Davis (enferex): Original pdfresurrect, modified man page
+
+Francois Marier: Original man page, modified Makefile.in
+                 and modified configure.ac, potential security bug identifying
+                 (e.g., bad code detection).
+
+David Binderman: Finding a bug and offering a correction suggestion
+
+Ryan Schmidt: MacPorts Makefile work
+
+xambroz: Suggestions and Makefile enhancement.
+
+j0lamma: Identified a bug that can cause a corrupted buffer.
+
+capcorpscert0188, LeeSunWoo, ParkInChul: Identified a bug that can cause
+                                         a corrupted buffer.
+
+rtfingc: Reported bugs regarding memory corruption and a leak.
+
+rwhitworth: Reported and helped isolate bugs. Created initial .gitignore.
+
+carter-yagemann: Reported and helped isolate a memory issue.
+
+rootup: Reporting and helped isolate a memory issue.

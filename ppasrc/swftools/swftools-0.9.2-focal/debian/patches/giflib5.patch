@@ -1,0 +1,25 @@
+## giflib5.patch by Matthias Klose <doko@ubuntu.com>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: This patch adds support for giflib5 which changes its API.
+
+--- a/src/gif2swf.c
++++ b/src/gif2swf.c
+@@ -468,7 +468,7 @@ TAG *MovieAddFrame(SWF * swf, TAG * t, c
+ 
+     free(pal);
+     free(imagedata);
+-    DGifCloseFile(gft);
++    DGifCloseFile(gft, NULL);
+ 
+     return t;
+ }
+@@ -541,7 +541,7 @@ int CheckInputFile(char *fname, char **r
+             fprintf(stderr, "frame: %u, delay: %.3f sec\n", i + 1, getGifDelayTime(gft, i) / 100.0);
+     }
+ 
+-    DGifCloseFile(gft);
++    DGifCloseFile(gft, NULL);
+ 
+     return 0;
+ }

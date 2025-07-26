@@ -1,0 +1,8 @@
+{
+  "runtimeOptions": {
+    "additionalProbingPaths": [
+      "/home/remnux/.dotnet/store/|arch|/|tfm|",
+      "/home/remnux/.nuget/packages"
+    ]
+  }
+}

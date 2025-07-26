@@ -1,0 +1,6 @@
+# Source file for swfs/rfxview.swf is swfs/rfxview.sc
+source: source-is-missing swfs/rfxview.swf
+
+# Sources for these two files are added into d/missing-sources.
+source: source-is-missing swfs/swft_loader.swf
+source: source-is-missing swfs/tessel_loader.swf

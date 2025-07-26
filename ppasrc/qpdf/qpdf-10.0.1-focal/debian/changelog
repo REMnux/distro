@@ -1,0 +1,638 @@
+qpdf (10.0.1-3-focal) focal; urgency=medium
+
+  * Repackaged for bionic and focal.
+
+ -- REMnux Distribution <distro@remnux.org>  Sun, 07 Jun 2020 13:42:10 -0400
+
+qpdf (10.0.1-2) unstable; urgency=medium
+
+  * Apply patch to link with -latomic if needed. (Closes: #902642)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Fri, 10 Apr 2020 13:39:17 -0400
+
+qpdf (10.0.1-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Thu, 09 Apr 2020 17:16:38 -0400
+
+qpdf (10.0.0-1) experimental; urgency=medium
+
+  * New upstream release.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Mon, 06 Apr 2020 13:02:11 -0400
+
+qpdf (9.1.1-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Update standards to 4.5.0. No changes required.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 26 Jan 2020 21:08:43 -0500
+
+qpdf (9.1.0-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 17 Nov 2019 08:24:01 -0500
+
+qpdf (9.1~rc1-1) experimental; urgency=medium
+
+  * New upstream release.
+  * Includes build dependency on gnutls to use gnutls crypto provider
+    instead of qpdf's native crypto.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 10 Nov 2019 21:38:01 -0500
+
+qpdf (9.0.2-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 13 Oct 2019 20:42:32 -0400
+
+qpdf (9.0.1-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Upstream release includes detection of duplicated dictionary keys.
+    (Closes: #933397)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Fri, 20 Sep 2019 09:35:45 -0400
+
+qpdf (9.0.0-2) unstable; urgency=medium
+
+  * Patch for integer conversion warnings on big-endian systems and to fix
+    a test failure (from a bad test, not a coding error) for systems where
+    char is unsigned.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Tue, 17 Sep 2019 19:18:59 -0400
+
+qpdf (9.0.0-1) unstable; urgency=medium
+
+  * Use https on download address in copyright file. (Closes: #933401)
+  * Update standards to 4.4.0. No changes required.
+  * New upstream release.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 31 Aug 2019 21:45:41 -0400
+
+qpdf (8.4.2-1) unstable; urgency=medium
+
+  * Update standards to 4.3.0. No changes required.
+  * New upstream release.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 18 May 2019 09:55:37 -0400
+
+qpdf (8.4.1-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 27 Apr 2019 22:13:00 -0400
+
+qpdf (8.4.0-2) unstable; urgency=medium
+
+  * Stop having library packages recommend binary packages. I'm not sure
+    this was ever done or why it took so long to notice. (Closes: #921722)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Fri, 08 Feb 2019 17:43:33 -0500
+
+qpdf (8.4.0-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 02 Feb 2019 09:42:59 -0500
+
+qpdf (8.3.0-2) unstable; urgency=medium
+
+  * Fix potential data loss. The change is already in master. Details in
+    https://github.com/qpdf/qpdf/issues/276
+
+ -- Jay Berkenbilt <qjb@debian.org>  Thu, 17 Jan 2019 10:52:00 -0500
+
+qpdf (8.3.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Install bash and zsh completion files.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Mon, 07 Jan 2019 18:47:47 -0500
+
+qpdf (8.2.1-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Change interpreter path for fix-qdf to not use /usr/bin/env
+  * Update standards version to 4.2.0
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 18 Aug 2018 11:21:48 -0400
+
+qpdf (8.2.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Includes documentation fixes reported as debian bug. (Closes: #902642)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Fri, 17 Aug 2018 21:32:53 -0400
+
+qpdf (8.1.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Includes fix for CVE-2018-9918
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 23 Jun 2018 09:17:28 -0400
+
+qpdf (8.0.2-3) unstable; urgency=medium
+
+  * Add patch for CVE-2018-9918 from upstream commit
+    b4d6cf6836ce025ba1811b7bbec52680c7204223. (Closes: #895443)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 15 Apr 2018 16:24:12 -0400
+
+qpdf (8.0.2-2) unstable; urgency=medium
+
+  * Update debhelper dependency to 10.3 for dh_missing. (Closes: #893581)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 25 Mar 2018 08:29:34 -0400
+
+qpdf (8.0.2-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Tue, 06 Mar 2018 11:54:54 -0500
+
+qpdf (8.0.1-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 04 Mar 2018 08:40:53 -0500
+
+qpdf (8.0.0-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 25 Feb 2018 16:55:10 -0500
+
+qpdf (8.0~a1-1) experimental; urgency=medium
+
+  * New upstream release.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Wed, 21 Feb 2018 07:15:50 -0500
+
+qpdf (7.1.1-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 04 Feb 2018 19:05:20 -0500
+
+qpdf (7.1.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Update standards to 4.1.3. No changes required.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 14 Jan 2018 22:22:11 -0500
+
+qpdf (7.0.0-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Fri, 15 Sep 2017 23:12:59 -0400
+
+qpdf (7.0~b1-3) experimental; urgency=medium
+
+  * Redo debian rules to use dh over cdbs.
+  * 7.0~b1 closes several bugs. (Closes: #863390, #871320, #825246)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Thu, 24 Aug 2017 21:40:57 -0400
+
+qpdf (7.0~b1-2) experimental; urgency=medium
+
+  * No code changes from previous upload other than noting that several
+    bugs are closed. I left this out of the earlier changelog. This
+    release has many enhancements and fixes many bugs. There are also
+    several CVE fixes: CVE-2017-11624, CVE-2017-11625, CVE-2017-11626,
+    CVE-2017-11627, CVE-2017-9208, CVE-2017-9209, CVE-2017-9210. A full
+    listing of the changes in this version will be included in the release
+    notes of the final 7.0.0 release.
+  * Change build dependency for libjpeg-dev to leave only virtual package.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Wed, 23 Aug 2017 12:19:47 -0400
+
+qpdf (7.0~b1-1) experimental; urgency=medium
+
+  * New upstream release. Includes soname bump.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Tue, 22 Aug 2017 16:34:17 -0400
+
+qpdf (6.0.0-2) unstable; urgency=medium
+
+  * Upload to unstable.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Mon, 16 Nov 2015 14:10:13 -0500
+
+qpdf (6.0.0-1) experimental; urgency=medium
+
+  * New upstream release. Includes soname bump.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Tue, 10 Nov 2015 13:52:29 -0500
+
+qpdf (5.2.0-2) unstable; urgency=medium
+
+  * Revert ABI change. This is reverts the deterministic ID change
+    introduced in 5.2.0 but retains the other fix. 6.0.0 will be released
+    imminently with the new functionality. This version is compatible with
+    5.1.3. (Closes: #804706)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Tue, 10 Nov 2015 13:08:28 -0500
+
+qpdf (5.2.0-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 01 Nov 2015 16:48:58 -0500
+
+qpdf (5.1.3-3) unstable; urgency=high
+
+  * Update copyright to include a few files that had separate copyrights
+    from the rest of the software. (Closes: #794555)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 06 Sep 2015 18:37:40 -0400
+
+qpdf (5.1.3-2) unstable; urgency=medium
+
+  * Upload for gcc5 transition. Rename libqpdf13 to libqpdf13v5.
+    (Closes: #791255)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Mon, 03 Aug 2015 09:39:26 -0400
+
+qpdf (5.1.3-1) unstable; urgency=medium
+
+  * New upstream release. Includes all previous patches.
+  * Update standards to 3.9.6. No changes required.
+  * Fix typo in package description. (Closes: #779192)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 24 May 2015 17:47:05 -0400
+
+qpdf (5.1.2-3) experimental; urgency=medium
+
+  * Handle broken PDF files with missing /Type keys in their page
+    dictionary nodes. (Uploaded to experimental during debian freeze --
+    this is production-ready.)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Mon, 29 Dec 2014 10:27:12 -0500
+
+qpdf (5.1.2-2) unstable; urgency=medium
+
+  * Properly handle pages with no /Content in the page dictionary,
+    enabling printing of files with blank pages as produced by some
+    software. (Closes: #769599)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Fri, 14 Nov 2014 21:07:25 -0500
+
+qpdf (5.1.2-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 07 Jun 2014 17:13:43 -0400
+
+qpdf (5.1.1-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Tue, 14 Jan 2014 15:51:35 -0500
+
+qpdf (5.1.0-1) unstable; urgency=medium
+
+  * New upstream release
+  * Use dh-autoreconf (Closes: #732093)
+  * Update standards to 3.9.5.  No changes required.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Tue, 17 Dec 2013 15:50:11 -0500
+
+qpdf (5.0.1-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Jay Berkenbilt <qjb@debian.org>  Fri, 18 Oct 2013 12:53:02 -0400
+
+qpdf (5.0.0-2) unstable; urgency=low
+
+  * Upload to unstable
+
+ -- Jay Berkenbilt <qjb@debian.org>  Fri, 26 Jul 2013 09:45:50 -0400
+
+qpdf (5.0.0-1) experimental; urgency=low
+
+  * New upstream release
+
+ -- Jay Berkenbilt <qjb@debian.org>  Wed, 10 Jul 2013 13:34:36 -0400
+
+qpdf (4.2.0-2) unstable; urgency=low
+
+  * Revert ABI change caused by bug fix.  The bug fix will be re-released
+    in qpdf 5.0.0.  (Closes: #715448)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Wed, 10 Jul 2013 13:00:43 -0400
+
+qpdf (4.2.0-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 07 Jul 2013 19:05:03 -0400
+
+qpdf (4.1.0-2) unstable; urgency=low
+
+  * Re-upload to unstable.
+  * Build depend on autotools-dev to always get latest config.sub and
+    config.guess
+  * Update standards version to 3.9.4.  No changes made.  (qpdf is a C++
+    library with versioned symbols that version "*", so we continue to use
+    a shlibs file instead of a symbols file.)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Tue, 07 May 2013 14:15:47 -0400
+
+qpdf (4.1.0-1) experimental; urgency=low
+
+  * New upstream release
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 14 Apr 2013 14:51:40 -0400
+
+qpdf (4.0.1-2) experimental; urgency=low
+
+  * Bug fix: proper handling of overridden compressed objects.  This fix
+    is backported from upstream and will be part of 4.1.0.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 23 Feb 2013 18:11:56 -0500
+
+qpdf (4.0.1-1) experimental; urgency=low
+
+  * New upstream release.  All patches incorporated.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Thu, 17 Jan 2013 10:09:39 -0500
+
+qpdf (4.0.0-2) experimental; urgency=low
+
+  * Patch to test code for detection of binary attachments on big-endian
+    systems.  No actual qpdf code is changed.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Wed, 16 Jan 2013 13:44:28 -0500
+
+qpdf (4.0.0-1) experimental; urgency=low
+
+  * New upstream release
+
+ -- Jay Berkenbilt <qjb@debian.org>  Mon, 31 Dec 2012 11:06:44 -0500
+
+qpdf (3.0.2-1) experimental; urgency=low
+
+  * New upstream release
+
+ -- Jay Berkenbilt <qjb@debian.org>  Thu, 06 Sep 2012 16:42:48 -0400
+
+qpdf (3.0.1-1) experimental; urgency=low
+
+  * New upstream release
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 11 Aug 2012 13:58:29 -0400
+
+qpdf (3.0.0-2) experimental; urgency=low
+
+  * Package .pc file in dev package.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Thu, 09 Aug 2012 21:20:22 -0400
+
+qpdf (3.0.0-1) experimental; urgency=low
+
+  * New upstream release
+  * Note: this release is fully production-ready.  It has been uploaded to
+    debian experimental only because of the Wheezy freeze in effect at the
+    time of upload.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Thu, 02 Aug 2012 06:36:49 -0400
+
+qpdf (3.0~rc1-1) experimental; urgency=low
+
+  * New upstream release
+  * Change hardening to use dpkg-buildflags
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 29 Jul 2012 14:57:40 -0400
+
+qpdf (2.3.1-4) unstable; urgency=low
+
+  * Work around portability issues exposed by upgrading to gcc 4.7.  The
+    next upstream version of qpdf will handle these properly.  (Closes:
+    #673404)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 19 May 2012 09:21:52 -0400
+
+qpdf (2.3.1-3) unstable; urgency=low
+
+  * Enable hardening and multiarch.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 22 Apr 2012 10:51:21 -0400
+
+qpdf (2.3.1-2) unstable; urgency=low
+
+  * Fix to work with pcre 8.30.  (Closes: #666308)
+  * Update standards to 3.9.3.
+  * Fix typo in zlib-flate manual page.  Thanks A. Costa.  (Closes:
+    #666983)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Fri, 06 Apr 2012 21:45:43 -0400
+
+qpdf (2.3.1-1) unstable; urgency=low
+
+  * New upstream release
+  * Release includes documentation fixes reported in debian bug reports.
+    (Closes: #638038, #636931)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Wed, 28 Dec 2011 17:38:56 -0500
+
+qpdf (2.3.0-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Jay Berkenbilt <qjb@debian.org>  Thu, 11 Aug 2011 16:43:32 -0400
+
+qpdf (2.2.4-1) unstable; urgency=low
+
+  * New upstream release.
+  * -Werror is now disabled by default, so it is no longer disabled
+    explicitly in debian/rules.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 25 Jun 2011 15:14:13 -0400
+
+qpdf (2.2.3-2) unstable; urgency=low
+
+  * Disable -Werror for debian builds. (Closes: #625420)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 07 May 2011 09:37:25 -0400
+
+qpdf (2.2.3-1) unstable; urgency=low
+
+  * New upstream release
+  * Updated standards to 3.9.2.  No changes required.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 30 Apr 2011 16:18:28 -0400
+
+qpdf (2.2.2-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Jay Berkenbilt <qjb@debian.org>  Mon, 04 Oct 2010 12:14:33 -0400
+
+qpdf (2.2.1-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 02 Oct 2010 12:00:30 -0400
+
+qpdf (2.2.0-2) unstable; urgency=low
+
+  * Updated shlibs file to reflect added API.  Thanks Julien Cristau.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 21 Aug 2010 12:02:55 -0400
+
+qpdf (2.2.0-1) unstable; urgency=low
+
+  * New upstream release
+  * Updated standards to 3.9.1.  No changes required.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 14 Aug 2010 14:14:52 -0400
+
+qpdf (2.1.5-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 25 Apr 2010 11:11:03 -0400
+
+qpdf (2.1.4-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 18 Apr 2010 19:26:55 -0400
+
+qpdf (2.1.3-1) unstable; urgency=low
+
+  * New upstream release
+  * Updated standards version to 3.8.4.  No changes required.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 27 Mar 2010 12:24:48 -0400
+
+qpdf (2.1.2-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 24 Jan 2010 20:47:09 -0500
+
+qpdf (2.1.1-1) unstable; urgency=low
+
+  * New upstream release
+  * Updated source format to '3.0 (quilt)'
+  * Upstream release builds with gcc 4.4. (Closes: #559877)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Mon, 14 Dec 2009 15:02:12 -0500
+
+qpdf (2.1-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Jay Berkenbilt <qjb@debian.org>  Fri, 30 Oct 2009 19:59:00 -0400
+
+qpdf (2.1~rc1-1) experimental; urgency=low
+
+  * New upstream release.  Several enhancements including support for PDF
+    files with AES encryption, a partial C API (qpdf is primarily C++),
+    and several additional enhancements to the API.  There are a few
+    source API changes, though most programs will not be affected; details
+    in documentation.
+  * Updated standards version to 3.8.3.  No changes required.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 24 Oct 2009 10:33:43 -0400
+
+qpdf (2.0.6-1) unstable; urgency=low
+
+  * New upstream release
+  * New release includes a fix for streams with decode parameters that
+    qpdf doesn't understand.  (It ignores them and leaves the streams
+    unfiltered instead of giving an error message.)
+  * Updated standards version to 3.8.1.  No changes required.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 03 May 2009 16:30:11 -0400
+
+qpdf (2.0.5-1) unstable; urgency=low
+
+  * New upstream release
+  * New release includes fixes to LZW decoder and improved features for
+    handling files with damaged streams.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Tue, 10 Mar 2009 13:02:50 -0400
+
+qpdf (2.0.4-1) unstable; urgency=low
+
+  * New upstream release
+  * Fix README.source since we don't use tarball in tarball anymore.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 22 Feb 2009 17:39:50 -0500
+
+qpdf (2.0.3-1) unstable; urgency=low
+
+  * New upstream release
+  * Upstream release includes fix for gcc 4.4 compilation errors.
+    (Closes: #505422)
+  * No longer use tarball in tarball source package format
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 15 Feb 2009 18:02:05 -0500
+
+qpdf (2.0.2-1) unstable; urgency=low
+
+  * New upstream release.  All debian changes incorporated.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Mon, 30 Jun 2008 11:04:02 -0400
+
+qpdf (2.0.1-3) unstable; urgency=low
+
+  * Fix bashism in test suite.  (Closes: #485047)
+  * Update standards version to 3.8.0 by adding a debian/README.source
+    file.  NO other changes were required.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 07 Jun 2008 21:14:05 -0400
+
+qpdf (2.0.1-2) unstable; urgency=low
+
+  * Increase timeout in test driver to be more tolerant of slow build
+    systems.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Wed, 07 May 2008 11:44:56 -0400
+
+qpdf (2.0.1-1) unstable; urgency=low
+
+  * New upstream release
+  * All debian patches incorporated.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Tue, 06 May 2008 12:15:20 -0400
+
+qpdf (2.0-5) unstable; urgency=low
+
+  * Fix 64-bit errors
+
+ -- Jay Berkenbilt <qjb@debian.org>  Mon, 05 May 2008 10:38:23 -0400
+
+qpdf (2.0-4) unstable; urgency=low
+
+  * Remove tests in specific locales.  These are obsolete and cause false
+    failures when locales aren't fully configured.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 04 May 2008 22:02:56 -0400
+
+qpdf (2.0-3) unstable; urgency=low
+
+  * Added missing header files needed for g++-4.3.  (Closes: #479301).
+    (Now figuring out why my sid chroot doesn't have gcc 4.3.)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 04 May 2008 12:01:31 -0400
+
+qpdf (2.0-2) unstable; urgency=low
+
+  * Added missing strlen.h to correct build failure.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 03 May 2008 22:04:26 -0400
+
+qpdf (2.0-1) unstable; urgency=low
+
+  * Initial public release.  (Closes: #478585)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Wed, 30 Apr 2008 12:00:29 -0400

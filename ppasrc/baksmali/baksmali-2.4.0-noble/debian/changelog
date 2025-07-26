@@ -1,0 +1,11 @@
+baksmali (2.4.0-noble) noble; urgency=medium
+
+  * Noble release.
+
+ -- REMnux Distribution <distro@remnux.org>  Fri, 25 Jul 2025 21:26:21 -0400
+
+baksmali (2.4.0-focal) focal; urgency=medium
+
+  * Initial Release.
+
+ -- REMnux Distribution <distro@remnux.org>  Mon, 06 Jul 2020 19:39:09 -0400

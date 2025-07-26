@@ -1,0 +1,38 @@
+Description: Do not generate avi2swf.
+Author: Christian Welzel <gawain@camlann.de>
+Last-Update: 2012-03-25
+
+--- swftools.orig/configure.in
++++ swftools/configure.in
+@@ -476,13 +476,13 @@
+   echo "* The following headers/libraries are missing: " ${MISSINGLIBS}
+ fi
+ 
+-avi2swf="avi2swf/Makefile"
+-if test "x${AVIFILE}" '!=' "xtrue" -a "x${AVIFIL32}" '!=' "xtrue"; then
+- #don't whine, avi2swf is outdated anyway
+- #echo "* Disabling avi2swf tool..."
+- echo all install uninstall clean: > avi2swf/Makefile
+- avi2swf=
+-fi
++#avi2swf="avi2swf/Makefile"
++#if test "x${AVIFILE}" '!=' "xtrue" -a "x${AVIFIL32}" '!=' "xtrue"; then
++# #don't whine, avi2swf is outdated anyway
++# #echo "* Disabling avi2swf tool..."
++# echo all install uninstall clean: > avi2swf/Makefile
++# avi2swf=
++#fi
+ 
+ pdf2swf_makefile="lib/pdf/Makefile"
+ PDF2SWF='pdf2swf$(E)'
+--- swftools.orig/Makefile.in
++++ swftools/Makefile.in
+@@ -14,8 +14,6 @@
+ #	cd lib/python;$(MAKE) $@
+ 	@echo making $@ in lib/ruby...
+ 	cd src;$(MAKE) $@
+-	@echo making $@ in avi2swf...
+-	cd avi2swf;$(MAKE) $@
+ 	@echo making $@ in swfs...
+ 	cd swfs;$(MAKE) $@
+ 	@$(MAKE) $@-local

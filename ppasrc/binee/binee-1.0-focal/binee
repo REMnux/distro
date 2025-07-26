@@ -1,0 +1,2 @@
+#!/bin/bash
+LD_LIBRARY_PATH=/opt/binee-files:$LD_LIBRARY_PATH /opt/binee-files/binee -r /opt/binee-files/win10_32/ ${*}

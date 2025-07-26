@@ -1,0 +1,17 @@
+fakenet-ng (1.4.11-focal) focal; urgency=medium
+
+  * Updated to latest upstream version and bionic. 
+
+ -- REMnux Distribution <distro@remnux.org>  Thu, 25 Jun 2020 20:00:36 -0400
+
+flare-fakenet-ng (1.1-5) trusty; urgency=medium
+
+  * Updated to match upstream version. 
+
+ -- REMnux <remnux@remnux>  Mon, 03 Jul 2017 15:17:27 -0400
+
+flare-fakenet-ng (1.1-4) trusty; urgency=medium
+
+  * Initial Release.
+
+ -- REMnux Distribution (https://REMnux.org) <distro@remnux.org>  Sat, 17 Jun 2017 20:59:56 -0400

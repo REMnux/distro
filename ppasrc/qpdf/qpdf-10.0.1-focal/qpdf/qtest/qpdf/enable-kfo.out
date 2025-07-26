@@ -1,0 +1,45 @@
+qpdf: selecting --keep-open-files=y
+qpdf: processing 010-kfo.pdf
+qpdf: processing 011-kfo.pdf
+qpdf: processing 012-kfo.pdf
+qpdf: processing 013-kfo.pdf
+qpdf: processing 014-kfo.pdf
+qpdf: processing 015-kfo.pdf
+qpdf: processing 016-kfo.pdf
+qpdf: processing 017-kfo.pdf
+qpdf: processing 018-kfo.pdf
+qpdf: processing 019-kfo.pdf
+qpdf: empty PDF: checking for shared resources
+qpdf: no shared resources found
+qpdf: 010-kfo.pdf: checking for shared resources
+qpdf: no shared resources found
+qpdf: 011-kfo.pdf: checking for shared resources
+qpdf: no shared resources found
+qpdf: 012-kfo.pdf: checking for shared resources
+qpdf: no shared resources found
+qpdf: 013-kfo.pdf: checking for shared resources
+qpdf: no shared resources found
+qpdf: 014-kfo.pdf: checking for shared resources
+qpdf: no shared resources found
+qpdf: 015-kfo.pdf: checking for shared resources
+qpdf: no shared resources found
+qpdf: 016-kfo.pdf: checking for shared resources
+qpdf: no shared resources found
+qpdf: 017-kfo.pdf: checking for shared resources
+qpdf: no shared resources found
+qpdf: 018-kfo.pdf: checking for shared resources
+qpdf: no shared resources found
+qpdf: 019-kfo.pdf: checking for shared resources
+qpdf: no shared resources found
+qpdf: removing unreferenced pages from primary input
+qpdf: adding pages from 010-kfo.pdf
+qpdf: adding pages from 011-kfo.pdf
+qpdf: adding pages from 012-kfo.pdf
+qpdf: adding pages from 013-kfo.pdf
+qpdf: adding pages from 014-kfo.pdf
+qpdf: adding pages from 015-kfo.pdf
+qpdf: adding pages from 016-kfo.pdf
+qpdf: adding pages from 017-kfo.pdf
+qpdf: adding pages from 018-kfo.pdf
+qpdf: adding pages from 019-kfo.pdf
+qpdf: wrote file a.pdf

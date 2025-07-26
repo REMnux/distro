@@ -1,0 +1,44 @@
+{
+  "/k1": "scalar1",
+  "/k2": 16059,
+  "/k3": {
+    "/a": "a",
+    "/b": "conflict: seen",
+    "/c": [
+      2,
+      3
+    ],
+    "/d": {
+      "/y": 25,
+      "/z": 26
+    },
+    "/e": "e"
+  },
+  "/k4": {
+    "/A": 65,
+    "/B": 66,
+    "/C": 67,
+    "/indirect2": "8 0 R",
+    "/recursive": "9 0 R"
+  },
+  "/k5": [
+    "/one",
+    2,
+    "three",
+    [
+      "/four"
+    ],
+    "two"
+  ]
+}
+/A
+/B
+/C
+/a
+/b
+/c
+/d
+/e
+/indirect2
+/recursive
+test 50 done

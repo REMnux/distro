@@ -1,0 +1,12 @@
+Source: 7zz
+Section: utils
+Priority: optional
+Maintainer: REMnux Distribution <distro@remnux.org>
+Build-Depends: debhelper (>= 10)
+Standards-Version: 4.1.2
+Homepage: https://www.7-zip.org
+
+Package: 7zz
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Compress and decompress files using a variety of algorithms. This is the latest alpha version of 7-Zip.

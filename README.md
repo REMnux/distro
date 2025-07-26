@@ -1,0 +1,1 @@
+This repository contains supplemental files for the [REMnux](https://REMnux.org) distro and the source files for the Debian packages that the distro installs from the [REMnux package repository](https://launchpad.net/~remnux/+archive/ubuntu/stable/+packages) on Launchpad.

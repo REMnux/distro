@@ -1,0 +1,32 @@
+Tests: basic-check
+
+Test-Command: ./debian/tests/regressions-check 775451-assert149.elf "UnknownExecutableFormatException"
+Features: test-name=bug775451-check1
+
+Test-Command: ./debian/tests/regressions-check 775451-assert150.elf "UnknownExecutableFormatException"
+Features: test-name=bug775451-check2
+
+Test-Command: ./debian/tests/regressions-check 775455-crash.elf "UnknownExecutableFormatException"
+Features: test-name=bug775455-check
+
+Test-Command: ./debian/tests/regressions-check 873260-crash.upx "CantPackException: bad e_phoff"
+Features: test-name=bug873260-check
+
+Test-Command: ./debian/tests/regressions-check 882401-segfault-macho "CantPackException: bad Mach_command"
+Features: test-name=bug882401-check
+
+Test-Command: ./debian/tests/regressions-check 899190-poc1 "CantPackException: bad PT_DYNAMIC"
+Features: test-name=bug899190-check1
+
+Test-Command: ./debian/tests/regressions-check 899190-poc2 "CantPackException: DT_STRTAB above stub"
+Features: test-name=bug899190-check2
+
+Test-Command: ./debian/tests/regressions-check -d 907426-poc_free "Exception: compressed data violation"
+Features: test-name=bug907426-check
+Restrictions: flaky
+
+Test-Command: ./debian/tests/regressions-check -d 933232-poc-integer-overflow "CantUnpackException: bad e_phoff"
+Features: test-name=bug933232-check1
+
+Test-Command: ./debian/tests/regressions-check --no-qq -d 933232-poc-buffer-overflow "NotPackedException: not packed by UPX" 2
+Features: test-name=bug933232-check2

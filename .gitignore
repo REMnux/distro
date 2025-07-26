@@ -1,0 +1,11 @@
+burpsuite-community.jar
+lost+found
+*.build
+*.upload
+*.changes
+*.buildinfo
+*.xz
+*.gz
+*.tar
+ghidra_*.zip
+!files.*

@@ -1,0 +1,37 @@
+dex2jar (2.1-focal) focal; urgency=medium
+
+  * Repackaging for REMnux 
+
+ -- REMnux Distribution <distro@remnux.org>  Mon, 15 Jun 2020 20:23:58 -0400
+
+dex2jar (2.1~nightly-28-0kali1) kali-dev; urgency=medium
+
+  * Update upstream Homepage
+  * Use debhelper 11
+  * Bump Standards-Version to 4.2.1 (change priority to optional)
+  * Update debian/copyright
+  * d/control: update Maintainers and Uploaders fields
+  * New upstream version 2.1~nightly-28
+  * Install dex-tools script
+  * Refresh patch
+  * d/rules: remove the extension .sh for files in /usr/bin
+
+ -- Sophie Brun <sophie@freexian.com>  Wed, 28 Nov 2018 10:37:37 +0100
+
+dex2jar (0.0.9.15-1kali0) kali; urgency=low
+
+  * Imported new upstream release and added watch file (Closes: 0000861)
+
+ -- Devon Kearns <dookie@kali.org>  Mon, 06 Jan 2014 07:44:53 -0700
+
+dex2jar (0.0.9.11-1kali2) kali; urgency=low
+
+  * Removed desktop file
+
+ -- Mati Aharoni <muts@kali.org>  Sat, 15 Dec 2012 07:07:06 -0500
+
+dex2jar (0.0.9.11-1kali1) kali; urgency=low
+
+  * Initial release 
+
+ -- dookie <dookie@kali.org>  Wed, 21 Nov 2012 19:50:39 -0700

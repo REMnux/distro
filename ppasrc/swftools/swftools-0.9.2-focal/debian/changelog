@@ -1,0 +1,162 @@
+swftools (0.9.2-focal) focal; urgency=medium
+
+  * Updated for focal compatibility. 
+
+ -- REMnux Distribution <distro@remnux.org>  Fri, 27 Nov 2020 20:14:33 -0500
+
+swftools (0.9.2+git20130725-4.1) unstable; urgency=high
+
+  * Non-maintainer upload.
+  * Fix an integer overflow issue in png.c (CVE-2017-8400) (Closes: #861693)
+
+ -- Salvatore Bonaccorso <carnil@debian.org>  Sat, 27 May 2017 13:25:12 +0200
+
+swftools (0.9.2+git20130725-4) unstable; urgency=medium
+
+  * Build using giflib5 (patch by Matthias Klose <doko@ubuntu.com>)
+    (Closes: #803291)
+  * Bumped standards version.
+  * Fixed ordering in copyright file.
+  * Renamed config sections in gbp.conf
+
+ -- Christian Welzel <gawain@camlann.de>  Tue, 15 Dec 2015 22:46:11 +0100
+
+swftools (0.9.2+git20130725-3) unstable; urgency=low
+
+  * Added build dependency on libzzip-dev (Closes: 760541)
+
+ -- Christian Welzel <gawain@camlann.de>  Tue, 30 Sep 2014 22:32:11 +0200
+
+swftools (0.9.2+git20130725-2) unstable; urgency=low
+
+  * Removed build dependency on libt1-dev. (Closes: 732651)
+  * Bump Standards Version to 3.9.5.
+  * Added debian/gbp.conf.
+
+ -- Christian Welzel <gawain@camlann.de>  Tue, 04 Mar 2014 09:00:00 +0100
+
+swftools (0.9.2+git20130725-1) unstable; urgency=low
+
+  * New version from upstream git: commit b6e946b
+    (Closes: 715912, 715961, 716159, 716366).
+  * Changed build depends from libjpeg8-dev to libjpeg-dev (Closes: 694700).
+  * Bump Standards Version to 3.9.4.
+  * Added Vcs-* header to control.
+  * Added hardening build flags.
+  * Added debug package.
+
+ -- Christian Welzel <gawain@camlann.de>  Sun, 15 Sep 2013 20:42:54 +0200
+
+swftools (0.9.2+ds1-3) unstable; urgency=low
+
+  * Added fix for segfault on i386. (Closes: 690237)
+
+ -- Christian Welzel <gawain@camlann.de>  Mon, 22 Oct 2012 12:42:54 +0100
+
+swftools (0.9.2+ds1-2) unstable; urgency=low
+
+  * Removed numbering from patch names and sorted alphabetically.
+  * Build with LAME support.
+  * Updated copyright file.
+
+ -- Christian Welzel <gawain@camlann.de>  Sat, 21 Apr 2012 12:42:54 +0100
+
+swftools (0.9.2+ds1-1) unstable; urgency=low
+
+  * New maintainer (Closes: 583982).
+  * New upstream release.
+  * Bump Standards Version to 3.9.3.
+  * Switch to source format 3.0 (quilt), remove dpatch, rename patch files.
+  * Raise dh compat level to 7.
+  * debian/rules completely rewritten.
+  * Add build-depends on autotools-dev, flex, libjpeg8-dev.
+  * Refresh patches.
+  * Remove 02_faq.patch (file FAQ removed from upstream source).
+  * README.source rewritten.
+  * Add build depends on libpoppler-dev and autoconf.
+  * Removed conflict and replace with libming =< 1:0.3.0-11.1 as all versions
+    in debian are later than this one.
+  * Updated watch file.
+
+ -- Christian Welzel <gawain@camlann.de>  Sun, 1 Apr 2012 12:42:54 +0100
+
+swftools (0.9.0-0ubuntu2) lucid; urgency=low
+
+  * Initial release for Lucid
+    - patches/05_xpdf-pl4.patch: added pl4 patch to embdded copy of xpdf
+  * Fixed spelling error description
+  * Updated standards version
+  * Added README.source
+  * Added misc:Depends
+  * Manually purged more files left behind after a make clean
+  * Added debian/format
+  * Took over as maintainer as this will now reside in partner
+
+ -- Brian Thomason <brian.thomason@canonical.com>  Tue, 06 Apr 2010 17:10:53 -0400
+
+swftools (0.9.0-0ubuntu1) karmic; urgency=low
+
+  * New upstream release (LP: #369931)
+    - patches/01_manpages: edited to match updated version of src/pdf2swf.1 and
+      src/wav2swf.1
+    - patches/02_faq: edited to match updated version of FAQ
+    - patches/04_makefile: edited to delete the patch on lib/Makefile.in and 
+      src/Makefile.in (applied upstream)
+    - deleted patch 99_configure_for_python2.5_and_2.6 (applied upstream)
+    - debian/swftools.doc: deleted installation of TODO and 
+      pdf2swf/HOWTO_pdf2swf as they don't exist anymore
+
+ -- Fabrice Coutadeur <fabricesp@ubuntu.com>  Thu, 30 Apr 2009 05:22:19 +0200
+
+swftools (0.8.1-2.1ubuntu1) jaunty; urgency=low
+
+  * debian/rules: 
+    - Added include of /usr/share/python/python.mk
+    - Changed site-package by $(call py_sitename_sh, $@) (LP: #?????)
+  * debian/python-rfxswf.install: changed site-packages to *-packages to take
+    into account dist-packages directory
+  * debian/patches/99_configure_for_python2.5_and_2.6.dpatch: patch configure
+    file to take python 2.5 and 2.6 into account
+
+ -- Fabrice Coutadeur <coutadeurf@gmail.com>  Tue, 31 Mar 2009 04:42:00 +0000
+
+swftools (0.8.1-2.1) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * Add versioned Replaces and Conflicts on libming-util. (Closes: #480378).
+  * Remove optional build-depends on libart-dev.
+  * Fix libgif4-dev dependency. (Should be libgif-dev).
+  * Fix up python package building. (Closes: #509629).
+    + Thanks a million to Thomas Viehmann.
+
+ -- Barry deFreese <bdefreese@debian.org>  Tue, 23 Dec 2008 13:58:42 -0500
+
+swftools (0.8.1-2) unstable; urgency=low
+
+  * Fixed the python-rfxswf dependencies. (Closes: #427834).
+  * Changed the python-rfxswf to comply with the policy.
+  * Move Homepage from package description to source stanza.
+  * Replace libungif4-dev build-dep with libgif-dev.
+  * Improve watch file regexp.
+  * Add debian/pyversions file.
+  * Fixed the minus signs in the manpages.
+  * Format copyright file for UTF-8.
+  * Bump Standards Version to 3.8.0.
+
+ -- Simo Kauppi <swk@nic.fi>  Thu, 10 Dec 2008 20:10:01 +0200
+
+swftools (0.8.1-1) unstable; urgency=low
+
+  * New upstream release 
+  * Fixed the debian/copyright to include the exceptions in MD5.c and
+    pdf2swf/fonts/*
+  * Disabled the failing check for gcc 2.95 compiler
+
+ -- Simo Kauppi <swk@nic.fi>  Sun,  4 Mar 2007 10:02:33 +0200
+
+swftools (0.8.0-1) unstable; urgency=low
+
+  * Initial release. (Closes: #187275: ITP: swftools -- collection of
+    SWF (Flash) manipulation and generation - Debian Bug report logs)
+
+ -- Simo Kauppi <swk@nic.fi>  Wed, 31 Jan 2007 17:46:16 +0200

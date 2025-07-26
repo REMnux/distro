@@ -1,0 +1,27 @@
+#!/bin/bash
+
+#
+# Determine the IP address of the default network interface.
+# If an IPv4 IP address is available, use that one; otherwise,
+# use the IPv6 address.
+#
+# Public Domain
+#
+
+# Show the IP address of the primary network interface
+function myip4 {
+  ip addr | egrep -A 1 " (en|eth)" | grep -m 1 "inet" | cut -f 6 -d " " | cut -f 1 -d "/"
+}
+function myip6 {
+  ip -6 addr | grep inet6 | awk -F '[ \t]+|/' '{print $3}' | grep -v "^::1"
+}
+
+ipv4=`myip4`
+ipv6=`myip6`
+if [ ${#ipv4} -gt 0 ]; then
+	echo $ipv4
+else
+	if [ ${#ipv6} -gt 0 ]; then
+		echo $ipv6
+	fi
+fi

@@ -1,0 +1,12 @@
+Name = Servers List
+Author = chrisu
+Description = Lists all servers (domains and (related) IP addresses). Blue ones have only been seen in the PCAP file and not in the Procmon log.
+Version = 1.0
+Type = MainMenuItem
+Architecture = LinuxShellScript
+File = serverslist_linsh.sh
+Priority = 9
+RunHidden = 1
+RunExclusively = 1
+CanOverrideOtherPlugins = 0
+CanOverrideProcDot = 0

@@ -1,0 +1,4 @@
+This package uses upstream-provided copy of LZMA library,
+mainly because the sources provided by Debian's lzma-dev
+package are not sufficient to build upx.
+See https://bugs.debian.org/871647 for more information.

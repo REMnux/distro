@@ -1,0 +1,13 @@
+Document: upx-ucl
+Title: Miscellaneous upx(ucl) documentation
+Author: Markus F.X.J. Oberhumer & Laszlo Molnar
+Abstract: This document is the documentation for upx
+ compression utility (ucl-version).
+Section: File Management
+
+Format: HTML
+Index: /usr/share/doc/upx-ucl/upx.html
+Files: /usr/share/doc/upx-ucl/upx.html
+
+Format: text
+Files: /usr/share/doc/upx-ucl/upx.doc.gz

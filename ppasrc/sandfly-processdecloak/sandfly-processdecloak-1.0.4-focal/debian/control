@@ -1,0 +1,12 @@
+Source: sandfly-processdecloak
+Section: utils
+Priority: optional
+Maintainer: REMnux Distribution <distro@remnux.org>
+Build-Depends: debhelper (>= 10)
+Standards-Version: 4.1.2
+Homepage: https://github.com/sandflysecurity/sandfly-processdecloak
+
+Package: sandfly-processdecloak
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Find hidden processes on the local Linux system.

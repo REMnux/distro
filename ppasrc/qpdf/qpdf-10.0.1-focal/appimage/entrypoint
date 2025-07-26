@@ -1,0 +1,28 @@
+#!/bin/bash
+set -e
+if [ "$SKIP_TESTS" = "1" ]; then
+    touch /tmp/skip-tests
+fi
+if [ $(id -u) = 0 ]; then
+    if [ ! -d /tmp/build ]; then
+        echo "/tmp/build must exist"
+        exit 2
+    fi
+    id=$(stat -c %u /tmp/build)
+    adduser --home /tmp/build --no-create-home --uid $id --disabled-password --gecos build build
+    exec sudo -iu build $0 "$@"
+fi
+
+cd /tmp/build
+if [ ! -d qpdf ]; then
+    if [ "$1" == "" ]; then
+        echo "A repository and optional git clone arguments must be given"
+        exit 2
+    fi
+    git clone "$@" qpdf
+fi
+cd qpdf
+if [ -f /tmp/skip-tests ]; then
+    export SKIP_TESTS=1
+fi
+./appimage/build-appimage

@@ -1,0 +1,93 @@
+Version 1.4.11
+--------------
+* TCP Custom Response and UDP Custom Response features
+* Removed stray `fcntl` import from `test.py` that prevented Windows testing in
+  some cases
+
+Version 1.4.10
+--------------
+* Fix format string errors due to line length limit
+
+Version 1.4.9
+-------------
+* Fully customizable HTTP responses without building a full listener
+
+Version 1.4.8
+-------------
+* FakeNet terminates upon listener exceptions, closing #117
+* Python 3-compliant exception handling in fakenet.py courtesy of @antman1p
+
+Version 1.4.7
+-------------
+* Output reduced for readability
+
+Version 1.4.6
+-------------
+* Fix test matchspec filter, closes #115
+
+Version 1.4.5
+-------------
+* LinuxRestrictInterface feature for MultiHost mode
+
+Version 1.4.4
+-------------
+* Moved ICMP redirection to singlehost only.
+
+Version 1.4.3
+-------------
+* Fixed unbound `proto` variable error in Windows PyDivert error case
+
+Version 1.4.2
+-------------
+* Updated contact information
+* Whitespace wrangling
+
+Version 1.4.1
+-------------
+* Syslog support
+
+Version 1.4.0
+-------------
+* Refactor FakeNet-NG to unify Windows and Linux packet handling
+* Remove Proxy Listener UDP stream abstraction to prevent issue where
+  subsequent clients do not receive response packets because the proxy listener
+  continues to send them to the old (expired) ephemeral port for the previous
+  client
+* Stop flag command-line support for rudimentary IPC-based start/stop
+  automation
+* Integration test script for MultiHost and SingleHost mode
+* Fixed Errno 98 (`TIME_WAIT`) issue with `RawTcpListener`
+* WinDivert `GetLastError` exception work-around for [WinDivert issue
+  #32](https://github.com/ffalcinelli/pydivert/issues/32)
+
+
+Version 1.3
+-----------
+* Protocol autodetection (thanks Matthew Haigh)
+* Security: fix for path traversal vulnerability (thanks Cody Pierce and Antony Saba)
+* Randomized banner generation (thanks Michael Bailey!)
+* Listener: BITS protocol support (thanks Peter Kacherginsky)
+* Various bug fixes
+
+
+Version 1.2
+-----------
+* Linux support (thanks Michael Bailey!)
+* Bug fixes
+
+Version 1.1
+-----------
+
+* POP Listener (Basic mode only)
+* TFTP Listener
+* IRC Listener
+* FTP Listener (with SSL support, Passive and Active modes).
+* Specify port ranges for listeners (e.g. 80, 8080-8085, 8888).
+* VMWare Host-Only mode autoconfiguration.
+* Support for Pydivert 2.x branch.
+* Many bug and stability fixes.
+
+Version 1.0
+-----------
+
+* Initial Windows release by Peter Kacherginsky

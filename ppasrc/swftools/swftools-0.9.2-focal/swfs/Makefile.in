@@ -1,0 +1,64 @@
+top_builddir = ..
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+include ../Makefile.common
+
+all: simple_viewer.swf keyboard_viewer.swf PreLoaderTemplate.swf
+
+programs = simple_viewer$(E) keyboard_viewer$(E) PreLoaderTemplate$(E)
+
+simple_viewer.$(O): simple_viewer.c
+	$(C) -I../lib simple_viewer.c -o $@
+keyboard_viewer.$(O): keyboard_viewer.c
+	$(C) -I../lib keyboard_viewer.c -o $@
+PreLoaderTemplate.$(O): PreLoaderTemplate.c
+	$(C) -I../lib PreLoaderTemplate.c -o $@
+
+simple_viewer$(E): simple_viewer.$(O) ../lib/librfxswf$(A) ../lib/libbase$(A)
+	$(L) simple_viewer.$(O) -o $@ ../lib/librfxswf$(A) ../lib/libbase$(A) $(LIBS) 
+keyboard_viewer$(E): keyboard_viewer.$(O) ../lib/librfxswf$(A) ../lib/libbase$(A) 
+	$(L) keyboard_viewer.$(O) -o $@ ../lib/librfxswf$(A) ../lib/libbase$(A) $(LIBS) 
+PreLoaderTemplate$(E): PreLoaderTemplate.$(O) ../lib/librfxswf$(A) ../lib/libbase$(A) 
+	$(L) PreLoaderTemplate.$(O) -o $@ ../lib/librfxswf$(A) ../lib/libbase$(A) $(LIBS) 
+
+simple_viewer.swf: $(programs)
+	@echo Calling ./keybard_viewer to create keyboard_viewer.swf
+	./simple_viewer$(E) || true
+
+keyboard_viewer.swf: $(programs)
+	@echo Calling ./simple_viewer to create simple_viewer.swf
+	./keyboard_viewer$(E) || true
+
+PreLoaderTemplate.swf: $(programs)
+	@echo Calling ./PreLoaderTemplate to create PreLoaderTemplate.swf
+	./PreLoaderTemplate$(E) || true
+
+install:
+	$(mkinstalldirs) $(pkgdatadir)
+	$(mkinstalldirs) $(pkgdatadir)/swfs
+	$(INSTALL_DATA) ./simple_viewer.swf $(pkgdatadir)/swfs/simple_viewer.swf
+	$(INSTALL_DATA) ./keyboard_viewer.swf $(pkgdatadir)/swfs/keyboard_viewer.swf
+	$(INSTALL_DATA) ./PreLoaderTemplate.swf $(pkgdatadir)/swfs/PreLoaderTemplate.swf
+	$(INSTALL_DATA) ./tessel_loader.swf $(pkgdatadir)/swfs/tessel_loader.swf
+	$(INSTALL_DATA) ./swft_loader.swf $(pkgdatadir)/swfs/swft_loader.swf
+	rm -f $(pkgdatadir)/swfs/default_viewer.swf
+	$(LN_S) $(pkgdatadir)/swfs/simple_viewer.swf $(pkgdatadir)/swfs/default_viewer.swf
+	rm -f $(pkgdatadir)/swfs/default_loader.swf
+	$(LN_S) $(pkgdatadir)/swfs/tessel_loader.swf $(pkgdatadir)/swfs/default_loader.swf
+		
+uninstall:
+	$(UNINSTALL_DATA) $(pkgdatadir)/swfs/simple_viewer.swf
+	$(UNINSTALL_DATA) $(pkgdatadir)/swfs/keyboard_viewer.swf
+	$(UNINSTALL_DATA) $(pkgdatadir)/swfs/PreLoaderTemplate.swf
+	$(UNINSTALL_DATA) $(pkgdatadir)/swfs/tessel_loader.swf
+	$(UNINSTALL_DATA) $(pkgdatadir)/swfs/swft_loader.swf
+	$(UNINSTALL_DATA) $(pkgdatadir)/swfs/default_viewer.swf
+	$(UNINSTALL_DATA) $(pkgdatadir)/swfs/default_loader.swf
+
+clean: 
+	rm -f *.o *.obj *.lo *.a *.lib *.la gmon.out 
+	rm -f simple_viewer keyboard_viewer PreLoaderTemplate 
+	rm -f simple_viewer$(E) keyboard_viewer$(E) PreLoaderTemplate$(E) 
+	rm -f simple_viewer.exe keyboard_viewer.exe PreLoaderTemplate.exe
+	rm -f simple_viewer.swf keyboard_viewer.swf PreLoaderTemplate.swf
+

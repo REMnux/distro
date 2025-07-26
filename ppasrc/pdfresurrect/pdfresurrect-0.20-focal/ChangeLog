@@ -1,0 +1,239 @@
+-- Version 0.20 --
+* pdf.c: Make buf_idx a size_t.
+  Guard strtok access (thanks rootup).
+	Add a null check to the page load routine.
+	Add a .gitignore (thanks rwhitworth).
+	Clean up a strlen calc (thanks Francois Marier).
+	Increase the creator buffer to 64B and guard against overflow (thanks
+  carter-yagemann)
+
+-- Version 0.19 --
+* pdf.c: Add bounds guards for reading creator data.
+
+-- Version 0.18 --
+
+2019-08-10 Matt Davis
+* pdf.c: Add a safe memory allocation routine (zeros and sanity checks).
+				 Free a memory leak.
+         Thanks to rtfingc for reporting the related bugs this patch
+				 addresses.
+
+-- Version 0.17 --
+
+2019-08-06 Matt Davis
+* pdf.c: Fix a buffer corruption bug identified by:
+         capcorpscert0188, LeeSunWoo, ParkInChul
+
+-- Version 0.16 --
+
+2019-07-25 Matt Davis
+* pdf.c: Fix a buffer corruption bug identified by j0lamma.
+
+* main.c: Fix grammar in an error message.
+
+-- Version 0.15 --
+
+2018-05-08 Matt Davis <mattdavis9@gmail.com>
+
+* pdf.c: Sanity check various file operations (fread, fseek).
+
+* configure.ac: Remove GNU defaults.
+*               User can override CFLAGS during configure.
+
+2018-05-07 Michal Ambroz
+
+* Makefile.in: Create the binary destination directory if it does not exist.
+
+-- Version 0.14 --
+
+2017-11-24 Matt Davis <mattdavis9@gmail.com>
+
+* main.c: Simplify the writing of older version.
+*         Only emit a startxref block with an older xref
+*         position, and nothing more.
+
+-- Version 0.13 --
+
+2017-11-24 Matt Davis <mattdavis9@gmail.com>
+
+* pdf.c: Bug fix - guard xref access during scrubbing.
+
+2013-11-17 Matt Davis <mattdavis9@gmail.com>
+* Makefile.in: Add the man1 directory if it does not exit.
+
+2013-11-7 Ryan Schmidt <github@ryandesign.com>
+* Makefile.in: Honor configure argument:
+*              --exec-prefix, --bindir, --datarootdir, --mandir
+
+2013-10-25: David Binderman.
+* pdf.c: Added a logical fix submitted by David B.
+
+-- Version 0.12 --
+
+2012-11-30 Matt Davis <mattdavis9@gmail.com>
+
+* pdfresurrect.1: Less emphasis on scrubbing. 
+*                 Cleaned up some wording.
+
+2012-11-29 Matt Davis <mattdavis9@gmail.com>
+
+* pdf.c: Use a better EOF finding algorithm.
+*        This should ensure that all EOFs are found, previously if an EOF was
+*        on a 256 character boundary, it would not be detected.
+
+2012-11-25 Matt Davis <mattdavis9@gmail.com>
+
+* configure.ac: Disable all optimizations when compiling a debugging version
+
+* pdf.c: Clean up a comment
+
+
+-- Version 0.11 --
+
+2012-05-28 Francois Marier <francois@debian.org>
+
+* Makefile.in: Add LDFLAGS macro
+*
+*              Update install and uninstall targets using DESTDIR macro
+* 
+*              Update CFLAGS macro to include CPPFLAGS
+
+* configure.ac: Preserve existing CFLAGS
+
+2012-05-28 Matt Davis <mattdavis9@gmail.com>
+
+* pdf.c: Prevent invalid access and double frees when the xref table is 
+*        of a zero length (thanks valgrind, oh so sexxy).
+*
+* ChangeLog: Correct a line not prefixed with an asterisk.
+
+2012-04-29 Matt Davis <mattdavis9@gmail.com>
+
+* pdf.c: Initialize a variable
+*        
+*        Add a macro for safe file access        
+
+2010-03-21 Matt Davis <mattdavis9@gmail.com>
+
+* pdf.c: Clean up memory leak just introduced by the new creator-from-object
+*        piece
+*
+*        Removed strdup and used strndup for portability
+*
+*        Allow creation tags to be picked up even if they are stored in objects
+*        and not inline.
+*
+*        Initialize a pointer
+
+
+-- Version 0.10 --
+
+2010-03-20 Matt Davis <mattdavis9@gmail.com>
+
+* main.c: Add additional copyright year 
+
+* pdf.c: Allow for creation data to be pulled from objects as well as inline
+*        Removed strdup and used strncpy for portability purposes
+
+* Makefile.in: Allow for EXTRA_CFLAGS to be specified from command line
+
+* pdfresurrect.1: Updated AUTHORS section to give Francois more props
+*	          Adjust date
+
+
+-- Version 0.9 --
+
+2009-11-11 Matt Davis <mattdavis9@gmail.com>
+
+* pdf.c: Display the entire line for creator information
+*        Avoid terminating the creator information past the array index
+
+
+-- Version 0.8 --
+
+2009-09-10 Matt Davis <mattdavis9@gmail.com>
+
+* pdf.c, main.c: Avoid stalling if we cannot find a trailer for linearized
+*                PDFs.  This is probably because the PDF is using xref
+*                streams.  Thanks to Francois for mentioning a stall was
+*                occurring, and then providing the suspect document that caused
+*                such a case.
+
+
+-- Version 0.7 --
+
+2009-09-09 Matt Davis <mattdavis9@gmail.com>
+
+* configure.ac: Added function check for strdup and strtol
+
+* pdf.{c,h}: Support to extract PDF creator information (not XML format)
+
+* pdf.c: Count objects from linearized PDFs appropriately
+
+
+2009-05-24 Francois Marier <francois@debian.org>
+
+* pdfresurrect.1: Added Francois Marier's update to the man page
+*                 escaping a hyphen
+
+
+-- Version 0.6 --
+
+2009-05-23 Matt Davis <mattdavis9@gmail.com> and 
+
+* pdfresurrect.1: Added Francois Marier's man page.
+*                 Added NOTES and COPYRIGHT to man page.
+
+* Makefile.in: Added .PHONY target for uninstall
+*              Removed backup target
+*              install and uninstall targets also add/remove the man page
+
+* configure.ac: Added default prefix as suggested by Francois Marier
+
+
+2009-05-22 Francois Marier <francois@debian.org>
+
+* pdfresurrect.1: Added Francois Marier's man page.
+
+* Makefile.in: Added Francois Marier's changes to add 
+*              install, distclean, and .PHONY targets
+
+
+-- Version 0.5 --
+
+2009-05-19 Matt Davis <mattdavis9@gmail.com>
+
+* pdf.h: Added notes that PDFs of version 1.5+ can have compressed stream xref
+
+* pdf.c: Warn on encoded xref streams
+*
+*        Added utility get_object_from_here() to obtain a PDF object at file
+*        pointer start
+*
+*        Break the xref into a routine for plaintext or encoded
+*        We will probably not decode the compressed stream but its
+*        nice to have a place for it.
+
+* configure.in: Added -DDEBUG on debug builds (nothing uses this yet)
+*
+*               Added AC_TYPE_SIZE_T check
+
+* main.c: Added -s to the usage statement
+*
+*         Using more portable exit call
+
+* README: Updated with some notes on security and validity of this tool
+
+
+-- Version 0.04 --
+
+2008-08-10 Matt Davis <mattdavis9@gmail.com>
+
+* Corrected a misspelling regarding the license URL in main.c
+
+
+-- Version 0.03 --
+
+2008-08-02 Matt Davis <mattdavis9@gmail.com>
+
+* Initial public release 
