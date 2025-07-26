@@ -1,0 +1,48 @@
+Source: edb-debugger
+Section: devel
+Priority: optional
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+XSBC-Original-Maintainer: Marcio de Souza Oliveira <marciosouza@debian.org>
+Build-Depends: cmake,
+               debhelper-compat (= 13),
+               libboost-dev,
+               libcapstone-dev,
+               libdouble-conversion-dev,
+               libgraphviz-dev,
+               libqt5svg5-dev,
+               libqt5xmlpatterns5-dev,
+               pkg-config,
+               qt5-qmake,
+               qtbase5-dev
+Standards-Version: 4.6.1.0
+Homepage: https://github.com/eteran/edb-debugger
+Vcs-Git: https://salsa.debian.org/debian/edb-debugger.git
+Vcs-Browser: https://salsa.debian.org/debian/edb-debugger
+Rules-Requires-Root: no
+
+Package: edb-debugger
+Architecture: amd64 i386
+Depends: edb-debugger-plugins, ${misc:Depends}, ${shlibs:Depends}
+Description: cross platform x86/x86-64 debugger
+ edb is a graphical cross platform x86/x86-64 debugger.
+ It was inspired by Ollydbg, but aims to function on x86
+ and x86-64 as well as multiple OS's. Linux is the only
+ officially supported platform at the moment, but FreeBSD,
+ OpenBSD, OSX and Windows ports are underway with varying
+ degrees of functionality.
+
+Package: edb-debugger-plugins
+Section: libs
+Architecture: amd64 i386
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: edb plugins
+ edb is a graphical cross platform x86/x86-64 debugger.
+ It was inspired by Ollydbg, but aims to function on x86
+ and x86-64 as well as multiple OS's. Linux is the only
+ officially supported platform at the moment, but FreeBSD,
+ OpenBSD, OSX and Windows ports are underway with varying
+ degrees of functionality.
+ .
+ This package provides the plugins that used by edb.

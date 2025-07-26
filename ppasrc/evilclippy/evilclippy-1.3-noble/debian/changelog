@@ -1,0 +1,11 @@
+evilclippy (1.3-noble) noble; urgency=medium
+
+  * Adjusted for Noble compatibility. 
+
+ -- REMnux Distribution <distro@remnux.org>  Sat, 26 Jul 2025 19:47:18 -0400
+
+evilclippy (1.3-focal) focal; urgency=medium
+
+  * Initial Release.
+
+ -- REMnux Distribution <distro@remnux.org>  Tue, 15 Jun 2021 10:59:35 -0400

@@ -1,0 +1,11 @@
+bearparser (0.6-noble) noble; urgency=medium
+
+  * Updated to latest upstream version and for Noble.
+
+ -- REMnux Distribution <distro@remnux.org>  Sat, 26 Jul 2025 11:42:24 -0400
+
+bearparser (0.3-focal) focal; urgency=medium
+
+  * Initial Release.
+
+ -- REMnux Distribution <distro@remnux.org>  Thu, 21 May 2020 00:22:14 -0400

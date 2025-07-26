@@ -1,0 +1,15 @@
+language: cpp
+sudo: false
+compiler: gcc
+addons:
+    apt:
+        packages:
+            - cmake
+            - g++
+            - gcc
+
+before_script:
+    - mkdir build && cd build && cmake ..
+script:
+    - make
+    - make check

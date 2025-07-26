@@ -1,0 +1,467 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <author>Evan Teran</author>
+ <class>Debugger</class>
+ <widget class="QMainWindow" name="Debugger">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>700</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>edb</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout"/>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>30</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu_help">
+    <property name="title">
+     <string>&amp;Help</string>
+    </property>
+    <addaction name="action_Help"/>
+    <addaction name="separator"/>
+    <addaction name="action_About"/>
+    <addaction name="actionAbout_QT"/>
+   </widget>
+   <widget class="QMenu" name="menu_View">
+    <property name="title">
+     <string>&amp;View</string>
+    </property>
+    <addaction name="action_Memory_Regions"/>
+    <addaction name="action_Threads"/>
+    <addaction name="actionApplication_Arguments"/>
+    <addaction name="action_Breakpoints"/>
+    <addaction name="separator"/>
+    <addaction name="action_Debug_Logger"/>
+   </widget>
+   <widget class="QMenu" name="menu_Plugins">
+    <property name="title">
+     <string>&amp;Plugins</string>
+    </property>
+    <addaction name="action_Plugins"/>
+    <addaction name="separator"/>
+   </widget>
+   <widget class="QMenu" name="menu_Options">
+    <property name="title">
+     <string>&amp;Options</string>
+    </property>
+    <addaction name="action_Configure_Debugger"/>
+    <addaction name="actionApplication_Working_Directory"/>
+   </widget>
+   <widget class="QMenu" name="menu_File">
+    <property name="title">
+     <string>&amp;File</string>
+    </property>
+    <addaction name="action_Open"/>
+    <addaction name="action_Attach"/>
+    <addaction name="action_Recent_Files"/>
+    <addaction name="separator"/>
+    <addaction name="actionE_xit"/>
+   </widget>
+   <widget class="QMenu" name="menu_Debug">
+    <property name="title">
+     <string>&amp;Debug</string>
+    </property>
+    <addaction name="action_Run"/>
+    <addaction name="action_Pause"/>
+    <addaction name="action_Restart"/>
+    <addaction name="action_Detach"/>
+    <addaction name="action_Kill"/>
+    <addaction name="separator"/>
+    <addaction name="action_Step_Into"/>
+    <addaction name="action_Step_Over"/>
+    <addaction name="separator"/>
+    <addaction name="action_Run_Pass_Signal_To_Application"/>
+    <addaction name="action_Step_Into_Pass_Signal_To_Application"/>
+    <addaction name="action_Step_Over_Pass_Signal_To_Application"/>
+    <addaction name="separator"/>
+    <addaction name="actionRun_Until_Return"/>
+   </widget>
+   <addaction name="menu_File"/>
+   <addaction name="menu_View"/>
+   <addaction name="menu_Debug"/>
+   <addaction name="menu_Plugins"/>
+   <addaction name="menu_Options"/>
+   <addaction name="menu_help"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>ToolBar</string>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="action_Pause"/>
+   <addaction name="action_Step_Into"/>
+   <addaction name="action_Step_Over"/>
+   <addaction name="actionStep_Out"/>
+   <addaction name="action_Run"/>
+   <addaction name="separator"/>
+   <addaction name="action_Debug_Logger"/>
+  </widget>
+  <action name="action_Open">
+   <property name="icon">
+    <iconset theme="document-open">
+     <normaloff>.</normaloff>.</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Open</string>
+   </property>
+   <property name="shortcut">
+    <string>F3</string>
+   </property>
+  </action>
+  <action name="action_Attach">
+   <property name="text">
+    <string>&amp;Attach</string>
+   </property>
+   <property name="shortcut">
+    <string>Shift+F3</string>
+   </property>
+  </action>
+  <action name="actionE_xit">
+   <property name="icon">
+    <iconset theme="application-exit">
+     <normaloff>.</normaloff>.</iconset>
+   </property>
+   <property name="text">
+    <string>E&amp;xit</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+X</string>
+   </property>
+  </action>
+  <action name="action_Memory_Regions">
+   <property name="icon">
+    <iconset theme="memory-slot">
+     <normaloff>.</normaloff>.</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Memory Regions</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+M</string>
+   </property>
+  </action>
+  <action name="action_Single_Step">
+   <property name="text">
+    <string>&amp;Step Into</string>
+   </property>
+   <property name="shortcut">
+    <string/>
+   </property>
+  </action>
+  <action name="action_Run">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset theme="debug-run">
+     <normaloff>.</normaloff>.</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Run</string>
+   </property>
+   <property name="shortcut">
+    <string>F9</string>
+   </property>
+  </action>
+  <action name="action_Pause">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset theme="debug-pause">
+     <normaloff>.</normaloff>.</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Pause</string>
+   </property>
+   <property name="shortcut">
+    <string>F11</string>
+   </property>
+  </action>
+  <action name="action_Restart">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset theme="debug-restart">
+     <normaloff>.</normaloff>.</iconset>
+   </property>
+   <property name="text">
+    <string>R&amp;estart</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F2</string>
+   </property>
+  </action>
+  <action name="action_Detach">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>&amp;Detach</string>
+   </property>
+   <property name="iconText">
+    <string>Detach</string>
+   </property>
+   <property name="toolTip">
+    <string>Detach</string>
+   </property>
+  </action>
+  <action name="action_Step_Into">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset theme="debug-step-into">
+     <normaloff>.</normaloff>.</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Step Into</string>
+   </property>
+   <property name="shortcut">
+    <string>F7</string>
+   </property>
+  </action>
+  <action name="action_Step_Over">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset theme="debug-step-over">
+     <normaloff>.</normaloff>.</iconset>
+   </property>
+   <property name="text">
+    <string>Step &amp;Over</string>
+   </property>
+   <property name="shortcut">
+    <string>F8</string>
+   </property>
+  </action>
+  <action name="action_About">
+   <property name="icon">
+    <iconset theme="help-about">
+     <normaloff>.</normaloff>.</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;About</string>
+   </property>
+  </action>
+  <action name="action_Help">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset theme="help-contents">
+     <normaloff>.</normaloff>.</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Help</string>
+   </property>
+   <property name="shortcut">
+    <string>F1</string>
+   </property>
+  </action>
+  <action name="action_Configure_Debugger">
+   <property name="icon">
+    <iconset theme="configure">
+     <normaloff>.</normaloff>.</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Preferences</string>
+   </property>
+  </action>
+  <action name="actionAbout_QT">
+   <property name="text">
+    <string>About &amp;Qt</string>
+   </property>
+   <property name="toolTip">
+    <string>About Qt</string>
+   </property>
+  </action>
+  <action name="action_Breakpoint_Manager">
+   <property name="text">
+    <string>&amp;Breakpoint Manager</string>
+   </property>
+  </action>
+  <action name="actionApplication_Arguments">
+   <property name="text">
+    <string>Application &amp;Arguments</string>
+   </property>
+  </action>
+  <action name="actionRun_Until_Return">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Run &amp;Until Return</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F9</string>
+   </property>
+  </action>
+  <action name="action_Step_Into_Pass_Signal_To_Application">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset theme="debug-step-into">
+     <normaloff>.</normaloff>.</iconset>
+   </property>
+   <property name="text">
+    <string>Step &amp;Into (Pass Signal To Application)</string>
+   </property>
+   <property name="shortcut">
+    <string>Shift+F7</string>
+   </property>
+  </action>
+  <action name="action_Step_Over_Pass_Signal_To_Application">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset theme="debug-step-over">
+     <normaloff>.</normaloff>.</iconset>
+   </property>
+   <property name="text">
+    <string>Step O&amp;ver (Pass Signal To Application)</string>
+   </property>
+   <property name="shortcut">
+    <string>Shift+F8</string>
+   </property>
+  </action>
+  <action name="action_Run_Pass_Signal_To_Application">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset theme="debug-run">
+     <normaloff>.</normaloff>.</iconset>
+   </property>
+   <property name="text">
+    <string>Ru&amp;n (Pass Signal To Application)</string>
+   </property>
+   <property name="shortcut">
+    <string>Shift+F9</string>
+   </property>
+  </action>
+  <action name="action_Recent_Files">
+   <property name="icon">
+    <iconset theme="document-open-recent">
+     <normaloff>.</normaloff>.</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Recent Files</string>
+   </property>
+  </action>
+  <action name="actionApplication_Working_Directory">
+   <property name="text">
+    <string>Application &amp;Working Directory</string>
+   </property>
+  </action>
+  <action name="action_Kill">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset theme="debug-close">
+     <normaloff>.</normaloff>.</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Kill</string>
+   </property>
+  </action>
+  <action name="action_Plugins">
+   <property name="icon">
+    <iconset theme="plugin">
+     <normaloff>.</normaloff>.</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Plugins</string>
+   </property>
+  </action>
+  <action name="action_Threads">
+   <property name="text">
+    <string>&amp;Threads</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+T</string>
+   </property>
+  </action>
+  <action name="actionStep_Out">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset theme="debug-step-out">
+     <normaloff>.</normaloff>.</iconset>
+   </property>
+   <property name="text">
+    <string>Step &amp;Out</string>
+   </property>
+   <property name="toolTip">
+    <string>Step Out</string>
+   </property>
+  </action>
+  <action name="action_Debug_Logger">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset theme="dialog-information">
+     <normaloff>.</normaloff>.</iconset>
+   </property>
+   <property name="text">
+    <string>Debug Logger</string>
+   </property>
+  </action>
+  <action name="action_Breakpoints">
+   <property name="text">
+    <string>&amp;Breakpoints</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+B</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>actionE_xit</sender>
+   <signal>triggered()</signal>
+   <receiver>Debugger</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>494</x>
+     <y>437</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

@@ -1,0 +1,2 @@
+version=4
+https://github.com/eteran/edb-debugger/releases .*/edb-debugger-(\d\S+)\.tgz

@@ -1,0 +1,5 @@
+src/res/images/edb48-logo.png usr/share/pixmaps/
+usr/share/pixmaps/edb.png
+usr/bin/edb
+usr/share/applications/edb.desktop
+usr/share/man/man1/edb.1

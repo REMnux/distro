@@ -1,0 +1,12 @@
+---
+include:
+  - https://salsa.debian.org/salsa-ci-team/pipeline/raw/master/salsa-ci.yml
+  - https://salsa.debian.org/salsa-ci-team/pipeline/raw/master/pipeline-jobs.yml
+
+# Allow blhc fail because of some problems with two plugins
+blhc:
+  allow_failure: true
+
+# Allow reprotest failure temporarily 
+reprotest:
+  allow_failure: true

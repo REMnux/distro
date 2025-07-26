@@ -1,0 +1,16 @@
+/*
+Copyright (C) 2006 - 2013 Evan Teran
+                          eteran@alum.rit.edu
+
+Copyright (C) 2010        Hugues Bruant
+                          hugues.bruant@gmail.com
+
+This file can be used under one of two licenses.
+
+1. The GNU Public License, version 2.0, in COPYING-gpl2
+2. A BSD-Style License, in COPYING-bsd2.
+
+The license chosen is at the discretion of the user of this software. 
+*/
+
+#include "qhexview.h"

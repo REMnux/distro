@@ -1,0 +1,12 @@
+Source: bearparser
+Section: utils
+Priority: optional
+Maintainer: REMnux Distribution (https://REMnux.org) <distro@remnux.org>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.4
+Homepage: https://github.com/hasherezade/bearparser/wiki
+
+Package: bearparser
+Architecture: amd64
+Depends: libqt5core5a:amd64
+Description: Parse PE file contents

@@ -1,0 +1,3 @@
+Test-Command: xvfb-run edb --version
+Depends: xauth, xvfb, @
+Restrictions: superficial
