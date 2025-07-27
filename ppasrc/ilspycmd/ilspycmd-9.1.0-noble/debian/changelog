@@ -1,0 +1,11 @@
+ilspycmd (9.1.0-noble) noble; urgency=medium
+
+  * Upgraded to newer version and for Noble.
+
+ -- REMnux Distribution <distro@remnux.org>  Sat, 26 Jul 2025 22:01:53 -0400
+
+ilspycmd (6.2.1-1-focal) focal; urgency=medium
+
+  * Initial Release.
+
+ -- REMnux Distribution <distro@remnux.org>  Tue, 20 Oct 2020 07:40:47 -0400

@@ -1,0 +1,15 @@
+#!/bin/bash
+
+if [ ! `which dotnet` ]; then
+  echo "The dotnet runtime environment is not installed."
+  echo "Exiting."
+  exit 1
+fi
+
+if [ ! -f /opt/ilspycmd-files/ilspycmd.dll ]; then
+  echo "Cannot locate the ILSpy DLL file. Exiting."
+  exit 2
+fi
+
+dotnet /opt/ilspycmd-files/ilspycmd.dll ${*}
+
