@@ -1,0 +1,277 @@
+<h1 id="ghidrasleigheditor-eclipse-plugin" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">GhidraSleighEditor Eclipse Plugin</h1>
+<p>GhidraSleighEditor makes developing and modifying Ghidra Sleigh processor modules much more
+enjoyable by providing a modern day context sensitive editor with syntax highlighting, navigation,
+context sensitive error notation, quick fixes, and more.  The editor is built with the excellent
+XTEXT DSL framework within Eclipse.</p>
+<p>The information provided in this document is effective as of Ghidra Sleigh Editor 1.0.0 and is
+subject to change with future releases.</p>
+<h2 id="table-of-contents" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Table of Contents</h2>
+<ol>
+<li><a href="#change-history">Change History</a></li>
+<li><a href="#minimum-requirements">Minimum Requirements</a></li>
+<li><a href="#installing">Installing</a></li>
+<li><a href="#ghidrasleigheditor-features">GhidraSleighEditor Features</a>
+<ul>
+<li><a href="#syntax-highlighting">Syntax Highlighting</a></li>
+<li><a href="#validation">Validation</a></li>
+<li><a href="#quickfix">QuickFix</a></li>
+<li><a href="#hover">Hover</a></li>
+<li><a href="#find-references">Find References</a></li>
+<li><a href="#renaming">Renaming</a></li>
+<li><a href="#code-formatting">Code Formating</a></li>
+</ul>
+</li>
+<li><a href="#uninstalling">Uninstalling</a></li>
+<li><a href="#upgrading">Upgrading</a></li>
+<li><a href="#building">Building</a></li>
+</ol>
+<h2 id="change-history" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Change History</h2>
+<p><strong>1.0.2:</strong></p>
+<ul>
+<li>Added <code style="background-color: #eef;">lzcount</code> to grammar</li>
+<li>Fixed cpool invalid error, and added test for cpool arguments</li>
+</ul>
+<p><strong>1.0.1:</strong></p>
+<ul>
+<li>Added support for new endian tag on <code style="background-color: #eef;">define token</code> definitions</li>
+<li>Bug fix for <code style="background-color: #eef;">@if &quot;!=&quot;</code> comparison</li>
+<li>Added <code style="background-color: #eef;">popcount</code> to grammar</li>
+</ul>
+<p><strong>1.0.0:</strong></p>
+<ul>
+<li>Initial release</li>
+</ul>
+<h2 id="minimum-requirements" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Minimum Requirements</h2>
+<ul>
+<li>Eclipse 2019-3 with DSL and XTEXT 2.17 or later</li>
+</ul>
+<h2 id="installing" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Installing</h2>
+<p>GhidraSleighEditor is installed manually into Eclipse and should be installed by anyone interested
+in working with processor module sleigh specifications. The GhidraSleighEditor must be manually
+installed in Eclipse. In the future the extension may be installed automatically along with the
+GhidraDev Eclipse plugin when setting up Eclipse for Ghidra scripting and plugin development.</p>
+<p>GhidraSleighEditor can be installed into an existing installation of Eclipse the same way most
+Eclipse plugins are installed. From Eclipse:</p>
+<ol>
+<li>Click <code style="background-color: #eef;">Help -&gt; Install New Software...</code></li>
+<li>Click <code style="background-color: #eef;">Add...</code></li>
+<li>Click <code style="background-color: #eef;">Archive...</code></li>
+<li>Select GhidraSleighEditor zip file from
+<code style="background-color: #eef;">&lt;GhidraInstallDir&gt;/Extensions/Eclipse/GhidraSleighEditor/</code></li>
+<li>Click <code style="background-color: #eef;">OK</code> (name field can be blank)</li>
+<li>Check <code style="background-color: #eef;">Ghidra</code> category (or <code style="background-color: #eef;">Ghidra Sleigh Editor</code> entry)</li>
+<li>Click <code style="background-color: #eef;">Next</code></li>
+<li>Click <code style="background-color: #eef;">Next</code></li>
+<li>Accept the terms of the license agreement</li>
+<li>Click <code style="background-color: #eef;">Finish</code></li>
+<li>Click <code style="background-color: #eef;">Install anyway</code></li>
+<li>Click <code style="background-color: #eef;">Restart Now</code></li>
+</ol>
+<h2 id="ghidrasleigheditor-features" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">GhidraSleighEditor Features</h2>
+<p>The Ghidra Sleigh Editor provides a variety of features one would expect in any modern IDE to make
+viewing, modifying, debugging, and creating Sleigh processor specifications as painless as possible.
+Once installed, any <code style="background-color: #eef;">.sinc</code> or <code style="background-color: #eef;">.slaspec</code> file that is edited will be brought up in the sleigh
+editor.</p>
+<p>The editor provides the following capabilities:</p>
+<h3 id="syntax-highlighting">Syntax Highlighting</h3>
+<p>Keywords, Tokens, Sub-constructor names, Comments, Instruction Formats, Strings, Variables, and more
+can be colorized to make the sliegh specification more readable. In the
+<code style="background-color: #eef;">Window -&gt; Preferences -&gt; Sleigh</code> preferences panel, the color and font style can be changed for any
+sleigh file tokens.</p>
+<h3 id="validation">Validation</h3>
+<p>The structure of a sleigh file while fairly simple can lend itself to errors when using a straight
+text editor. The editor understands the syntax and all constructs of a sleigh file. Instead of
+waiting for the sleigh compiler to produce an error, many but not all syntax errors can be caught
+and displayed with a red error marker.</p>
+<p>The editor validates the definition of variables including locals. Though legal in the sleigh
+compiler, it has been found that not declaring local variables leads to errors that are not be
+caught by the sleigh compiler. For example, assigning to a variable <code style="background-color: #eef;">ro</code> when the actual register
+name is <code style="background-color: #eef;">r0</code> may go unnoticed. All local variables must be defined with with the <code style="background-color: #eef;">local</code> keyword or
+with an initial <code style="background-color: #eef;">:size</code>.</p>
+<p>Warnings on duplicate names of tokens is marked in yellow. Complex matching patterns such as
+<code style="background-color: #eef;">'!='  '&lt;'  '&gt;'</code> are warnings as well. Using comparison matching operators can cause the generated
+.sla file to be much larger than necessary. Comparison matching should really never be used on any
+tokens that are bigger than a few bits as the number of match cases generated will be large. Their
+use is unavoidable in some cases.</p>
+<p>There are some artificial enforcements in the editor that, while valid sleigh syntax, cause the
+syntax to be unparsable. Because the sleigh Domain Specific Language (DSL) is a context sensitive
+grammer, as well as using define-like pre-processing expansion, the editor only allows define
+<code style="background-color: #eef;">$()</code> variables at certain locations where a single token would reside. The most common flagged
+error is embedding a connecting <code style="background-color: #eef;">&amp;</code> in a define and then using it an a match pattern:
+<code style="background-color: #eef;">:MOV ax, bx is t1=1 $(BadDefine) {}</code> is not allowed, and instead should be
+<code style="background-color: #eef;">:MOV ax, bx is t1=1 &amp; $(GoodDefine) {}</code>.</p>
+<h3 id="quickfix">QuickFix</h3>
+<p>Some simple syntax errors can be fixed quickly with QuickFix suggestions. Pressing <code style="background-color: #eef;">Crtl-1</code> on an
+error will bring up available quick-fixes:</p>
+<ul>
+<li><em>Undefined local variable</em> - insert <code style="background-color: #eef;">local</code> or the <code style="background-color: #eef;">:size</code> form if the size can be detected.</li>
+<li><em>Undefined user pcodeop</em> - can insert a user pcodeop definition for an unknown identifier</li>
+<li><em>Undefined macro</em> - can insert a macro definition for an unknown identifier</li>
+<li><em>Add token field definition</em> - for an unknown token in the match pattern</li>
+</ul>
+<p>More quick-fixes may be added in the future. Please note quickfixes can be slow on large files such
+as the AARCH64.</p>
+<h3 id="hover">Hover</h3>
+<p>There are many constructs in a sleigh file that, when hovered over, will display additional
+information. This is especially useful for tokens to get their size without having to navigate to
+the token field definition. More hovers will be added.</p>
+<ul>
+<li>Sub-Constructors will display all the defined sub-constructors with the same name.</li>
+<li>Token field definitions will display their size, and if attached, the set of registers.</li>
+<li>Registers display their size.</li>
+<li>Numeric values will display in Hex, Binary, and Decimal.</li>
+<li><code style="background-color: #eef;">$(Defines)</code> display all the possible defines for the name, since the actual define used can't be
+known.</li>
+</ul>
+<h3 id="navigation">Navigation</h3>
+<p>If you have edited a sleigh processor specification in a regular text editor, you will appreciate
+the forward and backward navigation supported on various variable name use and their associated
+definition. Navigation is supported on sub-constructor names, field token names, registers, macros
+names, local variables, define names, and user define pcodeop's.</p>
+<p>Navigate by pressing <code style="background-color: #eef;">F3</code> on a variable, using the forward/backward navigation arrows, or my
+favorite the <code style="background-color: #eef;">&lt;-*</code> that will navigate back to the last edit location.</p>
+<h3 id="find-references">Find References</h3>
+<p>Instead of keyword searching, the editor provides a find all uses of a variable. Each found use is
+listed in a search window with the text of the line where it is used displayed. Each found location
+can also be navigated to by double clicking on the found reference.</p>
+<p>Use the editor popup menu <code style="background-color: #eef;">Find References</code> action.</p>
+<h3 id="renaming">Renaming</h3>
+<p>The name of variables can be very important, and instead of doing a search and replace on a string,
+the editor can refactor a name and change all other uses of that name. The name is even changed in
+other <code style="background-color: #eef;">.sinc</code> and <code style="background-color: #eef;">.slaspec</code> files.</p>
+<p>Use the editor popup menu <code style="background-color: #eef;">Rename Element</code> action.</p>
+<h3 id="code-formatting">Code Formatting</h3>
+<p>Sleigh files can get large and messy during development. Instead of paying much attention to format,
+or trying to format by hand you can use the Source Format action. Common constructs are lined up,
+for example the token definitions will find the longest token and line up all other tokens and their
+definition. All sub-constructors of the same name will be lined up on the <code style="background-color: #eef;">is</code> keyword, the match
+pattern, and the semantic definitions. All constructors <code style="background-color: #eef;">is</code> keywords will be generally lined up
+based on the longest print peice for each constructor. Statements will also be indented
+consistently. Multi-line attach definitions will have each entry lined up. Formatting can be
+restricted to a selection of lines to stop formatting from entirely re-formatting carefully
+formatted files. Additional formatting may be added in the future, and the formatter may become more
+configurable in the future.</p>
+<p>Use the editor popup menu <code style="background-color: #eef;">Source -&gt; Format</code> action.`</p>
+<h2 id="uninstalling" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Uninstalling</h2>
+<p>GhidraSleighEditor can be uninstalled as follows from Eclipse:</p>
+<ol>
+<li>Click <code style="background-color: #eef;">Help -&gt; About Eclipse</code>
+<ul>
+<li>For macOS, <code style="background-color: #eef;">Eclipse -&gt; About Eclipse</code></li>
+</ul>
+</li>
+<li>Click <code style="background-color: #eef;">Installation Details</code></li>
+<li>Select Ghidra Sleigh Editor</li>
+<li>Click <code style="background-color: #eef;">Uninstall...</code></li>
+<li>Select Ghidra Sleigh Editor</li>
+<li>Click <code style="background-color: #eef;">Finish</code></li>
+<li>Click <code style="background-color: #eef;">Restart Now</code></li>
+</ol>
+<h2 id="upgrading" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Upgrading</h2>
+<p>GhidraSleighEditor can be upgraded the same way it was initially installed.</p>
+<h2 id="building" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Building</h2>
+<p>The GhidraSleighEditor is currently built from Eclipse and distributed with Ghidra manually.
+Ideally we will use Gradle one day, but we aren't there yet. We do rely on <code style="background-color: #eef;">gradle prepDev</code> to
+generate the Eclipse project and  build GhidraSleighEditor's dependencies though, hence the
+build.gradle file.</p>
+<p><strong>NOTE:</strong> Only &quot;Eclipse IDE for Java and DSL Developers&quot; has the ability to do the below
+instructions. The following instructions assume that you are using this version of Eclipse.</p>
+<p>It is also suggested that you use the &quot;Eclipse IDE for Java and DSL Developers&quot; if you will
+use the GhidraSleighEditor. You can build the GhidraSleighEditor installation zip with the XTEXT
+runtime in the plugin. The XTEXT runtime was not included in the distribution build because it would
+have added 80Meg.</p>
+<p>Importing GhidraSleighEditor Eclipse projects (they are deactivated by default):</p>
+<ol>
+<li>Uncomment the line in <code style="background-color: #eef;">settings.gradle</code> that includes the GhidraSleighEditor project.</li>
+<li>Run <code style="background-color: #eef;">gradle eclipse -PeclipseDSL</code> to generate the GhidraSleighEditor Eclipse projects.</li>
+<li>From Eclipse, <code style="background-color: #eef;">File -&gt; Import -&gt; General -&gt; Existing Projects into Workspace</code>.</li>
+<li>From the ghidra repo, import all &quot;Eclipse GhidraSleighEditor *&quot; projects.</li>
+</ol>
+<p>Generating all Sleigh XTEXT generated files:</p>
+<ol>
+<li>Open &quot;Eclipse SleighEditor&quot; project.</li>
+<li>Navigate to the file <code style="background-color: #eef;">src -&gt; ghidra.xtext.sleigh -&gt; GenerateSleigh.mwe2</code></li>
+<li><strong>NOTE:</strong> The following will download a jar file from the internet (not from NSA) unless you
+pre-download.
+<ol>
+<li>Download the file http://download.itemis.com/antlr-generator-3.2.0-patch.jar</li>
+<li>Put the file in <code style="background-color: #eef;">ghidra/GhidraBuild/EclipsePlugins/SleighEditor/ghidra.xtext.sleigh</code></li>
+<li>Rename the file to <code style="background-color: #eef;">.antlr-generator-3.2.0-patch.jar</code></li>
+</ol>
+</li>
+<li>From the popup menu <code style="background-color: #eef;">RunAs -&gt; MWE2 Workflow</code>
+<ul>
+<li>Files in xtend-gen and src-gen will be created</li>
+</ul>
+</li>
+<li>If there are any red bookmarks on any of the Eclipse Sleigh* projects,
+<ul>
+<li>Select all the Eclipse Sleigh* projects, and refresh from the popup menu</li>
+<li>The project should rebuild, and there should be no red Problem errors</li>
+</ul>
+</li>
+</ol>
+<p>Try out the Sleigh Editor</p>
+<ol>
+<li>Navigate to the <code style="background-color: #eef;">Eclipse SleighEditor</code> and chose <code style="background-color: #eef;">RunAs -&gt; Eclipse Runtime</code></li>
+<li>Add a sleigh processor module
+<ol>
+<li><code style="background-color: #eef;">File -&gt; NewJavaProject...</code>
+<ul>
+<li>Uncheck default location and navigate to a processor in <code style="background-color: #eef;">Ghidra/Processors/&lt;X&gt;</code></li>
+<li>The project be automatically named <code style="background-color: #eef;">&lt;X&gt;</code></li>
+<li>Finish</li>
+<li>Cancel Module creation</li>
+<li>Navigate to a <code style="background-color: #eef;">&lt;X&gt;/data/languages/&lt;file&gt;.sinc</code> or <code style="background-color: #eef;">&lt;file&gt;.slaspec</code></li>
+<li>On the popup asking to convert to an XTEXT project, choose &quot;Yes&quot;</li>
+</ul>
+</li>
+<li>-OR-
+<ul>
+<li>Drop a <code style="background-color: #eef;">.slaspec</code> or <code style="background-color: #eef;">.sinc</code> file from the file browser on eclipse</li>
+<li>This is good for quick viewing, however navigation across files may not work.</li>
+</ul>
+</li>
+</ol>
+</li>
+</ol>
+<p>Optional: Changing version number (GhidraSleighEditor is versioned independently of Ghidra):</p>
+<ol>
+<li>Open <code style="background-color: #eef;">feature.xml</code> in the GhidraSleighEditor Feature project.</li>
+<li>In the &quot;Overview&quot; tab, update the &quot;Version&quot; field to <code style="background-color: #eef;">x.y.z.qualifier</code> and save.</li>
+<li>Open <code style="background-color: #eef;">category.xml</code> in the GhidraSleighEditor Feature project.</li>
+<li>Highlight <code style="background-color: #eef;">ghidra.xtext.sleigh.editor (x.y.z.qualifier)</code>, and click &quot;Remove&quot;.</li>
+<li>Highlight <code style="background-color: #eef;">ghidra.xtext.sleigh.editor</code>, and click &quot;Add Feature&quot;.</li>
+<li>Select <code style="background-color: #eef;">ghidra.ghidradev (x.y.z.qualifer)</code>, click &quot;OK&quot;, and save.</li>
+<li>Update &quot;Change History&quot; section of this document if necessary.</li>
+</ol>
+<p>Optional: Including the XTEXT runtime
+You can include the XTEXT runtime or redist module in the .zip file which will negate the need to
+have Eclipse with the DSL in the Eclipse into which the Eclipse Sleigh Editor is installed to run.</p>
+<ol>
+<li>Navigate to the ghidra.xtext.sleigh.feature</li>
+<li>bring up the feature.xml with the Feature Manager Editor (dbl-click on it).</li>
+<li>Go to the Included Features tab</li>
+<li>Add...</li>
+<li>Filter by <code style="background-color: #eef;">redist</code> and add <code style="background-color: #eef;">org.eclipse.xtext.redist</code></li>
+</ol>
+<p>Creating an installation zip file to install in Eclipse:</p>
+<ol>
+<li>Do a <code style="background-color: #eef;">gradle prepDev</code> to ensure GhidraSleighEditor's dependencies are up-to-date.</li>
+<li><code style="background-color: #eef;">File -&gt; Export -&gt; Plug-in Development -&gt; Deployable plugins and fragments</code></li>
+<li>Select <code style="background-color: #eef;">Archive file</code> and choose a directory to save it to. Name it
+<code style="background-color: #eef;">GhidraSleighEditor-x.y.z.zip</code>.</li>
+<li>In the &quot;Options&quot; tab make sure things look like this:
+<ul>
+<li>Export source: UNCHECKED</li>
+<li>Package as individual JAR archives: CHECKED</li>
+<li>Generate p2 repository: CHECKED</li>
+<li>Categorize repository: CHECKED</li>
+<li>Qualifier replacement: CHECKED + clear field so default is used</li>
+<li>Save as Ant script: UNCHECKED</li>
+<li>Allow for binary cycles in target platform: CHECKED</li>
+<li>Use class files compiled in the workspace: UNCHECKED</li>
+</ul>
+</li>
+<li>Finish</li>
+</ol>

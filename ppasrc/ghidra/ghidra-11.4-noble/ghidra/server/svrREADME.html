@@ -1,0 +1,730 @@
+<h1 id="ghidra-server-readme" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Ghidra Server README</h1>
+<h2 id="table-of-contents" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Table of Contents</h2>
+<ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#java-runtime-environment">Java Runtime Environment</a></li>
+<li><a href="#server-configuration">Server Configuration</a></li>
+<li><a href="#server-logs">Server Logs</a></li>
+<li><a href="#server-memory-considerations">Server Memory Considerations</a></li>
+<li><a href="#note-regarding-use-of-dns-name-lookup-service">Note regarding use of DNS (name lookup service)</a></li>
+<li><a href="#user-authentication">User Authentication</a></li>
+<li><a href="#ssh-user-authentication">SSH User Authentication</a></li>
+<li><a href="#server-options">Server Options</a></li>
+<li><a href="#running-ghidra-server-on-microsoft-windows">Running Ghidra Server on Microsoft Windows</a>
+<ul>
+<li><a href="#server-scripts-located-within-the-server-subdirectory">Server Scripts</a></li>
+<li><a href="#running-server-in-console-window-intended-for-diagnostic-use-only">Running Server in Console Window</a></li>
+<li><a href="#install-as-automatic-service-must-have-administrator-privilege">Install as Automatic Service</a></li>
+<li><a href="#uninstall-service-must-have-administrator-privilege">Uninstall Service</a></li>
+</ul>
+</li>
+<li><a href="#running-ghidra-server-on-linux-or-macos">Running Ghidra Server on Linux or macOS</a>
+<ul>
+<li><a href="#server-scripts-located-within-the-server-subdirectory-1">Server Scripts</a></li>
+<li><a href="#running-server-in-console-window">Running Server in Console Window</a></li>
+<li><a href="#install-as-automatic-service-must-have-admin-privilege">Install as Automatic Service</a></li>
+<li><a href="#uninstall-service-must-have-admin-privilege">Uninstall Service</a></li>
+</ul>
+</li>
+<li><a href="#server-administration">Server Administration</a></li>
+<li><a href="#repository-backup">Repository Backup</a></li>
+<li><a href="#clearing-obsolete-checkouts">Clearing Obsolete Checkouts</a></li>
+<li><a href="#pki-certificates">PKI Certificates</a></li>
+<li><a href="#managing-pki-certificate-authorities">Managing PKI Certificate Authorities</a></li>
+<li><a href="#upgrading-the-ghidra-server-installation">Upgrading the Ghidra Server Installation</a></li>
+<li><a href="#troubleshooting--known-issues">Troubleshooting / Known Issues</a>
+<ul>
+<li><a href="#failures-creating-repository-folders--checking-in-files">Failures Creating Repository Folders / Checking in Files</a></li>
+<li><a href="#clientserver-connection-errors">Client/Server connection errors</a></li>
+<li><a href="#ms-windows---error-incorrect-function-windowswatchservice">MS Windows - ERROR Incorrect function (WindowsWatchService)</a></li>
+<li><a href="#ms-windows---error-missing-temp-directory">MS Windows - ERROR Missing Temp Directory</a></li>
+<li><a href="#ms-windows-7-and-8---ghidrasvrbat-svrinstallbat-or-svruninstallbat-error">MS Windows 7 and 8 - ghidraSvr.bat, svrInstall.bat, or svrUninstall.bat Error</a></li>
+<li><a href="#linux---selinux-must-be-disabled">Linux - SELinux must be disabled</a></li>
+<li><a href="#linux---potential-hang-from-devrandom-depletion">Linux - Potential hang from /dev/random depletion</a></li>
+<li><a href="#macos---service-fails-to-start-macos-1014-mojave-and-later">macOS - Service fails to start</a></li>
+</ul>
+</li>
+</ul>
+<h2 id="introduction" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Introduction</h2>
+<p>The Ghidra Server is incorporated into the standard Ghidra software distribution. Simply unpack the
+Ghidra distribution, configure the Ghidra Server and perform the OS-specific install and you should
+have the server running in no time.</p>
+<p>The Ghidra Server utilizes the YAJSW Java service wrapper to launch the application and provides OS
+specific scripts which enable the application to run as a service.</p>
+<p><strong>NOTE</strong>: It is very important that only a single server instance is running against any given
+server repositories directory.  This can be assured if only the default port is ever used.<br />
+The daemon/service mechanism assumes that only one instance of the service exists.  Attempting to
+run a second concurrent instance may lead to difficulties and is not supported.</p>
+<p><strong>NOTE</strong>: It is highly recommended that the installation files for Ghidra reside on a local drive
+and that the intended Ghidra Server process owner is granted full access to the Ghidra installation
+directory (this is frequently not the case for NFS/SMB mounted home directories).</p>
+<p>You may also refer to the <em>GettingStarted.html</em> file within the Ghidra installation root directory
+for general installation information.</p>
+<p>(<a href="#ghidra-server-readme">Back to Top</a>)</p>
+<h2 id="java-runtime-environment" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Java Runtime Environment</h2>
+<p>The installation of a suitable Java Runtime Environment must be completed before installing or
+running the Ghidra Server.  Please refer to the Getting Started document to identify a suitable
+version.  Since the Ghidra Server is unable to interactively identify a Java installation at runtime
+it must rely upon the setting of <code style="background-color: #eef;">JAVA_HOME</code>, execution search PATH or the use of standard Java
+installation locations.  It is important to consider the service execution environment which may
+differ from the administrator who may be installing the service.  For this reason use of an
+installed Java release may be preferable over one that is simply unpacked to an arbitrary location.</p>
+<p>(<a href="#ghidra-server-readme">Back to Top</a>)</p>
+<h2 id="server-configuration" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Server Configuration</h2>
+<p>Before installing and running the Ghidra Server, the <code style="background-color: #eef;">server/server.conf</code> file must be modified to
+suit your particular needs.  Within this file, locate the lines labeled:</p>
+<pre style="background-color: #eef;"><code style="background-color: #eef;">wrapper.app.parameter.#
+</code></pre>
+<p>These lines correspond to a sequential list of server command line arguments - be sure not duplicate
+a parameter number.  The comments within this file indicate the available command line arguments
+which should be specified here based upon the desired user authentication, repositories directory
+location and other associated options.</p>
+<p>It is highly recommended that you specify a repositories directory outside of your Ghidra
+installation directory with an absolute path so that it may be re-used more easily with future
+upgraded installations of Ghidra.  Due to the use of a filesystem watcher service the use of a
+locally attached storage device is preferred and will also ensure the best performance.</p>
+<p><strong>NOTE</strong>: The server may fail to start if the repository native filesystem does not support the use
+of a filesystem watcher service.  This could occur if attempting to use a remotely-mounted
+filesystem which may lack the required event support.  The watcher service is used in conjunction
+with command processing associated with the <code style="background-color: #eef;">svrAdmin</code> command.  If a running server fails to
+process queued <code style="background-color: #eef;">svrAdmin</code> command requests, the repository native filesystem may be the cause.</p>
+<p>When upgrading your Ghidra installation, you will need to copy your app parameters from your old
+<em>server.conf</em> to the new <em>server.conf</em>.  Do not copy the entire <em>server.conf</em> file as this may
+prevent the server from running properly.  If running as a service, you must run the
+<code style="background-color: #eef;">server/svrUninstall</code> script from the old installation before running the <code style="background-color: #eef;">server/svrInstall</code> script
+from the new installation.  Using a non-default repositories directory outside your Ghidra
+installation will simplify the migration process.</p>
+<p>(<a href="#ghidra-server-readme">Back to Top</a>)</p>
+<h2 id="server-logs" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Server Logs</h2>
+<p>The Ghidra Server produces two log files, which for the most part have the same content. The service
+<em>wrapper.log</em> file generally resides within the Ghidra installation root directory, while the
+<em>server.log</em> file resides within the configured <em>repositories/</em> directory.  When running the server
+in console mode all <em>wrapper.log</em> output is directed to the console.</p>
+<p>(<a href="#ghidra-server-readme">Back to Top</a>)</p>
+<h2 id="server-memory-considerations" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Server Memory Considerations</h2>
+<p>The Ghidra Server currently maintains an in-memory state for all repositories. We are aware that
+this can limit the scalability of the Ghidra Server.  The maximum memory used by the process can be
+set within the <code style="background-color: #eef;">server/server.conf</code> file by adjusting the following setting:</p>
+<pre style="background-color: #eef;"><code style="background-color: #eef;">wrapper.java.maxmemory
+</code></pre>
+<p><strong>WARNING</strong>! There are currently no safeguards when insufficient memory is available to the Ghidra
+Server and can cause severe failure if an out of memory error occurs.</p>
+<p>The following formula can be used to approximate an appropriate setting for this <code style="background-color: #eef;">maxmemory</code> value
+where <code style="background-color: #eef;">FileCount</code> represents the maximum number of repository files and <code style="background-color: #eef;">ClientCount</code> is the number
+of active Ghidra clients connected at one time.</p>
+<pre style="background-color: #eef;"><code style="background-color: #eef;">wrapper.java.maxmemory = 16 + (32 * FileCount/10000) + (2 * ClientCount)
+</code></pre>
+<p>Example:</p>
+<pre style="background-color: #eef;"><code style="background-color: #eef;">100,000 files and 25 connected Ghidra clients
+16 + (32 * 100000/10000) + (2 * 25) = 386
+wrapper.java.maxmemory=772  (2 * 386, see NOTE below)
+</code></pre>
+<p><strong>NOTE</strong>: Due to the dynamic memory demands on the server not considered by this calculation (e.g.,
+open file handles, etc.), the actual <code style="background-color: #eef;">maxmemory</code> setting used should be larger than the calculated
+value.  At a minimum, it is recommended that the calculated value be doubled, and a larger value
+may be appropriate based upon server loading.</p>
+<p>The Java VisualVM tool (if available for your host) may also be used to examine memory usage while
+the server is running.  This tool is NOT provided with any Ghidra distribution.</p>
+<p>(<a href="#ghidra-server-readme">Back to Top</a>)</p>
+<h2 id="note-regarding-use-of-dns-name-lookup-service" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Note regarding use of DNS (name lookup service)</h2>
+<p>Both Ghidra Server and client application make extensive use of forward and reverse network name
+lookups.  If this service is not properly configured on your network and hosts, names may fail to
+be resolved or in certain cases cause severe performance delays due to improperly serviced DNS
+name/address queries.</p>
+<p>By default the server will attempt to identify an appropriate remote access IPv4 address which will
+be written to the log at startup.  In addition, the server will listen for incoming connections on
+all IPv4 interfaces by default.  It is important to understand the difference between the published
+remote access address and the listening address (i.e. interface) which are both configurable.  See
+the <code style="background-color: #eef;">-ip</code> and <code style="background-color: #eef;">-i</code> options in the <a href="#server-options">Server Options</a> section for more details.</p>
+<p>(<a href="#ghidra-server-readme">Back to Top</a>)</p>
+<h2 id="user-authentication" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">User Authentication</h2>
+<p>The Ghidra Server has been designed to support many  possible user authentication modes:</p>
+<ul>
+<li>
+<p><strong>No authentication</strong>: Any user which has been added to the server may connect without password or
+credentials.</p>
+</li>
+<li>
+<p><strong>Local Ghidra password (-a0)</strong>: Passwords associated with each user added to the server are
+maintained in the <em>users</em> file located within the repositories directory. The user will be
+prompted for this password when connecting to the server.  The default password <em>changeme</em> is used
+when a user is first added or when the user is reset (see
+<a href="#server-administration">Server Administration</a>). This default password must be changed by the
+user to avoid its expiration.</p>
+</li>
+<li>
+<p><strong>Active Directory via Kerberos (-a1)</strong>: User authentication is performed against your local
+Active Directory system using Kerberos to do so.  The <code style="background-color: #eef;">-d&lt;ad_domain&gt;</code> argument is required to
+specify the domain name of your Active Directory system.</p>
+<p>It is also possible to authenticate against your Active Directory system using LDAP.  See the LDAP
+example when using JAAS -a4 mode.</p>
+</li>
+<li>
+<p><strong>PKI authentication (-a2)</strong>: User authentication is performed using PKI user certificates. When
+using this mode, the distinguished name (DN) for each user must be associated with each server
+User ID (see <a href="#server-administration">Server Administration</a>). In addition, each user must
+configure Ghidra with the location of their signing key/certificate keystore file (see
+<a href="#pki-certificates">PKI Certificates</a> for more information).</p>
+<p>Please note that each user's certificate must be issued by a trusted certificate authority which
+has been properly added to the Ghidra Server's <em>cacerts</em> file.  See
+<a href="#managing-pki-certificate-authorities">Managing PKI Certificate Authorities</a> for more
+information.</p>
+<p>In an attempt to simplify the determination of user DN's, a log file (<em>UnknownDN.log</em>) records
+user DNs which are unknown.  After adding a user to the server, ask the user to attempt a login
+using their PKCS certificate.  This should result in their DN being recorded to this log file. The
+server administrator may now copy the appropriate DN from this log file when assigning the DN for
+a user.</p>
+</li>
+<li>
+<p><strong>JAAS - Java Authentication and Authorization Service (-a4)</strong>: User authentication is delegated
+to the JAAS subsystem.  The -jaas <code style="background-color: #eef;">&lt;config_file&gt;</code> argument is required to specify the JAAS config
+file.  The JAAS config file supplied (<em>server/jaas.conf</em>) contains various example configurations
+which may be used to establish an 'auth' configuration section.  None of the example
+configurations use the 'auth' name so they will be ignored by default.</p>
+<p>JAAS is architected similar to Linux/Unix PAM, where a named authentication configuration is
+possibly composed of several different modules.  Ghidra's support of JAAS only handles single
+simple JAAS modules that requests the name and password from the user.</p>
+<p>Some known JAAS login modules:</p>
+<ul>
+<li>
+<p><strong>com.sun.security.auth.module.LdapLoginModule</strong>: Allows authentication to an LDAP server. There
+is an example of using this module to authenticate against an Active Directory system in the
+jaas.conf file.</p>
+</li>
+<li>
+<p><strong>net.sf.jpam.jaas.JpamLoginModule (Linux/Unix server only)</strong>: Allows authentication against
+the local PAM configuration.  You will need to download JPAM from SourceForce and install the
+libraries in the necessary locations.  See the example in the <em>jaas.conf</em> file.</p>
+</li>
+<li>
+<p><strong>ghidra.server.security.loginmodule.ExternalProgramLoginModule</strong>: Spawns an external program
+for each authentication request, and uses the external program's exit code as the indicator
+of successful authentication.</p>
+<p>There is an example (and non-useful) implementation of an external authenticator provided with
+the Ghidra installation called <em>server/jaas_external_program.example.sh</em>.</p>
+<p>This login module strives to be compatible with Apache's mod_authnz_external API, and you should
+be able to use any mod_authnz_external authenticator with Ghidra.</p>
+<p>The external program is fed the username\n and password\n on its STDIN (i.e., two text lines).
+The external authenticator needs to exit with 0 (zero) error level if the authentication was
+successful, or a non-zero error level if not successful.</p>
+</li>
+<li>
+<p><strong>com.sun.security.auth.module.Krb5LoginModule</strong>: Not recommended. This login module is used in
+the <code style="background-color: #eef;">-a1</code> Active Directory via Kerberos authentication mode, and as such you should use it that
+way.</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>Use of an SSH pre-shared key (-ssh&lt;/)</strong>: Supported as an alternate form of authentication when
+using Local Ghidra password (<code style="background-color: #eef;">-a0</code>). This SSH authentication is currently supported by the
+Headless Analyzer only. See <a href="#ssh-user-authentication">SSH User Authentication</a> for configuration
+details.</p>
+</li>
+</ul>
+<p>(<a href="#ghidra-server-readme">Back to Top</a>)</p>
+<h2 id="ssh-user-authentication" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">SSH User Authentication</h2>
+<p>When the <code style="background-color: #eef;">-ssh</code> option has been included in conjunction with password based authentications mode
+(<code style="background-color: #eef;">-a0</code>) a user's SSH public key may be added to the server to facilitate access by a Headless
+Analyzer.  An SSH public key file must be added to the server repository for each user who requires
+headless SSH authentication.  The SSH public key file (e.g., <em>id_rsa.pub</em>) must be copied to the
+<em>repositories/~ssh/</em> subdirectory to a file named <code style="background-color: #eef;">&lt;username&gt;.pub</code>.  Removing the file will
+eliminate SSH based authentication for the corresponding user.  When creating the <em>~ssh/</em>
+subdirectory, it should be owned by the Ghidra Server process owner with full access and any SSH
+public keys readable by the process owner.  Changes to the SSH public key files may be made without
+restarting the Ghidra Server.</p>
+<p>Each user may generate a suitable SSH key pair with the <code style="background-color: #eef;">ssh-keygen</code> command issued from a shell
+prompt.  A PEM formatted RSA key-pair should be generated using the following command options:</p>
+<pre style="background-color: #eef;"><code style="background-color: #eef;">ssh-keygen -m pem -t rsa -b 2048
+</code></pre>
+<p><strong>NOTE</strong>: Ghidra Server authentication does not currently support the OPENSSH key format which may
+be the default <em>ssh-keygen</em> format (<code style="background-color: #eef;">-m</code> option) on some systems such as Ubuntu. In addition, other
+key types (<code style="background-color: #eef;">-t</code> option) such as <em>ecdsa</em> and <em>ed25519</em> are not currently supported.</p>
+<p>(<a href="#ghidra-server-readme">Back to Top</a>)</p>
+<h2 id="server-options" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Server Options</h2>
+<h3 id="networking-options">Networking options</h3>
+<h4 id="-ip-hostname"><code style="background-color: #eef;">-ip &lt;hostname&gt;</code></h4>
+<p>Identifies the remote access hostname (FQDN) or IPv4 address which should be  used by remote clients
+to access the server.  By default the host name reported by the operating system is resolved to an
+IPv4 address, if this fails the local loopback address is used.  The server log will indicate the
+remote access hostname at startup.  This option may be required when a server has multiple IP
+interfaces, relies on a dynamic DNS or other network address translation for incoming connections.
+This option establishes the property value for <em>java.rmi.server.hostname</em>.</p>
+<h4 id="-i-"><code style="background-color: #eef;">-i &lt;#.#.#.#&gt;</code></h4>
+<p>Forces the server to be bound to a specific IPv4 interface on the server. If specified and the <code style="background-color: #eef;">-ip</code>
+option is not, the address specified by <code style="background-color: #eef;">-i</code> will establish the remote access IP address as well as
+restrict the listening interface. If this option is not specified connections will be accepted on
+any interface.</p>
+<h4 id="-p"><code style="background-color: #eef;">-p#</code></h4>
+<p>Allows the base TCP port to be specified (default: 13100).  The server utilizes three (3) TCP ports
+starting with the specified base port (e.g., 13100, 13101 and 13102). The ports utilized are logged
+by the server during startup.</p>
+<h4 id="-n"><code style="background-color: #eef;">-n</code></h4>
+<p>Enables reverse name lookup for IP addresses when logging (requires proper configuration of reverse
+lookup by your DNS server).  Please note that logging of host names is now disabled by default due
+to the slow-down which occurs when reverse DNS is not properly configured on the  network.</p>
+<h3 id="authentication-options">Authentication options</h3>
+<h4 id="-a"><code style="background-color: #eef;">-a#</code></h4>
+<p>Allows a user authentication mode to be specified (see <a href="#user-authentication">User Authentication</a>)</p>
+<h4 id="-dad_domain"><code style="background-color: #eef;">-d&lt;ad_domain&gt;</code></h4>
+<p>Sets the Active Directory domain name. Example: &quot;-dmydomain.com&quot;</p>
+<h4 id="-e"><code style="background-color: #eef;">-e#</code></h4>
+<p>Allows the reset password expiration to be set to a specified number of days (default is 1-day). A
+value of 0 prevents expiration.</p>
+<h4 id="-jaas-config_file"><code style="background-color: #eef;">-jaas &lt;config_file&gt;</code></h4>
+<p>Specifies the path to the JAAS config file (when using <code style="background-color: #eef;">-a4</code>), relative to the ghidra/server
+directory (if not absolute).</p>
+<p>See <em>jaas.conf</em> for examples and suggestions. It is the system administrator's responsibility to
+craft their own JAAS configuration directive when using the <code style="background-color: #eef;">-a4</code> mode.</p>
+<h4 id="-u"><code style="background-color: #eef;">-u</code></h4>
+<p>Allows the server login user ID to be specified at time of login for <code style="background-color: #eef;">-a0</code> authentication mode.
+Without this option, the users client-side login ID will be assumed.</p>
+<h4 id="-autoprovision"><code style="background-color: #eef;">-autoProvision</code></h4>
+<p>Enable the auto-creation of new Ghidra Server users when they successfully authenticate to the
+server (<code style="background-color: #eef;">-a1</code> and <code style="background-color: #eef;">-a4</code> modes only). Users removed from the authentication provider (e.g., Active
+Directory) will need to be deleted manually from the Ghidra Server using <code style="background-color: #eef;">svrAdmin</code> command.</p>
+<h4 id="-anonymous"><code style="background-color: #eef;">-anonymous</code></h4>
+<p>Enable anonymous access support for Ghidra Server and its repositories.  Only those repositories
+which specifically enable anonymous access will be accessible as read-only to an anonymous user.</p>
+<h4 id="-ssh"><code style="background-color: #eef;">-ssh</code></h4>
+<p>Enable SSH as an alternate form of authentication when using <code style="background-color: #eef;">-a0</code> authentication mode.</p>
+<p>(<a href="#ghidra-server-readme">Back to Top</a>)</p>
+<h2 id="running-ghidra-server-on-microsoft-windows" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Running Ghidra Server on Microsoft Windows</h2>
+<h3 id="server-scripts-located-within-the-server-subdirectory">Server Scripts (located within the server subdirectory)</h3>
+<ul>
+<li><strong>svrInstall.bat</strong>: Installs server as service (<em>ghidraSvr</em>)</li>
+<li><strong>svrUninstall.bat</strong>: Removes previously installed server service</li>
+<li><strong>svrAdmin.bat</strong>: Facilitates Ghidra Server administrative commands (see
+<a href="#server-administration">Server Administration</a>)</li>
+<li><strong>ghidraSvr.bat</strong>: Provides a variety of commands for controlling the server when	running as a
+daemon process.  When running this script it accepts a single argument which is one of the
+following commands.  Many of these commands are included so that this script may be used for
+controlling the service.
+<ul>
+<li><strong>console</strong>: Starts server within the current terminal window. The <em>console</em> argument may be
+omitted to allow for double-click execution in this mode.</li>
+<li><strong>start</strong>: Starts the previously installed Ghidra Server service</li>
+<li><strong>stop</strong>: Stops the installed Ghidra Server service which is currently running</li>
+<li><strong>restart</strong>: Stops and restarts the previously installed Ghidra Server service</li>
+<li><strong>status</strong>: Displays the current status of the Ghidra Server (<em>ghidraSvr</em>) service</li>
+</ul>
+</li>
+</ul>
+<p><strong>NOTE</strong>: The above scripts may be run from a <em>CMD</em> window, or by double-clicking the script file
+from an Explorer window.  Other than the console and status operation, elevated privilege is needed
+to run these commands.  As such the user executing these scripts must be a member of the
+Administrator group and must be run with elevated privilege.  If using Windows Vista or newer, the
+best way to accomplish this is to run the <em>CMD</em> shell using the <em>Run as Administrator</em> action which
+is available by right-clicking on a command shortcut or batch file.  If the <em>CMD</em> shell is run in
+this manner, the Ghidra Server scripts may then be executed within the shell to run with
+administrator privilege.</p>
+<h3 id="running-server-in-console-window-intended-for-diagnostic-use-only">Running Server in Console Window (intended for diagnostic use only)</h3>
+<p><strong>NOTE</strong>: Starting the server in console mode is generally intended for diagnostic use only.<br />
+Extreme care must be taken to ensure that any user who starts the Ghidra Server via this script
+has full access to all directories and files within the root repository directory.</p>
+<p>If the Ghidra Server is not already running, it may be started within a console window by running
+the <code style="background-color: #eef;">ghidraSvr.bat console</code> command.  When you wish to terminate the server, use the
+<code style="background-color: #eef;">Ctrl-C</code> key sequence within the server console window and wait for a clean shutdown.</p>
+<h3 id="install-as-automatic-service-must-have-administrator-privilege">Install as Automatic Service (must have Administrator privilege)</h3>
+<p>The Ghidra Server may be installed as an automatic service by executing the <em>svrInstall.bat</em> script.
+This script may be run from a _CMD window, or by double-clicking the script file from an Explorer
+window.  Once installed, the server will start automatically when the system is booted. Immediately
+after running this script the service will not be running, you will need to either reboot or start
+the service from the Service Control Panel.</p>
+<h3 id="uninstall-service-must-have-administrator-privilege">Uninstall Service (must have Administrator privilege)</h3>
+<p>If after installing the Ghidra Server as a service you wish to uninstall it, you may run the
+<em>svrUninstall.bat</em> script.  You must stop the service via the Service Control Panel prior to running
+this script.  This script may be run from a <em>CMD</em> window, or by double-clicking the script file from</p>
+<p><strong>NOTE</strong>: It is very important that you uninstall the service prior to doing any of the following
+activities:</p>
+<ul>
+<li>Deleting or upgrading the Ghidra installation</li>
+<li>Moving/renaming the Ghidra installation directory</li>
+</ul>
+<p>(<a href="#ghidra-server-readme">Back to Top</a>)</p>
+<h2 id="running-ghidra-server-on-linux-or-macos" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Running Ghidra Server on Linux or macOS</h2>
+<p><strong>NOTE</strong>: macOS has limited support (see
+<a href="#macos---service-fails-to-start-macos-1014-mojave-and-later">macOS - Service fails to start</a>).</p>
+<h3 id="server-scripts-located-within-the-server-subdirectory-1">Server Scripts (located within the server subdirectory)</h3>
+<ul>
+<li><strong>svrInstall</strong>: Installs server as service (<em>ghidraSvr</em> or <em>wrapper.ghidraSvr</em>)</li>
+<li><strong>svrUninstall</strong>: Removes previously installed server service</li>
+<li><strong>svrAdmin</strong>: Facilitates Ghidra Server administrative commands (see
+<a href="#server-administration">Server Administration</a>)</li>
+<li><strong>ghidraSvr</strong>: Provides a variety of commands for controlling the server when	running as a
+daemon process.  When running this script it accepts a single argument which is one of the
+following commands.  Many of these commands are included so that this script may be used for
+controlling the service.
+<ul>
+<li><strong>console</strong>: Starts server within the current terminal window</li>
+<li><strong>start</strong>: Starts the previously installed Ghidra Server service</li>
+<li><strong>stop</strong>: Stops the installed Ghidra Server service which is currently running</li>
+<li><strong>restart</strong>: Stops and restarts the previously installed Ghidra Server service</li>
+<li><strong>status</strong>: Displays the current status of the Ghidra Server (<em>ghidraSvr</em>) service</li>
+</ul>
+</li>
+</ul>
+<h3 id="running-server-in-console-window">Running Server in Console Window</h3>
+<p><strong>NOTE</strong>: Starting the server in console mode is generally intended for diagnostic use only. Care
+must be taken to ensure that any user who starts the Ghidra Server via this script  has full access
+to all directories and files within the root repository directory.</p>
+<p>If the Ghidra Server is not already running, it may be started within a terminal window by running
+the command: <code style="background-color: #eef;">ghidraSvr console</code>.  When you wish to terminate the server, use the <code style="background-color: #eef;">Ctrl-C</code> key
+sequence within the server console window and wait for a clean shutdown.</p>
+<h3 id="install-as-automatic-service-must-have-admin-privilege">Install as Automatic Service (must have admin privilege)</h3>
+<p>The Ghidra Server may be installed as an automatic service by executing the <em>svrInstall</em> script.
+Once installed, the server will start automatically when the system is booted.  If performing an
+upgrade to an existing Ghidra Server installation you must uninstall the existing Ghidra Server
+first (see <a href="#uninstall-service-must-have-admin-privilege">Uninstall Service</a>).</p>
+<p>In order for the installed service script to survive Java system updates, which may change the
+installed Java version, it is highly recommended that the <code style="background-color: #eef;">GHIDRA_JAVA_HOME</code> variable be set
+properly at the top of the <code style="background-color: #eef;">ghidraSvr</code> script prior to the server install. <code style="background-color: #eef;">GHIDRA_JAVA_HOME</code> should
+refer to a non-changing path where Java is installed.  For a system-installed Java the major-version
+symblic-link path should be specified in favor of a full-version path which stipulates minor-version
+information.  In addition, it is important that the Ghidra Server service be restarted anytime the
+installed Java version is updated where this symbolic link has been modified to reference a newly
+installed Java version.  Failure to use this approach may result in the Ghidra Server service script
+referring to an invalid Java path following an update.</p>
+<p>Example setting of <code style="background-color: #eef;">GHIDRA_JAVA_HOME</code> within <em>ghidraSvr</em> script:</p>
+<pre style="background-color: #eef;"><code style="background-color: #eef;">GHIDRA_JAVA_HOME=/usr/lib/jvm/java-21-openjdk
+</code></pre>
+<p>If it is preferred to run the service with a dedicated local user account, the following entry may
+be added to the <em>server.conf</em> file with the appropriate account specified in place of <code style="background-color: #eef;">&lt;uid&gt;</code>.
+A dedicated local service account should generally be a no-login account with a corresponding group
+identifier with the same name (i.e., see <em>/etc/passwd</em> and <em>/etc/group</em>). The local account should
+be established and specified with server.conf prior to	installation of the Ghidra Server service.</p>
+<pre style="background-color: #eef;"><code style="background-color: #eef;">wrapper.app.account=&lt;uid&gt;
+</code></pre>
+<p>It is also important that the repositories directory and Ghidra installation files be owned by the
+service account with proper permissions.  Note that while the Ghidra Server Java process will run
+using the specified <em>uid</em>, the <em>wrapper</em> process will continue to run as <em>root</em> and monitor/manage
+the Java process.</p>
+<h3 id="uninstall-service-must-have-admin-privilege">Uninstall Service (must have admin privilege)</h3>
+<p>If after installing the Ghidra Server as a service you wish to uninstall it, you may run the
+<em>svrUninstall</em> script.</p>
+<p><strong>IMPORTANT</strong>: It is very important that you uninstall the Ghidra Server service using the original
+Ghidra software installation.  Use of a newer Ghidra software install may not properly uninstall a
+different service version.  This is particularly true if uninstalling a Ghidra Server version prior
+to 11.2.  Such an uninstall will be required when:</p>
+<ul>
+<li>deleting or upgrading the Ghidra installation</li>
+<li>moving/renaming the Ghidra installation directory</li>
+</ul>
+<p><strong>NOTE</strong>: The service control mechanism for Linux changed with the Ghidra 11.2 release. The
+<em>init.d</em> mechanism was previously used in all cases, whereas the <em>systemd</em> service mechanism may now
+used based upon YAJSW preference.</p>
+<p>(<a href="#ghidra-server-readme">Back to Top</a>)</p>
+<h2 id="server-administration" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Server Administration</h2>
+<p>The script <em>svrAdmin</em>, or <em>svrAdmin.bat</em>, provides the ability to manage Ghidra Server users and
+repositories.  This script must be run from a command shell so that the proper command line
+arguments may be specified.  This command should only be used after the corresponding Ghidra
+installation has been properly configured via modification of the <em>server/server.conf</em> file
+(see <a href="#server-configuration">Server Configuration</a>) and installed and/or started.</p>
+<p>Many of the commands are queued for subsequent execution by the Ghidra Server process. Due to this
+queuing, there may be a delay between the invocation of a <em>svrAdmin</em> command and its desired affect.
+The Ghidra log file(s) may be examined for feedback on queued command execution (see
+<a href="#server-logs">Server Logs</a>).</p>
+<p>The general command usage is:</p>
+<pre style="background-color: #eef;"><code class="language-bash" style="background-color: #eef;">svrAdmin [&lt;server-root-path&gt;]
+         [-add &lt;user_sid&gt; [--p]]
+         [-grant &lt;user_sid&gt; &lt;&quot;+r&quot;|&quot;+w&quot;|&quot;+a&quot;&gt; &lt;repository_name&gt;] 
+         [-revoke &lt;user_sid&gt; &lt;repository_name&gt;] 
+         [-remove &lt;user_sid&gt;] 
+         [-reset &lt;user_sid&gt; [--p]] 
+         [-dn &lt;user_sid&gt; &quot;&lt;user_dn&gt;&quot;]
+         [-list  &lt;user_sid&gt; [&lt;user_sid&gt;...]]
+         [-list [--users]]
+         [-users]
+         [-migrate-all]
+         [-migrate &quot;&lt;repository_name&gt;&quot;]
+</code></pre>
+<h4 id="server-root-path"><code style="background-color: #eef;">&lt;server-root-path&gt;</code></h4>
+<p>There is normally no need to specify this argument on the command line.The default server-root-path
+is determined by the <em>server.conf</em> setting of the <code style="background-color: #eef;">ghidra.repositories.dir</code> variable.  This allows
+both the server execution and <em>svrAdmin</em> script to utilize the same setting.</p>
+<h4 id="-add-adding-a-user"><code style="background-color: #eef;">-add</code> (Adding a User)</h4>
+<p>All authentication modes require that a user first be added to the server for a connection to be
+permitted.  If Ghidra password authentication is used (<code style="background-color: #eef;">-a0</code>), the initial password is set to
+&quot;<strong>changeme</strong>&quot;. This password must be changed by the user within 24-hours to avoid its expiration
+(password expiration period can be extended as a server option, see <code style="background-color: #eef;">-e</code>
+<a href="#server-options">server option</a>.  Alternatively, the initial password may be specified by including
+the optional <code style="background-color: #eef;">--p</code> parameter which will prompt for an initial password.</p>
+<p>Examples:</p>
+<pre style="background-color: #eef;"><code class="language-bash" style="background-color: #eef;">svrAdmin -add mySID
+svrAdmin -add mySID --p
+</code></pre>
+<h4 id="-grant-grant-repository-access-for-user"><code style="background-color: #eef;">-grant</code> (Grant Repository Access for User)</h4>
+<p>Grant access for a specified user and repository where both must be known to the server. Repository
+access permission must be specified as +r for READ_ONLY, +w for WRITE or +a for ADMIN.</p>
+<p>Examples:</p>
+<pre style="background-color: #eef;"><code class="language-bash" style="background-color: #eef;">svrAdmin -grant mySID +a myRepo
+svrAdmin -grant mySID +w myRepo
+</code></pre>
+<h4 id="-revoke-revoke-repository-access-for-user"><code style="background-color: #eef;">-revoke</code> (Revoke Repository Access for User)</h4>
+<p>Revoke the access for a specified user and named repository.  Currently, revoking access for a user
+does not disconnect them if currently connected.</p>
+<p>Examples:</p>
+<pre style="background-color: #eef;"><code class="language-bash" style="background-color: #eef;">svrAdmin -revoke mySID myRepo
+</code></pre>
+<h4 id="-remove-removing-a-user"><code style="background-color: #eef;">-remove</code> (Removing a User)</h4>
+<p>A user may be removed from the Ghidra Server and all repositories with this command form.  This will
+only prevent the specified user from connecting to the server in the future and will have no effect
+on the state or history of repository files.  If a repository admin wishes to clear a user's
+checkouts, this is a separate task which may be performed from an admin's Ghidra client.  Currently,
+removing a user does not disconnect them if currently connected.</p>
+<p>Example:</p>
+<pre style="background-color: #eef;"><code class="language-bash" style="background-color: #eef;">svrAdmin -remove mySID
+</code></pre>
+<h4 id="-reset-reset-users-ghidra-password"><code style="background-color: #eef;">-reset</code> (Reset User's Ghidra Password)</h4>
+<p>If a user's password has expired, or has simply been forgotten, the password may be reset to
+&quot;<strong>changeme</strong>&quot;.  After resetting, this password must be changed by the user within 24-hours to avoid
+its expiration (password expiration period can be extended as a server option). Alternatively, the
+new password may be specified by including the optional <code style="background-color: #eef;">--p</code> parameter which will prompt for an
+initial password.</p>
+<p>Example:</p>
+<pre style="background-color: #eef;"><code class="language-bash" style="background-color: #eef;">svrAdmin -reset mySID
+svrAdmin -reset mySID --p
+</code></pre>
+<h4 id="-dn-assign-users-distinguished-name"><code style="background-color: #eef;">-dn</code> (Assign User's Distinguished Name)</h4>
+<p>The use of PKI authentication requires that each user's DN be associated with their user SID.</p>
+<p>Example:</p>
+<pre style="background-color: #eef;"><code class="language-bash" style="background-color: #eef;">svrAdmin -dn mySID &quot;CN=MyName,OU=AGENCY,OU=DoD,O=U.S. Government,C=US&quot;
+</code></pre>
+<p><strong>NOTE</strong>: After having been added to the server, a user's DN may be copied from the <em>UnknownDN.log</em>
+file following an attempted connection with their PKCS certificate.</p>
+<h4 id="-list-list-all-repositories-andor-user-permissions"><code style="background-color: #eef;">-list</code> (List All Repositories and/or User Permissions)</h4>
+<p>If the <code style="background-color: #eef;">--users</code> option is also present, the complete user access list will be included for each
+repository. Otherwise, command may be followed by one or user SIDs (separated by a space) which will
+limit the displayed repository list and access permissions to those users specified.</p>
+<p>Example:</p>
+<pre style="background-color: #eef;"><code class="language-bash" style="background-color: #eef;">svrAdmin -list
+svrAdmin -list --users
+svrAdmin -list mySID
+</code></pre>
+<h4 id="-users-list-all-users"><code style="background-color: #eef;">-users</code> (List All Users)</h4>
+<p>Lists all users with server access.</p>
+<p>Example:</p>
+<pre style="background-color: #eef;"><code class="language-bash" style="background-color: #eef;">svrAdmin -users
+</code></pre>
+<h4 id="-migrate-all-migrate-all-repositories-to-use-indexed-file-system-storage"><code style="background-color: #eef;">-migrate-all</code> (Migrate All Repositories to Use Indexed File-System Storage)</h4>
+<p>For all repositories which are using the deprecated Mangled Filesystem storage, they will be
+marked for migration to the Indexed Filesystem storage with support for longer file pathnames.<br />
+The actual migration will be performed when the Ghidra Server is restarted.</p>
+<p>Please note that any migration to the Indexed filesystem storage is a one-way conversion so a
+backup of your server repositories directory is highly recommended before proceeding.</p>
+<p>Example:</p>
+<pre style="background-color: #eef;"><code class="language-bash" style="background-color: #eef;">svrAdmin -migrate-all
+</code></pre>
+<h4 id="-migrate-migrate-a-specified-repository-to-use-indexed-file-system-storage"><code style="background-color: #eef;">-migrate</code> (Migrate a Specified Repository to use Indexed File-System Storage)</h4>
+<p>The specified repository will be marked for migration to the Indexed Filesystem storage with support
+for longer file pathnames.  The actual migration will be performed when the Ghidra Server is
+restarted.</p>
+<p>Please note that any migration to the Indexed filesystem storage is a one-way conversion so a backup
+of your server repositories directory is highly recommended before proceeding.</p>
+<p>Example:</p>
+<pre style="background-color: #eef;"><code class="language-bash" style="background-color: #eef;">svrAdmin -migrate &quot;myProject&quot;
+</code></pre>
+<p>(<a href="#ghidra-server-readme">Back to Top</a>)</p>
+<h2 id="repository-backup" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Repository Backup</h2>
+<p>As with any server, it is highly recommended that your server repositories directory be periodically
+backed-up or whenever an upgrade (or data migration) is performed.  While backups may be taken while
+the Ghidra Server is idle (e.g., after midnight), it is always safest to stop the Ghidra Server
+while a backup is in progress.</p>
+<p>(<a href="#ghidra-server-readme">Back to Top</a>)</p>
+<h2 id="clearing-obsolete-checkouts" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Clearing Obsolete Checkouts</h2>
+<p>Any user who has Admin privilege of a specific repository may use the Ghidra client to View
+Checkouts for a specific file and Delete individual checkouts from those that are listed.  The
+<em>View Checkouts</em> action is available from the popup-menu of the Ghidra Project Window by
+right-clicking on a specific project file.</p>
+<p>Under special circumstances (e.g., classroom environment) it may be desirable to remove all
+checkouts either for a specific repository or an entire Ghidra Server.  Under Linux/Mac this is
+most easily accomplished from the command shell while the Ghidra Server is stopped.  The following
+command may be used:</p>
+<pre style="background-color: #eef;"><code class="language-bash" style="background-color: #eef;">find &lt;repo-path&gt; -name checkout.dat -exec rm {} \;
+</code></pre>
+<p>where <code style="background-color: #eef;">&lt;repo-path&gt;</code> is the directory path of a specific named repository root, or the parent
+repositories directory if clearing checkouts for all repositories.</p>
+<p><strong>WARNING!</strong> Since the <code style="background-color: #eef;">find</code> command is recursive, care must be taken when specifying the
+<code style="background-color: #eef;">&lt;repo-path&gt;</code> and the other parameters.  If you specify the incorrect <code style="background-color: #eef;">&lt;repo-path&gt;</code> or omit the
+correct <code style="background-color: #eef;">-name</code> argument, you may remove important files without the ability to recover.</p>
+<p>(<a href="#ghidra-server-readme">Back to Top</a>)</p>
+<h2 id="pki-certificates" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">PKI Certificates</h2>
+<p>PKI keys/certificates can be used to authenticate clients and/or servers. When using the Ghidra
+Server PKI authentication mode this corresponds to &quot;client authentication&quot; which requires the
+<em>server.conf</em> to specify a <em>cacerts</em> file location and each user client to configure a user signing
+key/certificate keystore file.  If clients wish to authenticate the server, the <em>server.conf</em> must
+specify a server key/certificate keystore file and each user client must configure a <em>cacerts</em> file.
+See <a href="#managing-pki-certificate-authorities">Managing PKI Certificate Authorities</a> for more
+information on configuring a <em>cacerts</em> file.</p>
+<p>User and server certificates must be acquired through one of many trusted authorities identified by
+the <em>cacerts</em> file installed by the peer system.  Your network support staff should be able to help
+you acquire a suitable signing key/certificate in the form of either a <em>*.p12</em>, <em>*.pks</em>, or <em>*.pfx</em>
+file.</p>
+<p>User's of the Ghidra GUI application can install their key/certificate file via the project window
+menu item <em>Edit-&gt;Set PKI Certificate...</em>. The user will be prompted for their keystore password the
+first time key access is required for a network connection after starting the application. If using
+the <em>analyzeHeadless</em> script, see the <em>analyzeHeadlessREADME.html</em> file for details.</p>
+<p>If the Ghidra Server will be installing a server certificate, the <em>server.conf</em> file should be
+modified to properly identify the server's key/certificate location (<em>ghidra.keystore</em>) and password
+(<em>ghidra.password</em>).</p>
+<p>(<a href="#ghidra-server-readme">Back to Top</a>)</p>
+<h2 id="managing-pki-certificate-authorities" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Managing PKI Certificate Authorities</h2>
+<p>When utilizing PKI authentication for a Ghidra Server a set of certificates for trusted Certificate
+Authorities (CA) must be collected and added to a cacerts keystore file created using the Java
+keytool.  The Java keytool can be found within the Java Development Kit (JDK) provided with
+Ghidra (<em>java/bin/keytool</em>) or any other Java distribution.  The default cacerts keystore file
+location is <em>Ghidra/cacerts</em> and is also specified by the <em>ghidra.cacerts</em> property setting within
+the <em>server.conf</em> file.  Uncomment this specification within the <em>server.conf</em> file to activate use
+of the <em>cacerts</em> for all incoming SSL/TLS connections (i.e., all Ghidra client users must install
+and employ the use of their personal PKI signing certificate for both headed and headless use - see
+<a href="#pki-certificates">PKI Certificates</a>).  Clients can also impose server authentication for all HTTPS
+and Ghidra Server connections by creating the <em>cacerts</em> file and enabling the <em>ghidra.cacerts</em>
+property setting within the <em>support/launch.sh</em> and/or <em>support/launch.bat</em> scripts.</p>
+<p>Individual CA public key certificates should be obtained in a Base64 encoding (see sample below).
+If pasting the encoded certificate into a file, be sure to include an extra blank line after the
+<code style="background-color: #eef;">END CERTIFICATE</code> line.</p>
+<p>Sample Base64 encoded certificate:</p>
+<pre style="background-color: #eef;"><code style="background-color: #eef;">-----BEGIN CERTIFICATE-----
+laSKCIElkjsudCUDusjSUkjeMSUjAJHDuLQWMCMausALkKXMXOOjSKSUjssjSKAA
+ksDSDjLKJHAuemCXXUmxxqjaskuDSYRmxiqgDlakkUSUdhemjASKUakjhuEhxMSD
+...
+ksJKDwocQwyeEIcbzHtyrSLfoeyGCmvbNLGHpgoruSTYQafzDFTgwjkJHCXVDjdg
+KDowiyYTXkcuiwCJXuyqCHpdoORriwwcCWUskucuwHDJskuejdkUWJCUDSjujsUE
+-----END CERTIFICATE-----
+</code></pre>
+<p>You can inspect the contents of a Base64 encoded certificate file with the following command:</p>
+<pre style="background-color: #eef;"><code class="language-bash" style="background-color: #eef;">keytool -printcert -v -file &lt;base64file&gt;
+</code></pre>
+<p>where:</p>
+<ul>
+<li><code style="background-color: #eef;">&lt;base64file&gt;</code> is the file containing the Base64 encoded CA certificate to be imported.</li>
+</ul>
+<p>The Owner common name (CN) displayed by this command should be used as the alias when importing the
+certificate into your cacerts file.</p>
+<p>The following command should be used to add a CA certificate to a new or existing cacerts file:</p>
+<pre style="background-color: #eef;"><code class="language-bash" style="background-color: #eef;">    keytool -import -alias &quot;&lt;caAlias&gt;&quot; -file &lt;base64file&gt; -storetype jks -keystore &lt;cacerts-file&gt;
+</code></pre>
+<p>where:</p>
+<ul>
+<li><code style="background-color: #eef;">&lt;caAlias&gt;</code> is the name of the CA corresponding to the imported certificate.</li>
+<li><code style="background-color: #eef;">&lt;base64file&gt;</code> is the file containing the Base64 encoded CA certificate to be imported.</li>
+<li><code style="background-color: #eef;">&lt;cacerts-file&gt;</code> is the cacerts file to be used by the Ghidra Server (and/or client if needed).</li>
+</ul>
+<p>The keystore password will be requested and is used to restrict future modifications to the
+<em>cacerts</em> file.</p>
+<p>When starting the Ghidra Server with PKI authentication enabled, the CA certificates contained
+within the <em>cacerts</em> file will be dumped to the log with their expiration dates.</p>
+<p>Please note that the Ghidra Server does not currently support Certificate Revocation Lists (CRLs).</p>
+<p>(<a href="#ghidra-server-readme">Back to Top</a>)</p>
+<h2 id="upgrading-the-ghidra-server-installation" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Upgrading the Ghidra Server Installation</h2>
+<ol>
+<li>
+<p>Be sure to backup your projects and tools to ensure that the new Ghidra installation does not
+overwrite any of your data. Individual program files upgraded to a newer version of Ghidra
+can not be opened with an older version.</p>
+</li>
+<li>
+<p>Uninstall an installed Ghidra Server Service by following the <em>Uninstall Service</em> instructions
+corresponding to your operating system
+(<a href="#uninstall-service-must-have-administrator-privilege">Windows</a> or
+<a href="#uninstall-service-must-have-admin-privilege">Linux/macOS</a>).</p>
+</li>
+<li>
+<p>Unzip the new Ghidra distribution to a new installation directory (general unpacking and
+installation guidelines may be found in <em>ghidra_x.x/GettingStarted.html</em>).</p>
+</li>
+<li>
+<p>Copy the old <em>repositories</em> directory to the new Ghidra Server installation directory.</p>
+</li>
+<li>
+<p>Copy the <code style="background-color: #eef;">wrapper.app.parameter.#</code> lines from your old <em>server/server.conf</em> file to the new
+installation <em>server/server.conf</em>.  For 5.0 release and earlier, your old <em>server.conf</em> file is
+located within a platform-specific directory (<code style="background-color: #eef;">core/os/&lt;platform&gt;</code>). No other changes should be
+made to your new <em>server.conf</em> file.</p>
+<p><strong>Do not replace the new server.conf file with your old server.conf file, as this could cause
+server problems.</strong></p>
+</li>
+<li>
+<p>If desired, install the Ghidra Server Service from the new installation server subdirectory by
+following the instructions corresponding to your operating system
+(<a href="#install-as-automatic-service-must-have-administrator-privilege">Windows</a> or
+<a href="#install-as-automatic-service-must-have-admin-privilege">Linux/macOS</a>).</p>
+</li>
+</ol>
+<p><strong>WARNING!</strong> <strong>As of Ghidra 7.0 a new project/server storage implementation, <code style="background-color: #eef;">Indexed-V1</code>, has been
+added which is not compatible with older versions of Ghidra.</strong>  The <em>Indexed-V0</em> filesystem storage
+allows longer filenames and paths to exist within a project, while the <code style="background-color: #eef;">V1</code> version expands support
+to facilitate some of the very large project/repository features introduced in Ghidra 7.0. Since the
+legacy storage implementation (<em>Mangled</em>) used by older projects and repositories is still
+supported, conflicting storage behavior may exist between a Ghidra project and its server repository
+for long filename/path support. It is highly recommended that all server repositories and associated
+projects be migrated to the new Indexed storage implementation in a coordinated fashion after making
+a complete backup. All new Ghidra projects will utilize the new Indexed storage implementation, so
+care should taken when creating shared projects with older repositories.</p>
+<p><strong>NOTE</strong>: If using Ghidra 6.0.x, opening a project which uses the newer <em>Indexed-V1</em> filesystem may
+cause the project storage to revert to the older <em>Indexed-V0</em> filesystem.</p>
+<p>A user may determine which storage implementation is used by a project by viewing the <em>Project Info</em>
+display (via <em>Project -&gt; View Project Info...</em>). Local projects using the legacy <em>Mangled</em>
+filesystem may be migrated to the new <em>Indexed</em> filesystem via this <em>Project Info</em> panel. The status
+of Ghidra Server repositories storage can be determined and flagged for migration via the
+<em>server/svrAdmin</em> script (described in the <a href="#server-administration">Server Administration</a> section).
+Please note that any migration to the <em>Indexed</em> filesystem storage is a one-way conversion so a
+backup of your project or server repositories directory is highly recommended before proceeding.</p>
+<p>(<a href="#ghidra-server-readme">Back to Top</a>)</p>
+<h2 id="troubleshooting--known-issues" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Troubleshooting / Known Issues</h2>
+<h3 id="failures-creating-repository-folders--checking-in-files">Failures Creating Repository Folders / Checking in Files</h3>
+<p>If you see continuous failures to create repository folders or failures to check in files, check
+the disk space on the server or folder permissions. When the server runs out of disk space, it
+cannot create folders or check in files.</p>
+<h3 id="clientserver-connection-errors">Client/Server connection errors</h3>
+<p>The Ghidra Server has transitioned to using SSL/TLS connections when accessing the server's RMI
+registry.  This change in communication protocol can cause unexpected symptoms when attempting to
+connect incompatible versions of Ghidra.  When an older incompatible Ghidra client attempts to access a
+newer SSL/TLS enabled Ghidra Server registry, the following connection error will occur:</p>
+<pre style="background-color: #eef;"><code style="background-color: #eef;">non-JRMP server at remote endpoint
+</code></pre>
+<h3 id="ms-windows---error-incorrect-function-windowswatchservice">MS Windows - ERROR Incorrect function (WindowsWatchService)</h3>
+<p>The Ghidra Server employs a file system watcher service for the repositories directory which must
+reside within a locally mounted NTFS or ReFS filesystem.</p>
+<h3 id="ms-windows---error-missing-temp-directory">MS Windows - ERROR Missing Temp Directory</h3>
+<p>Running the Ghidra Server as an installed service under Windows may attempt to use a non-existing
+temporary directory (e.g., <code style="background-color: #eef;">C:\Windows\system32\config\systemprofile\AppData\Local\Temp\</code>). The
+work-around for this is to configure the server to use an existing temporary directory (e.g.,
+<code style="background-color: #eef;">C:\Windows\Temp</code>).  This can be done by editing the <em>server.conf</em> file, locate the
+<em>wrapper.java.additional</em> entries and add/uncomment an entry with your temporary directory
+specified. For example:</p>
+<pre style="background-color: #eef;"><code style="background-color: #eef;">wrapper.java.additional.3=-Djava.io.tmpdir=C:\Windows\Temp
+</code></pre>
+<p>Be sure to use the next unique sequence number for your <em>wrapper.java.additional</em> entry.</p>
+<h3 id="ms-windows-7-and-8---ghidrasvrbat-svrinstallbat-or-svruninstallbat-error">MS Windows 7 and 8 - ghidraSvr.bat, svrInstall.bat, or svrUninstall.bat Error</h3>
+<p>The following error may occur when attempting to install/uninstall/start/stop/restart the Ghidra
+Server under MS Windows 7 or 8 even if the user is a member of the Administrator group:</p>
+<pre style="background-color: #eef;"><code style="background-color: #eef;">Access denied: please check the user credentials
+</code></pre>
+<p>The user executing these scripts must be a member of the Administrator group and must be run with
+elevated privilege.  The best way to accomplish this is to run the <em>CMD</em> shell using the
+<em>Run as Administrator</em> action which is available by right-clicking on a command shortcut or batch
+file.  If the <em>CMD</em> shell is run in this manner, the Ghidra Server scripts may then be executed
+within the shell to run with administrator privilege.  Failure to run the scripts in this manner may
+cause failure information to be hidden from view due to the privilege escalation mechanism.</p>
+<h3 id="linux---selinux-must-be-disabled">Linux - SELinux must be disabled</h3>
+<p>The Ghidra Server may not start properly if SELinux has not been disabled.  This setting is
+specified in the file <em>/etc/selinux/config</em>.</p>
+<h3 id="linux---potential-hang-from-devrandom-depletion">Linux - Potential hang from /dev/random depletion</h3>
+<p>SSL communications and the PKI/SSH authentication mechanisms employed by GHIDRA make use of the Java
+<code style="background-color: #eef;">SecureRandom </code> class to generate random numbers required by various cryptographic techniques. On
+Linux systems this class makes use of <em>/dev/random</em> to produce these random numbers which in turn
+relies on other system entropy sources to feed it.  We have seen that <em>/dev/random</em> can become
+depleted which can cause the dependent Java application to hang.  While Java claims to have settings
+which should allow <em>/dev/urandom</em> to be used, these security settings do not appear to work as
+intended.  The best workaround we have found for systems which exhibit this problem is to install
+<em>haveged</em> (HArdware Volatile Entropy Gathering and Expansion Daemon) which will satisfy the entropy
+demand needed by <em>/dev/random</em>.</p>
+<h3 id="macos---service-fails-to-start-macos-1014-mojave-and-later">macOS - Service fails to start (macOS 10.14 Mojave and later)</h3>
+<p>The installed service may fail to start with macOS Mojave (10.14) and later due to changes in the
+macOS system protection feature.  When the service fails to start it does not provide any error or
+logging to help determine the cause.  Although granting <em>Full Disk Access</em> to <em>Java</em> can be a
+workaround, this is rather drastic and is not considered desirable since it will allow any Java
+application to run as root.  For this reason, installation of the Ghidra Server as a service on
+macOS is discouraged.</p>
+<p>(<a href="#ghidra-server-readme">Back to Top</a>)</p>

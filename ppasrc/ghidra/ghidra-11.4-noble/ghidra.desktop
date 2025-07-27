@@ -1,0 +1,12 @@
+[Desktop Entry]
+Categories=Application;Development;
+Comment=Ghidra Software Reverse Engineering Suite
+Exec=/opt/ghidra/ghidraRun
+GenericName=Ghidra Software Reverse Engineering Suite
+Icon=/opt/ghidra/docs/GhidraClass/Intermediate/Images/GhidraLogo64.png
+Name=Ghidra
+StartupNotify=false
+Terminal=false
+Type=Application
+X-DBUS-StartupType=none
+X-KDE-SubstituteUID=false

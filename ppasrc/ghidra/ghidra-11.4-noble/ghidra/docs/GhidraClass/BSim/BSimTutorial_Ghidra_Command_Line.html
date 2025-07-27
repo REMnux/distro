@@ -1,0 +1,40 @@
+<h1 id="ghidra-analysis-from-the-command-line" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Ghidra Analysis from the Command Line</h1>
+<p>For the remaining exercises, we need to populate our BSim database with a number of binaries.
+We'd like a consistent set of binaries for the tutorial, but we don't want to clutter the Ghidra distribution with dozens of additional executables.
+Fortunately, the BSim plugin includes a script for building the PostgreSQL backend, and that build process creates hundreds of object files.
+So we can just build PostgreSQL and harvest the object files we need.</p>
+<p><strong>Note</strong>: For the tutorial, we continue to use the H2 BSim backend.
+We do not run any PostgreSQL code, we simply analyze some files produced when building PostgreSQL.</p>
+<p>Note that these files must be built on a machine running Linux or macOS.
+Windows users can build these files in a Linux virtual machine.</p>
+<p>To build the files, execute the following commands in a shell: <sup class="footnote-ref"><a href="#fn-1" id="fnref-1" data-footnote-ref>1</a></sup></p>
+<pre style="background-color: #eef;"><code class="language-bash" style="background-color: #eef;">cd &lt;ghidra_install_dir&gt;/Ghidra/Features/BSim
+export CFLAGS=&quot;-O2 -g&quot;
+./support/make-postgres.sh
+mkdir ~/postgres_object_files
+cd build
+find . -name p*o -size +100000c -size -700000c -exec cp {} ~/postgres_object_files/ \;
+cd os/linux_x86_64/postgresql/bin
+strip -s postgres
+</code></pre>
+<p>To continue on Windows, transfer the <code style="background-color: #eef;">~/postgres_object_files</code> directory and the stripped <code style="background-color: #eef;">postgres</code> executable to your Windows machine.</p>
+<h2 id="importing-and-analyzing-the-exercise-files" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Importing and Analyzing the Exercise Files</h2>
+<p>Now that we have the executables, we can analyze them with the headless analyzer<sup class="footnote-ref"><a href="#fn-2" id="fnref-2" data-footnote-ref>2</a></sup>.
+The headless analyzer is distinct from BSim, but using it is the only feasible way to analyze substantial numbers of binaries.</p>
+<p>To analyze the files in Linux, execute the following commands in a shell.</p>
+<pre style="background-color: #eef;"><code class="language-bash" style="background-color: #eef;">cd &lt;ghidra_install_dir&gt;/support
+./analyzeHeadless &lt;ghidra_project_dir&gt; postgres_object_files -import ~/postgres_object_files/*
+</code></pre>
+<p>(On windows, use <code style="background-color: #eef;">analyzeHeadless.bat</code> and adjust paths accordingly.)</p>
+<p>This will create a local Ghidra project called <code style="background-color: #eef;">postgres_object_files</code> in the directory <code style="background-color: #eef;">&lt;ghidra_project_dir&gt;</code>.</p>
+<p>Next Section: <a href="BSimTutorial_BSim_Command_Line.html">BSim from the Command Line</a></p>
+<section class="footnotes" data-footnotes>
+<ol>
+<li id="fn-1">
+<p>You may need to install additional packages and/or change some build options in order for PostgreSQL to build successfully. The error messages are generally informative.  See the comments in <code style="background-color: #eef;">make-postgres.sh</code>. <a href="#fnref-1" class="footnote-backref" data-footnote-backref data-footnote-backref-idx="1" aria-label="Back to reference 1">↩</a></p>
+</li>
+<li id="fn-2">
+<p>The headless analyzer has its own documentation: <code style="background-color: #eef;">&lt;ghidra_install_dir&gt;/support/analyzeHeadlessREADME.html</code>. <a href="#fnref-2" class="footnote-backref" data-footnote-backref data-footnote-backref-idx="2" aria-label="Back to reference 2">↩</a></p>
+</li>
+</ol>
+</section>

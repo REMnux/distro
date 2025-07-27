@@ -1,0 +1,154 @@
+<h1 id="dockerized-ghidra" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Dockerized Ghidra</h1>
+<h2 id="build" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Build</h2>
+<p>From the root directory of your Ghidra release, run the following command.</p>
+<pre style="background-color: #eef;"><code style="background-color: #eef;">./docker/build-docker-image.sh
+</code></pre>
+<p>This will build the ghidra docker image with a tag corresponding to the release version of Ghidra.</p>
+<h2 id="the-mode-environment-variable" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">The MODE environment variable</h2>
+<p>The Ghidra Docker Container supports the following <code style="background-color: #eef;">MODE</code>'s of execution:</p>
+<ul>
+<li>gui</li>
+<li>headless</li>
+<li>ghidra-server</li>
+<li>bsim</li>
+<li>bsim-server</li>
+<li>pyghidra</li>
+</ul>
+<p>The <code style="background-color: #eef;">MODE</code> environment variable designates which entrypoint of Ghidra to execute.</p>
+<p>The <code style="background-color: #eef;">entrypoint.sh</code> script is executed upon container startup.</p>
+<h2 id="configuring-a-container" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Configuring a Container</h2>
+<p>Configuration of a container is done just as any other docker container would be configured.
+Volumes can be mounted, environment variables can be set, ports can be mapped from container to the host, and so on.
+Configuration steps vary a lot based on what MODE the container is started with.</p>
+<p>The base directory for Ghidra within the container is located at <code style="background-color: #eef;">/ghidra</code>.
+All of ghidra's default locations for files, configs, etc., are the same within that.
+Ghidra is run as the user <code style="background-color: #eef;">ghidra</code> within the container, with uid <code style="background-color: #eef;">1001</code> and guid <code style="background-color: #eef;">1001</code>.</p>
+<p>The <code style="background-color: #eef;">ghidra</code> user only has permissions to the following directories inside the container:</p>
+<ul>
+<li><code style="background-color: #eef;">/ghidra</code></li>
+<li><code style="background-color: #eef;">/home/ghidra</code></li>
+</ul>
+<p>When a container does not receive any arguments passed to it with the <code style="background-color: #eef;">docker run</code> command,
+the corresponding Command Line Interface (CLI) for the <code style="background-color: #eef;">MODE</code> executed will display it's usage statement.</p>
+<h3 id="mapping-local-volumes-to-a-container">Mapping Local Volumes to a Container</h3>
+<p>Volumes within the container may run into permission issues if the volumes are not accessible by users in the group id <code style="background-color: #eef;">1001</code>.</p>
+<p>The default uid and guid for the container is <code style="background-color: #eef;">1001:1001</code>. Volumes that get mapped to the container should be accessible by this uid/guid.</p>
+<p>Adding the host machine's user to the group <code style="background-color: #eef;">1001</code> on the host helps manage volumes that will be used in the container.
+This can easily be done by executing <code style="background-color: #eef;">sudo usermod -aG 1001 &lt;user&gt;</code> on Linux.</p>
+<h3 id="example-of-headless-mode">Example of Headless Mode</h3>
+<pre style="background-color: #eef;"><code style="background-color: #eef;">docker run \
+    --env MODE=headless \
+    --rm \
+    --volume /path/to/myproject:/home/ghidra/myproject \
+    --volume /path/to/mybinary:/home/ghidra/mybinary \
+    ghidra/ghidra:&lt;version&gt; \
+    /home/ghidra/myproject programFolder -import /home/ghidra/mybinary
+</code></pre>
+<p>Breaking this down line by line:</p>
+<ul>
+<li><code style="background-color: #eef;">docker run</code> is going to start a docker container using the image <code style="background-color: #eef;">ghidra/ghidra&lt;:&lt;version&gt;</code></li>
+<li><code style="background-color: #eef;">--env MODE=headless</code> configures the environment variable <code style="background-color: #eef;">MODE</code> within the container to be the value <code style="background-color: #eef;">headless</code></li>
+<li><code style="background-color: #eef;">--rm</code> removes the container after the command is complete</li>
+<li><code style="background-color: #eef;">--volume /path/to/myproject:/home/ghidra/myproject</code> mounts the local volume
+<code style="background-color: #eef;">/path/to/myproject</code> on the host to <code style="background-color: #eef;">/home/ghidra/myproject</code> within the container</li>
+<li><code style="background-color: #eef;">--volume /path/to/mybinary:/home/ghidra/mybinary</code> mounts the local volume
+<code style="background-color: #eef;">/path/to/mybinary</code> on the host to <code style="background-color: #eef;">/home/ghidra/mybinary</code> within the container</li>
+<li><code style="background-color: #eef;">ghidra/ghidra:&lt;version&gt;</code> is the full reference for the docker image, where <code style="background-color: #eef;">ghidra/ghidra</code> is the group and name of the image, and <code style="background-color: #eef;">&lt;version&gt;</code> is the tag.</li>
+<li><code style="background-color: #eef;">/home/ghidra/myproject programFolder -import /home/ghidra/mybinary</code> are arguments being passed to Ghidra's headless analyzer's command line interface</li>
+</ul>
+<p>Passing no arguments will result in the usage of the headless analyzer being displayed.</p>
+<p><code style="background-color: #eef;">/path/to/myproject</code> on the host must be accessible to guid <code style="background-color: #eef;">1001</code> with <code style="background-color: #eef;">rwx</code> permissions.</p>
+<h3 id="example-of-gui-mode">Example of Gui Mode</h3>
+<p>Running Ghidra's Graphical User Interface (GUI) in the docker container is not a recommended method for running Ghidra.
+GUI's are not a typical use case for dockerized applications.</p>
+<pre style="background-color: #eef;"><code style="background-color: #eef;">docker run \
+    --env MODE=gui \
+    -it \
+    --rm \
+    --net host \
+    --env DISPLAY \
+    --volume &quot;$HOME/.Xauthority:/home/ghidra/.Xauthority&quot; \
+    ghidra/ghidra:&lt;version&gt;
+</code></pre>
+<p>In this mode, the container relies on X11 forwarding to display the GUI. Configuration of X11 can vary, but in this case,
+the host's Xauthority file is mounted into the container, the container is configured to use the host's network, and the DISPLAY
+environment variable is passed to the container. This enables forwarding the GUI back to the host machine's display. Volumes
+containing binaries would still need to be mounted to the container as well as volumes for ghidra projects.</p>
+<p>The host's <code style="background-color: #eef;">.Xauthority</code> file must have appropriate permissions - assigned the group<code style="background-color: #eef;">:1001</code> with <code style="background-color: #eef;">rw</code> group permissions.</p>
+<h3 id="example-of-ghidra-server-mode">Example of Ghidra Server Mode</h3>
+<pre style="background-color: #eef;"><code style="background-color: #eef;">docker run \
+    --env MODE=ghidra-server \
+    --rm \
+    -it \
+    --volume /path/to/my/repositories:/ghidra/repositories \
+    --volume /path/to/my/configs/server.conf:/ghidra/server/server.conf \
+    -p 13100:13100 \
+    -p 13101:13101 \
+    -p 13102:13102 \
+    ghidra/ghidra:&lt;version&gt;
+</code></pre>
+<p>Volumes would need to be mounted to the server container to save the repositories, users, and also to configure the server as well.</p>
+<p>To utilize svrAdmin, exec into the running ghidra server container (<code style="background-color: #eef;">docker exec -it &lt;container-id&gt; bash</code>) for a bash shell in the container.
+After exec'ing into the container, administration and management of the Ghidra server is the same as outside of a containerized environment.</p>
+<p>To stop the container, execute the command <code style="background-color: #eef;">docker stop &lt;container-id&gt;</code>.</p>
+<h2 id="example-of-bsim-server-mode" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Example of BSIM Server Mode</h2>
+<pre style="background-color: #eef;"><code style="background-color: #eef;">docker run \
+    --env MODE=bsim-server \
+    --rm \
+    -it \
+    --volume /path/to/my/datadir:/ghidra/bsim_datadir \
+    -p 5432:5432 \
+    ghidra/ghidra:&lt;version&gt; \
+    /ghidra/bsim_datadir
+</code></pre>
+<p><code style="background-color: #eef;">/ghidra/bsim_datadir</code> is the directory used to store bsim's data in the container. Other directories could be used on the container,
+but make sure that the folder on the host machine has appropriate permissions, assigned the group <code style="background-color: #eef;">:1001</code>.</p>
+<p>This example simply starts a bsim server. Configuring the bsim server and populating it with data
+could be done post start within the container in a similar way that ghidra server administration is done.
+An administrator would have to exec into the running bsim server container (<code style="background-color: #eef;">docker exec -it &lt;container-id&gt; bash</code>),
+and after exec'ing into the container, administration and management of the Bsim server is the same as outside of a containerized environment.</p>
+<p>To stop the container, execute the command <code style="background-color: #eef;">docker stop &lt;container-id&gt;</code>.</p>
+<h2 id="example-of-bsim-cli-mode" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Example of BSIM CLI Mode</h2>
+<pre style="background-color: #eef;"><code style="background-color: #eef;">docker run \
+		--env MODE=bsim \
+		--rm \
+		 -it \
+		 ghidra/ghidra:&lt;version&gt; \
+		 generatesigs ghidra://ghidrasvr/demo /home/ghidra \
+			 --bsim postgresql://bsimsvr/demo \
+			 --commit --overwrite \
+			 --user ghidra
+</code></pre>
+<p>In this example, the bsim CLI is used to connect to a ghidra server hosted on <code style="background-color: #eef;">ghidrasvr</code>,
+generate signatures for the <code style="background-color: #eef;">demo</code> repository in that ghidra server and save them to <code style="background-color: #eef;">/home/ghidra</code>.
+and then commit the signatures to the BSIM server hosted on <code style="background-color: #eef;">bsimsvr</code> in the <code style="background-color: #eef;">demo</code> database.</p>
+<h2 id="example-of-pyghidra-gui-mode" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Example of Pyghidra Gui Mode</h2>
+<p>Running Ghidra's Graphical User Interface (GUI) in the docker container is not a recommended method for running Ghidra.
+GUI's are not a typical use case for dockerized applications.</p>
+<pre style="background-color: #eef;"><code style="background-color: #eef;">docker run \
+    --env MODE=pyghidra \
+    -it \
+    --rm \
+    --net host \
+    --env DISPLAY \
+    --volume=&quot;$HOME/.Xauthority:/home/ghidra/.Xauthority:rw&quot; \
+    ghidra/ghidra:&lt;version&gt; -c
+</code></pre>
+<p>In this mode, the container relies on X11 forwarding to display the GUI. Configuration of X11 can vary, but in this case,
+the host's Xauthority file is mounted into the container, the container is configured to use the host's network, and the DISPLAY
+environment variable is passed to the container. This enables forwarding the GUI back to the host machine's display. Volumes
+containing binaries would still need to be mounted to the container as well as volumes for ghidra projects.</p>
+<p>The host's <code style="background-color: #eef;">.Xauthority</code> file must have appropriate permissions - owned by <code style="background-color: #eef;">:1001</code> with <code style="background-color: #eef;">rw</code> group permissions.</p>
+<h2 id="example-of-pyghidra-headless-mode" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Example of Pyghidra Headless Mode</h2>
+<pre style="background-color: #eef;"><code style="background-color: #eef;">docker run \
+    --env MODE=pyghidra \
+    --rm \
+    --volume /path/to/myproject:/myproject \
+    --volume /path/to/mybinary:/mybinary \
+    ghidra/ghidra:&lt;version&gt; -H \
+    /myproject programFolder -import /mybinary
+</code></pre>
+<p>Passing no arguments to the pyghidra headless analyzer will result in the help menu being displayed, just like the headless analyzer.</p>
+<p>This use case is very similar to the headless mode's example with the added benefit of being able to utilize python3 for Ghidra Scripts.</p>
+<p>Again, in this example, appropriate permissions and group assignment for <code style="background-color: #eef;">/path/to/myproject</code> and <code style="background-color: #eef;">/path/to/mybinary</code> are necessary
+in order to not run into permissions issues.</p>

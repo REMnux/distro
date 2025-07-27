@@ -1,0 +1,114 @@
+<h1 id="ghidra-nsa-reverse-engineering-software" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Ghidra: NSA Reverse Engineering Software</h1>
+<p>Ghidra is a software reverse engineering (SRE) framework developed by NSA's Research Directorate.
+This framework includes a suite of full-featured, high-end software analysis tools that enable users
+to analyze compiled code on a variety of platforms including Windows, MacOS, and Linux. Capabilities
+include disassembly, assembly, decompilation, debugging, emulation, graphing, and scripting, along
+with hundreds of other features.  Ghidra supports a wide variety of processor instruction sets and
+executable formats and can be run in both user-interactive and automated modes.  Users may also
+develop their own Ghidra plug-in components and/or scripts using the exposed API.  In addition there
+are numerous ways to extend Ghidra such as new processors, loaders/exporters, automated analyzers,
+and new visualizations.</p>
+<p>In support of NSA's Cybersecurity mission, Ghidra was built to solve scaling and teaming problems on
+complex SRE efforts and to provide a customizable and extensible SRE research platform.  NSA has
+applied Ghidra SRE capabilities to a variety of problems that involve analyzing malicious code and
+generating deep insights for NSA analysts who seek a better understanding of potential
+vulnerabilities in networks and systems.</p>
+<h1 id="whats-new-in-ghidra-114" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">What's New in Ghidra 11.4</h1>
+<p>This release includes new features, enhancements, performance improvements, quite a few bug fixes,
+and many pull-request contributions. Thanks to all those who have contributed their time, thoughts,
+and code. The Ghidra user community thanks you too!</p>
+<h3 id="the-not-so-fine-print-please-read">The not-so-fine print: Please Read!</h3>
+<p>Ghidra 11.4 is fully backward compatible with project data from previous releases. However, programs
+and data type archives which are created or modified in 11.4 will not be usable by an earlier Ghidra
+version.</p>
+<p><strong>IMPORTANT:</strong> Ghidra 11.4 requires at minimum JDK 21 to run.</p>
+<p><strong>IMPORTANT:</strong> To use the Debugger or do a full source distribution build, you will need Python3
+(3.9 to 3.13 supported) installed on your system.</p>
+<p><strong>NOTE:</strong> There have been reports of certain features causing the XWindows server to crash. A fix
+for <code style="background-color: #eef;">CVE-2024-31083</code> in X.org software in April 2024 introduced a regression, which has been fixed
+in xwayland 23.2.6 and xorg-server 21.1.13.  If you experience any crashing of Ghidra, most likely
+causing a full logout, check if your xorg-server has been updated to at least the noted version.</p>
+<p><strong>NOTE:</strong> Each build distribution will include native components (e.g., decompiler) for at least one
+platform (e.g., Windows x86-64). If you have another platform that is not included in the build
+distribution, you can build native components for your platform directly from the distribution.
+See the <em>Getting Started</em> document for additional information. Users running with older shared libraries
+and operating systems (e.g., CentOS 7.x) may also run into compatibility errors when launching
+native executables such as the Decompiler and GNU Demangler which may necessitate a rebuild of
+native components.</p>
+<p><strong>NOTE:</strong> Ghidra Server: The Ghidra 11.x server is compatible with Ghidra 9.2 and later Ghidra
+clients. Ghidra 11.x clients are compatible with all 10.x and 9.x servers.  Although, due to
+potential Java version differences, it is recommended that Ghidra Server installations older than
+10.2 be upgraded.  Those using 10.2 and newer should not need a server upgrade.</p>
+<p><strong>NOTE:</strong> Programs imported with a Ghidra beta version or code built directly from source code
+outside of a release tag may not be compatible, and may have flaws that won't be corrected by using
+this new release.  Any programs analyzed from a beta or other local master source build should be
+considered experimental and re-imported and analyzed with a release version.</p>
+<p>Programs imported with previous release versions should upgrade correctly through various automatic
+upgrade mechanisms.  However, there may be improvements or bug fixes in the import and analysis
+process that will provide better results than prior Ghidra versions.  You might consider comparing a
+fresh import of any program you will continue to reverse engineer to see if the latest Ghidra
+provides better results.</p>
+<h2 id="search" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Search</h2>
+<p>A new &quot;Search and Replace&quot; feature allows searching for string patterns in a wide variety
+of Ghidra elements and replacing that text with a different text sequence. Using this feature, many different
+Ghidra elements can be renamed all at once including labels, functions, name-spaces, parameters, data-types,
+field names, and enum values. This feature also supports regular expressions (including capture groups).
+After initiating a search and replace, a results table is displayed with a list of items that match the
+search. From this table, the replace actions can be applied in bulk or individually, one item at a time
+as they are reviewed.</p>
+<h2 id="taint-engine-support" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Taint Engine Support</h2>
+<p>Extended support for using taint engines, particularly CTADL (https://github.com/sandialabs/ctadl)
+and AngryGhidra (https://github.com/Nalen98/AngryGhidra), from the decompiler. Allows users to mark
+pcode varnodes as sources and sinks, displaying paths from sources to sinks as both address selections
+in the disassembly and token selections in the decompiler.</p>
+<h2 id="dockerized-ghidra" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Dockerized Ghidra</h2>
+<p>A new capability to build a docker image that demonstrates Ghidra's various entrypoint executions for <code style="background-color: #eef;">headless</code>,
+<code style="background-color: #eef;">ghidra-server</code>, <code style="background-color: #eef;">bsim-server</code>, <code style="background-color: #eef;">bsim</code>, <code style="background-color: #eef;">pyghidra</code>, and <code style="background-color: #eef;">gui</code> within the docker container has been included. The Docker
+image can be used as is, or can be tailored to your workflow needs.   Configuration such as the base
+image (linux distro), additional packages, and more is possible using Docker.</p>
+<p>See the <code style="background-color: #eef;">docker/README.md</code> for information about building a docker image for Ghidra and running within the Ghidra container.</p>
+<h2 id="binary-formats" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Binary Formats</h2>
+<ul>
+<li>New loaders for the a.out and OMF-51 binary file formats.</li>
+<li>Support for Mach-O &quot;re-exports&quot;.</li>
+<li>New ability to load Mach-O binaries directly from a Universal Binary without needing to open the File System Browser.</li>
+<li>DWARF will now load external debug files during analysis as is done for PDB files.</li>
+</ul>
+<h2 id="debugger" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Debugger</h2>
+<p>There have been numerous improvements, extensions for new targets, better launching and configuration, and bug fixes to the debugger.</p>
+<h2 id="analysis-speed" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Analysis Speed</h2>
+<p>Constant and Stack analysis time has been greatly decreased through algorithm improvements and better threading.  There has been additional
+work to loosen locking of the program database where possible.  By locking only when necessary, multiple threads can better analyze the program
+and interaction with the GUI during analysis should be more responsive.</p>
+<h2 id="golang" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Golang</h2>
+<p>Golang binary analysis analysis has been improved.</p>
+<ul>
+<li>Analysis has been improved to model closures, interface methods, and generic functions more accurately.</li>
+<li>Function signatures for core golang library functions are automatically applied.</li>
+<li>Decompilation results are improved by filtering some verbose golang garbage collection function logic.</li>
+<li>Addressed finding the Golang bootstrap information in stripped PE binaries.</li>
+</ul>
+<h2 id="bsim" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">BSim</h2>
+<p>PostgreSQL for BSim has been updated to version 15.13 and the JDBC driver to 42.7.6.  This resolves issues with building PostgreSQL
+server on newer releases of Linux and compiler toolchains which compile with -std=c23 option by default.  In addition,
+building of PostgreSQL for linux_arm_64 and mac_arm_64 based platforms is supported.</p>
+<ul>
+<li>BSim is now installed in the default Codebrowser tool.</li>
+<li>Function names now update in BSim search results overview if the name is changed elsewhere in Ghidra.</li>
+</ul>
+<h2 id="processors" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Processors</h2>
+<ul>
+<li>Enhanced support for the x86 AVX-512 processor extension with additional instruction support - including the BF16, FP16 and VNNI extensions.</li>
+<li>Implemented many AARCH64 Neon instruction semantics to improve decompilation.</li>
+<li>Upgraded pcodetest framework scripts to python3 and improved command-line options.</li>
+</ul>
+<h2 id="other-improvements" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Other Improvements</h2>
+<ul>
+<li>Many calling conventions for various processors/compilers have been improved using the more flexible decompiler rules
+when the data types for parameters and return values are known.</li>
+<li>Upgraded many 3rd party dependencies to address potential bugs and CVE's, including jars for Bouncy Castle,
+Apache Commons Compress, Apache Commons Lang3, Apache Commons IO, protobuf, and JUnit.</li>
+</ul>
+<h2 id="additional-bug-fixes-and-enhancements" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Additional Bug Fixes and Enhancements</h2>
+<p>Numerous other new features, improvements, and bug fixes are fully listed in the
+<a href="ChangeHistory.html">Change History</a> file.</p>
