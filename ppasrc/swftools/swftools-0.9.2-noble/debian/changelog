@@ -1,3 +1,9 @@
+swftools (0.9.2.1-noble) noble; urgency=medium
+
+  * Adjustment for version. 
+
+ -- REMnux Distribution <distro@remnux.org>  Mon, 28 Jul 2025 18:23:04 -0400
+
 swftools (0.9.2-noble) noble; urgency=medium
 
   * Updated for Noble. 
