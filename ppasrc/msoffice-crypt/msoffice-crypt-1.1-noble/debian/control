@@ -1,0 +1,12 @@
+Source: msoffice-crypt
+Section: utils
+Priority: optional
+Maintainer: REMnux <distro@remnux.org>
+Build-Depends: debhelper (>= 8.0.0), libssl-dev
+Standards-Version: 3.9.4
+Homepage: https://github.com/herumi/msoffice
+
+Package: msoffice-crypt
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}, libssl-dev
+Description: Encryp and decrypt OOXML Microsoft Office documents.

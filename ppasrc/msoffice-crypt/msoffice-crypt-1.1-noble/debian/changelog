@@ -1,0 +1,11 @@
+msoffice-crypt (1.1-noble) noble; urgency=medium
+
+  * Noble compatibility. 
+
+ -- REMnux Distribution <distro@remnux.org>  Mon, 28 Jul 2025 12:01:44 -0400
+
+msoffice-crypt (1.1-focal) focal; urgency=medium
+
+  * Initial Release.
+
+ -- REMnux Distribution <distro@remnux.org>  Mon, 06 Jul 2020 22:41:23 -0400
