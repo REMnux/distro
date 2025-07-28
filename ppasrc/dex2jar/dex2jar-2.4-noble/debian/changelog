@@ -1,3 +1,9 @@
+dex2jar (2.4.1-noble2) noble; urgency=medium
+
+  * Fixed the dex-tools script to define the APP_HOME variable to point to the correct location.
+
+ -- REMnux Distribution <distro@remnux.org>  Mon, 28 Jul 2025 11:17:19 -0400
+
 dex2jar (2.4-noble) noble; urgency=medium
 
   * Upgraded to latest upstream version and for Noble compatibility.
