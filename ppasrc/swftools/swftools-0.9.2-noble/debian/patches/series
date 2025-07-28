@@ -1,0 +1,7 @@
+remove-pdf2swf.patch
+remove-avi2swf.patch
+manpages.patch
+makefile.patch
+spelling.patch
+remove-fontconfig.patch
+configure.patch

@@ -1,0 +1,8 @@
+swftools (0.9.1+201202040819+ds1-1)
+
+ * repack upstream tarball to remove
+   - embedded copy of xpdf
+   - avi2swf subproject as its dead upstream. Upstream recommends to use mencoder
+     or ffmpeg.
+
+ -- Christian Welzel <gawain@camlann.de>  Sun, 29 Jan 2012 12:42:54 +0100

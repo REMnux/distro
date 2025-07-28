@@ -1,0 +1,245 @@
+## 01-manpages.patch by Simo Kauppi <swk@nic.fi>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: This patch fixes the jpg2swf.1 and swfstrings.1 manpages, which
+## DP: have the letter 'ö' in the author's name.
+## DP: Fixes also the minus signs in swfextract.1, swfdump.1, swfbbox.1,
+## DP: font2swf.1, pdf2swf.1, wav2swf.1 and swfcombine.1 manpages.
+
+--- swftools.orig/src/font2swf.1
++++ swftools/src/font2swf.1
+@@ -20,7 +20,7 @@
+     Print short help message and exit
+ .TP
+ \fB\-v\fR, \fB\-\-verbose\fR 
+-    Be verbose. Use more than one -v for greater effect.
++    Be verbose. Use more than one \-v for greater effect.
+ .TP
+ \fB\-o\fR, \fB\-\-output\fR \fIfilename\fR
+     Write output to file \fIfilename\fR. (If not given, the output will go
+--- swftools.orig/src/jpeg2swf.1
++++ swftools/src/jpeg2swf.1
+@@ -8,7 +8,7 @@
+ .SH DESCRIPTION
+ This tool converts jpeg image files into an SWF animation. It takes any
+ number of input pictures, and converts them to SWF one\-by\-one, where every
+-converted picture is a seperate frame in the target SWF.
++converted picture is a separate frame in the target SWF.
+ 
+ .SH OPTIONS
+ .TP
+@@ -57,6 +57,6 @@
+     Make importable as asset with \fIassetname\fR
+ .SH AUTHORS
+ 
+-Rainer Böhme <rfxswf@reflex\-studio.de>
++Rainer B\[:o]hme <rfxswf@reflex-studio.de>
+ .TP
+ Matthias Kramm
+--- swftools.orig/src/pdf2swf.1
++++ swftools/src/pdf2swf.1
+@@ -1,9 +1,9 @@
+ .TH pdf2swf "1" "June 2008" "pdf2swf" "swftools"
+ .SH NAME
+-pdf2swf - Converts Acrobat PDF files into Flash SWF Animation files.
++pdf2swf \- Converts Acrobat PDF files into Flash SWF Animation files.
+ 
+ .SH Synopsis
+-.B pdf2swf [-options] file.pdf -o file.swf
++.B pdf2swf [\-options] file.pdf \-o file.swf
+ 
+ .SH DESCRIPTION
+ Converts a PDF file to a SWF file.
+@@ -17,7 +17,7 @@
+     Print version info and exit
+ .TP
+ \fB\-o\fR, \fB\-\-output\fR file.swf
+-    will go into a seperate file.
++    will go into a separate file.
+ .TP
+ \fB\-p\fR, \fB\-\-pages\fR range
+     3-5,10-12
+@@ -26,7 +26,7 @@
+     Use password for deciphering the pdf.
+ .TP
+ \fB\-v\fR, \fB\-\-verbose\fR 
+-    Be verbose. Use more than one -v for greater effect.
++    Be verbose. Use more than one /-v for greater effect.
+ .TP
+ \fB\-z\fR, \fB\-\-zlib\fR 
+     The resulting SWF will not be playable in browsers with Flash Plugins 5 and below!
+@@ -38,7 +38,7 @@
+     Set quality of embedded jpeg pictures to quality. 0 is worst (small), 100 is best (big). (default:85)
+ .TP
+ \fB\-s\fR, \fB\-\-set\fR param=value
+-    Set a SWF encoder specific parameter.  See pdf2swf -s help for more information.
++    Set a SWF encoder specific parameter.  See pdf2swf \-s help for more information.
+ .TP
+ \fB\-w\fR, \fB\-\-samewindow\fR 
+     When clicked on, the page they point to will be opened in the window the SWF is displayed.
+@@ -68,7 +68,7 @@
+     filename is an arbitrary swf animation.
+ .TP
+ \fB\-q\fR, \fB\-\-quiet\fR 
+-    Suppress normal messages.  Use -qq to suppress warnings, also.
++    Suppress normal messages.  Use \-qq to suppress warnings, also.
+ .TP
+ \fB\-S\fR, \fB\-\-shapes\fR 
+     Don't use SWF Fonts, but store everything as shape.
+--- swftools.orig/src/swfbbox.1
++++ swftools/src/swfbbox.1
+@@ -35,7 +35,7 @@
+     Clip bounding boxes to movie size
+ .TP
+ \fB\-o\fR, \fB\-\-output\fR \fIfilename\fR
+-    Set output filename to \fIfilename\fR (for -O)
++    Set output filename to \fIfilename\fR (for \-O)
+ .TP
+ \fB\-v\fR, \fB\-\-verbose\fR 
+     Be more verbose
+--- swftools.orig/src/swfcombine.1
++++ swftools/src/swfcombine.1
+@@ -29,7 +29,7 @@
+ .TP
+ \fB\-t\fR, \fB\-\-stack\fR 
+     Don't assume the first file is a master file. Instead, store each
+-    file in a seperate frame.
++    file in a separate frame.
+ .TP
+ \fB\-T\fR, \fB\-\-stack1\fR 
+     place each slave in the first frame (no master movie)
+@@ -47,7 +47,7 @@
+     Clip the slave objects by the corresponding master objects
+ .TP
+ \fB\-v\fR, \fB\-\-verbose\fR 
+-    Be verbose. Use more than one -v for greater effect 
++    Be verbose. Use more than one \-v for greater effect 
+ .TP
+ \fB\-F\fR, \fB\-\-flashversion\fR 
+     Set the flash version of the output file.
+@@ -72,10 +72,10 @@
+     Force the output to have the framerate \fIfps\fR. (Otherwise, the framerate of the master file will be used)
+ .TP
+ \fB\-X\fR, \fB\-\-width\fR \fIwidth\fR       
+-    Force movie bbox width to \fIwidth\fR (default: use master width (not with -t))
++    Force movie bbox width to \fIwidth\fR (default: use master width (not with \-t))
+ .TP
+ \fB\-Y\fR, \fB\-\-height\fR \fIheight\fR      
+-    Force movie bbox height to \fIheight\fR (default: use master height (not with -t))
++    Force movie bbox height to \fIheight\fR (default: use master height (not with \-t))
+ .TP
+ \fB\-N\fR, \fB\-\-local-with-networking\fR 
+     Make output file "local-with-networking"
+@@ -109,7 +109,7 @@
+ The slave name may also be the object id, preceded by '#', in which case 
+ the object to be replaced is referenced by id and not by instance name.
+ .SH Combining (stacking) one or more .swf files without a master
+-The flash files will be inserted in seperate frames. They will still be
++The flash files will be inserted in separate frames. They will still be
+ packed into Movieclips, therefore the outputfile will have exactly as many
+ frames as there were inputfiles. Also, the files don't need to have names.
+ If you want to access the Movieclips, their names are frameXX, where XX is
+--- swftools.orig/src/swfdump.1
++++ swftools/src/swfdump.1
+@@ -18,7 +18,7 @@
+     Print short help message and exit
+ .TP
+ \fB\-D\fR, \fB\-\-full\fR 
+-    Show everything. Same as -atp
++    Show everything. Same as \-atp
+ .TP
+ \fB\-V\fR, \fB\-\-version\fR 
+     Print version info and exit
+@@ -51,16 +51,16 @@
+     Print tag's bounding boxes
+ .TP
+ \fB\-X\fR, \fB\-\-width\fR 
+-    Print out the horizontal dimension of the movie, in a string of the form "-X width"
++    Print out the horizontal dimension of the movie, in a string of the form "\-X width"
+ .TP
+ \fB\-Y\fR, \fB\-\-height\fR 
+-    Print out the vertical dimension of the movie, in a string of the form "-Y height"
++    Print out the vertical dimension of the movie, in a string of the form "\-Y height"
+ .TP
+ \fB\-r\fR, \fB\-\-rate\fR 
+-    Print out the frame rate of the movie, in a string of the form "-r rate".
++    Print out the frame rate of the movie, in a string of the form "\-r rate".
+ .TP
+ \fB\-f\fR, \fB\-\-frames\fR 
+-    Print out the number of frames in the movie, in a string of the form "-f frames"
++    Print out the number of frames in the movie, in a string of the form "\-f frames"
+ .TP
+ \fB\-d\fR, \fB\-\-hex\fR 
+     Print hex output of tag data, too.
+--- swftools.orig/src/swfextract.1
++++ swftools/src/swfextract.1
+@@ -5,7 +5,7 @@
+ .B swfextract
+ [\fIoptions\fR] [\fIfile.swf\fR]
+ .SH DESCRIPTION
+-swfextracts allows to extract swf movieclips and objects out of swf files.
++swfextracts allows one to extract swf movieclips and objects out of swf files.
+ .PP
+ SWF files are animation files which can be displayed in Web Browsers using
+ the Flash Plugin.
+@@ -27,7 +27,7 @@
+ \fIids\fR is a range of JPEG IDs to extract. E.g. 1-2,3,14-
+ .TP
+ \fB\-p\fR, \fB\-\-pngs\fR \fIids\fR
+-\fIids\fR is a range of PNG IDs to extract. E.g. -10,20-30
++\fIids\fR is a range of PNG IDs to extract. E.g. \-10,20\-30
+ .TP
+ \fB\-f\fR, \fB\-\-frame\fR \fIframes\fR
+ \fIframes\fR is a range of frames to extract. E.g. 1-10,20-30,40-
+@@ -40,7 +40,7 @@
+ .TP
+ \fB\-P\fR, \fB\-\-placeobject\fR
+ Copy original placeobject tag for the given object into the
+-output file (Use with -i). This means that the object is
++output file (Use with \-i). This means that the object is
+ at the same position in the generated movie as in the
+ original movie.
+ .TP
+--- swftools.orig/src/swfstrings.1
++++ swftools/src/swfstrings.1
+@@ -30,6 +30,6 @@
+     Print version information and exit
+ .SH AUTHORS
+ 
+-Rainer Böhme <rfxswf@reflex-studio.de>
++Rainer B\[:o]hme <rfxswf@reflex-studio.de>
+ .TP
+ Matthias Kramm <kramm@quiss.org>
+--- swftools.orig/src/wav2swf.1
++++ swftools/src/wav2swf.1
+@@ -47,7 +47,7 @@
+     Set mp3 bitrate to \fIbps\fR (default: 32)
+ .TP
+ \fB\-v\fR, \fB\-\-verbose\fR 
+-    Be more verbose. (Use more than one -v for greater effect)
++    Be more verbose. (Use more than one /-v for greater effect)
+ .SH AUTHOR
+ 
+ Matthias Kramm <kramm@quiss.org>
+--- swftools.orig/src/gif2swf.1
++++ swftools/src/gif2swf.1
+@@ -9,7 +9,7 @@
+ .SH DESCRIPTION
+ This tools converts gif image files into an SWF animation. It takes any
+ number of input pictures, and converts them to SWF one\-by\-one, where every
+-converted picture is a seperate frame in the target SWF. 
++converted picture is a separate frame in the target SWF. 
+ 
+ .SH OPTIONS
+ .TP
+--- swftools.orig/src/png2swf.1
++++ swftools/src/png2swf.1
+@@ -9,7 +9,7 @@
+ .SH DESCRIPTION
+ This tools converts png image files into an SWF animation. It takes any
+ number of input pictures, and converts them to SWF one\-by\-one, where every
+-converted picture is a seperate frame in the target SWF. 
++converted picture is a separate frame in the target SWF. 
+ .PP
+ The way the
+ images are encoded in SWF is very similar to PNG (in that a zlib\-based, lossless

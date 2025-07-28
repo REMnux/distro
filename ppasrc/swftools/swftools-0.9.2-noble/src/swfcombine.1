@@ -1,0 +1,130 @@
+.TH swfcombine "1" "April 2012" "swfcombine" "swftools"
+.SH NAME
+swfcombine \- a tool for combining swf (flash) files
+
+.SH Synopsis
+.B swfcombine [\-rXYomlcv] [\-f] masterfile [\-xysf] [(name1|#id1)=]slavefile1 .. [\-xysf] [(nameN|#idN)=]slavefileN
+.PP
+.B swfcombine [\-rXYomv] \--stack[1] [\-xysf] [(name1|#id1)=]slavefile1 .. [\-xysf] [(nameN|#idN)=]slavefileN
+.PP
+.B swfcombine [\-rXYov] \--cat [\-xysf] [(name1|#id1)=]slavefile1 .. [\-xysf] [(nameN|#idN)=]slavefileN
+.PP
+.B swfcombine [\-rXYomlcv] \--dummy [\-xys] [file]
+
+.SH DESCRIPTION
+Take two or more SWF files, and combine them into a new SWF. SWFs can either
+be stacked (no masterfile is present) or inserted (into the masterfile).
+.PP
+SWF files are animation files which can be displayed in Web Browsers using
+the Flash Plugin.
+.LP
+For template mechanisms, it's often convenient to separate the processes
+of generating small animation fragments and merging them into a big
+movie. swfcombine can be used to perform the latter.
+
+.SH OPTIONS
+.TP
+\fB\-o\fR, \fB\-\-output\fR \fIoutputfile\fR  
+    explicitly specify output file. (otherwise, output.swf will be used)
+.TP
+\fB\-t\fR, \fB\-\-stack\fR 
+    Don't assume the first file is a master file. Instead, store each
+    file in a seperate frame.
+.TP
+\fB\-T\fR, \fB\-\-stack1\fR 
+    place each slave in the first frame (no master movie)
+.TP
+\fB\-m\fR, \fB\-\-merge\fR 
+    Do not store the slave files in a sprite/MovieClip. Instead, merge the files frame by frame.
+.TP
+\fB\-a\fR, \fB\-\-cat\fR 
+    concatenate all slave files (no master movie)
+.TP
+\fB\-l\fR, \fB\-\-overlay\fR 
+    Don't remove any master objects, only overlay new objects
+.TP
+\fB\-c\fR, \fB\-\-clip\fR 
+    Clip the slave objects by the corresponding master objects
+.TP
+\fB\-v\fR, \fB\-\-verbose\fR 
+    Be verbose. Use more than one -v for greater effect 
+.TP
+\fB\-F\fR, \fB\-\-flashversion\fR 
+    Set the flash version of the output file.
+.TP
+\fB\-d\fR, \fB\-\-dummy\fR 
+    Don't require the presence of slave objects. Usually used together with \fB\-X\fR, \fB\-Y\fR or \fB\-r\fR.
+.TP
+\fB\-f\fR, \fB\-\-frame\fR 
+    The next slave replaces a frame, not an object. Therefore the slave identifier is a
+    frame number (#frame=) or frame label (framelabel=).
+.TP
+\fB\-x\fR, \fB\-\-movex\fR \fIxpos\fR        
+    x Adjust position of slave by \fIxpos\fR pixels
+.TP
+\fB\-y\fR, \fB\-\-movey\fR \fIypos\fR        
+    y Adjust position of slave by \fIypos\fR pixels
+.TP
+\fB\-s\fR, \fB\-\-scale\fR \fIscale\fR       
+    Adjust size of slave by \fIscale\fR percent (e.g. 100% = original size)
+.TP
+\fB\-r\fR, \fB\-\-rate\fR \fIfps\fR   
+    Force the output to have the framerate \fIfps\fR. (Otherwise, the framerate of the master file will be used)
+.TP
+\fB\-X\fR, \fB\-\-width\fR \fIwidth\fR       
+    Force movie bbox width to \fIwidth\fR (default: use master width (not with -t))
+.TP
+\fB\-Y\fR, \fB\-\-height\fR \fIheight\fR      
+    Force movie bbox height to \fIheight\fR (default: use master height (not with -t))
+.TP
+\fB\-N\fR, \fB\-\-local-with-networking\fR 
+    Make output file "local-with-networking"
+.TP
+\fB\-G\fR, \fB\-\-hardware-gpu\fR 
+    Set the "use hardware gpu" bit in the output file
+.TP
+\fB\-B\fR, \fB\-\-accelerated-blit\fR 
+    Set the "use accelerated blit" bit in the output file
+.TP
+\fB\-L\fR, \fB\-\-local-with-filesystem\fR 
+    Make output file "local-with-filesystem"
+.TP
+\fB\-z\fR, \fB\-\-zlib\fR \fIzlib\fR        
+    Use Flash MX (SWF 6) Zlib encoding for the output. The resulting SWF will be
+    smaller, but not playable in Flash Plugins of Version 5 and below.
+.PP
+.SH Combining two or more .swf files using a master file
+Of the flash files to be combined, all except one will be packed into a sprite
+structure (Movieclip) which will then be inserted into the master .swf file.
+This means that, in terms of trees, when combining several flash files,
+one will form the root of the tree, while the others will be
+appended to the root as a subnode.
+The user has to specify which of the files will become the root
+of the tree ("master") and which will be the appended nodes ("slaves").
+The slave files must all have a name, which is then used to determine
+their exact position inside the master file.
+The slave files will then be converted into sprites, inserted into the
+master file, and all PlaceObject tags in the master file which match the
+name of the slave file will be updated to correctly display the slave sprite.
+The slave name may also be the object id, preceded by '#', in which case 
+the object to be replaced is referenced by id and not by instance name.
+.SH Combining (stacking) one or more .swf files without a master
+The flash files will be inserted in seperate frames. They will still be
+packed into Movieclips, therefore the outputfile will have exactly as many
+frames as there were inputfiles. Also, the files don't need to have names.
+If you want to access the Movieclips, their names are frameXX, where XX is
+the decimal number of the file, starting by zero (00).
+
+.SH EXAMPLES
+
+Create two flash movies. Insert some rectangle into one of them, and give
+it a name. (E.g. "foo") Now call
+
+swfcombine \-o combined.swf master.swf foo=slave.swf
+
+As a result, the slave movie should be visible inside the master movie
+at the position where the rectangle used to be.
+
+.SH AUTHOR
+
+Matthias Kramm <kramm@quiss.org>

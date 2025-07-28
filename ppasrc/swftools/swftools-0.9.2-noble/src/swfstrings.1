@@ -1,0 +1,35 @@
+.TH swfstrings "1" "August 2009" "swfstrings" "swftools"
+.SH NAME
+swfstrings - Extracts strings from SWF files.
+
+.SH Synopsis
+.B swfstrings [options] file.swf
+
+.SH DESCRIPTION
+This tool extracts strings from SWF files. It parses SWF font records
+and text records and prints unicode-encoded characters to stdout.
+
+.SH OPTIONS
+.TP
+\fB\-f\fR, \fB\-\-fonts\fR 
+    Print out font information for each text block
+.TP
+\fB\-x\fR, \fB\-\-xpos\fR \fIx\fR
+    Set bounding box x coordinate
+.TP
+\fB\-y\fR, \fB\-\-ypos\fR \fIy\fR
+    Set bounding box y coordinate
+.TP
+\fB\-W\fR, \fB\-\-width\fR \fIwidth\fR
+    Set bounding box width
+.TP
+\fB\-H\fR, \fB\-\-height\fR \fIheight\fR
+    Set bounding box height
+.TP
+\fB\-V\fR, \fB\-\-version\fR 
+    Print version information and exit
+.SH AUTHORS
+
+Rainer Böhme <rfxswf@reflex-studio.de>
+.TP
+Matthias Kramm <kramm@quiss.org>
