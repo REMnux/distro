@@ -1,0 +1,11 @@
+scdbg (20191016-noble) noble; urgency=medium
+
+  * Updated for noble. 
+
+ -- REMnux Distribution <distro@remnux.org>  Mon, 28 Jul 2025 15:29:06 -0400
+
+scdbg (20191016-focal) focal; urgency=medium
+
+  * Initial Release.
+
+ -- REMnux Distribution <distro@remnux.org>  Sat, 04 Jul 2020 21:05:51 -0400
