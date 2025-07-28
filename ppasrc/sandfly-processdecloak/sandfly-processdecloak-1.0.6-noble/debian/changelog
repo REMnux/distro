@@ -1,0 +1,11 @@
+sandfly-processdecloak (1.0.6-noble) noble; urgency=medium
+
+  * Updated to latest upstream version and for Noble.
+
+ -- REMnux Distribution <distro@remnux.org>  Mon, 28 Jul 2025 15:25:08 -0400
+
+sandfly-processdecloak (1.0.4-focal) focal; urgency=medium
+
+  * Initial Release.
+
+ -- REMnux Distribution <distro@remnux.org>  Sat, 15 Aug 2020 22:56:56 -0400
