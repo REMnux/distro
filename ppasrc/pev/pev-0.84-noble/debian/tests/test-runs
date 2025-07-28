@@ -1,0 +1,33 @@
+#!/bin/sh
+#
+# Try to build and run the example code.  Provide input on both stdin
+# and as first argument as the programs seem to handle either or both.
+# The goal is to verify that it is possible to link with the libvorbis
+# library and run the resulting binaries.
+
+set -e
+
+retval=0
+#cd $ADTTMP
+
+if type valgrind ; then
+    VALGRIND=valgrind
+else
+    VALGRIND=
+fi
+
+if $VALGRIND pesec /usr/share/win32/gzip.exe | grep ASLR; then
+    echo "success: pesec reported ASLR status"
+else
+    echo "error: pesec did not report ASLR status"
+    retval=1
+fi
+
+if $VALGRIND pehash /usr/share/win32/gzip.exe | grep sha256:; then
+    echo "success: pehash reported ASLR status"
+else
+    echo "error: pehash did not report ASLR status"
+    retval=1
+fi
+
+exit $retval

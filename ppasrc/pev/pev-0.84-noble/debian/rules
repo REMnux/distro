@@ -1,0 +1,11 @@
+#!/usr/bin/make -f
+%:
+	dh $@
+override_dh_auto_clean:
+	dh_auto_clean
+	$(RM) src/lib/libfuzzy/edit_dist.o src/lib/libfuzzy/fuzzy.o
+override_dh_auto_make:
+	$(MAKE) prefix=/usr
+override_dh_auto_install:
+	$(MAKE) prefix=/usr DESTDIR=$(CURDIR)/debian/pev install
+

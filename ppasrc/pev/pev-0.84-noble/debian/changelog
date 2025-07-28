@@ -1,0 +1,96 @@
+pev (0.84-noble) noble; urgency=medium
+
+  * Upgraded to the latest upstream version and noble. 
+
+ -- REMnux Distribution <distro@remnux.org>  Mon, 28 Jul 2025 14:42:23 -0400
+
+pev (0.81-1-focal) focal; urgency=medium
+
+  * Upgraded to use the latest upstream version.
+
+ -- REMnux Distribution <distro@remnux.org>  Tue, 19 Jan 2021 12:59:48 -0500
+
+pev (0.80-4build1) bionic; urgency=high
+
+  * No change rebuild against openssl1.1.
+
+ -- Dimitri John Ledkov <xnox@ubuntu.com>  Mon, 05 Feb 2018 16:51:47 +0000
+
+pev (0.80-4) unstable; urgency=medium
+
+  * QA upload.
+  * Migrate to openssl 1.1. (Closes: #870779)
+  * Priority optional.
+  * R³.
+
+ -- Adam Borowski <kilobyte@angband.pl>  Mon, 18 Dec 2017 16:02:05 +0100
+
+pev (0.80-3) unstable; urgency=medium
+
+  * QA upload.
+  * Fix segfault due to modification of const value. (Closes: #868554)
+  * Extend autopkgtest check to run pehash too.
+
+ -- Petter Reinholdtsen <pere@debian.org>  Sun, 16 Jul 2017 20:50:18 +0200
+
+pev (0.80-2) unstable; urgency=medium
+
+  * QA upload.
+  * Reorder build dependency for ssl, list libssl1.0-dev first to make
+    life easier for the autobuilders.
+
+ -- Petter Reinholdtsen <pere@debian.org>  Sat, 15 Jul 2017 17:31:35 +0000
+
+pev (0.80-1) unstable; urgency=medium
+
+  * QA upload.
+  * New upstream version 0.80 (Closes: #772837).
+    - Dropped install-target.patch now applied upstream.
+    - Adjusted build rules for new upstream version.
+    - Added libssl1.0-dev as build dependency.
+    - Added 01-plugins-path.patch to adjust plugin path.
+  * Added simple autopkgtest check.
+
+ -- Petter Reinholdtsen <pere@debian.org>  Sat, 15 Jul 2017 14:27:47 +0000
+
+pev (0.50-1) unstable; urgency=medium
+
+  * QA upload.
+  * Imported Debian packaging to collab-maint git.
+  * Change maintainer to Debian QA Group  as package is orphaned (bug #836368).
+  * Changed Standards-Version from 3.9.2 to 3.9.8.
+  * Changed debhelper compat level from 7 to 9.
+  * Updated to upstream version 0.50.
+    - Adjust build rules for version 0.50.  Added install-target.patch.
+    - Not updating to version 0.60 and newer because this is a GPL
+      program linking to OpenSSL without the OpenSSL exception.
+
+ -- Petter Reinholdtsen <pere@debian.org>  Fri, 02 Sep 2016 11:33:08 +0200
+
+pev (0.40-1) unstable; urgency=low
+
+  * New upstreamer version.
+  * Added PE32+ support, TLS, ASLR and DEP checks.
+
+ -- Fernando Mercês <fernando@mentebinaria.com.br>  Wed, 17 Aug 2011 09:21:20 -0300
+
+pev (0.31-2) unstable; urgency=low
+
+  * Fixed description.
+  * Compliance with Standards-Version 3.9.2
+
+ -- Fernando Mercês <fernando@mentebinaria.com.br>  Thu, 19 May 2011 11:39:39 -0300
+
+pev (0.31-1) unstable; urgency=low
+
+  * New upstream release.
+  * Updated description (Closes: #618693)
+  * Display PE headers and sections.
+
+ -- Fernando Mercês <fernando@mentebinaria.com.br>  Thu, 19 May 2011 04:12:56 -0300
+
+pev (0.22-1) unstable; urgency=low
+
+  * Initial release. (Closes: #608460)
+
+ -- Fernando Mercês <fernando@mentebinaria.com.br>  Tue, 28 Dec 2010 22:35:58 -0200

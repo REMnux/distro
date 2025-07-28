@@ -1,0 +1,49 @@
+.TH PESTR 1
+.SH NAME
+pestr - search strings in PE files
+
+.SH SYNOPSIS
+.B pestr
+[OPTIONS]...
+.IR pefile
+
+.SH DESCRIPTION
+pestr search for ASCII and Unicode strings in PE files. It's part of pev, the PE file analysis toolkit.
+.PP
+\&\fIpefile\fR is a PE32/PE32+ executable or dynamic linked library file.
+
+.SH OPTIONS
+.TP
+.BR \-n ", " \-\-min\-length
+Set minimum string length (default: 4).
+
+.TP
+.BR \-o ", " \-\-offset
+Show string offset in file.
+
+.TP
+.BR \-s ", " \-\-section
+Show string section, if exists.
+
+.TP
+.BR \-V ", " \-\-version
+Show version.
+
+.TP
+.BR \-\-help
+Show help.
+
+.SH EXAMPLES
+Search all strings in \fBputty.exe\fP:
+.IP
+$ pestr putty.exe
+
+.SH REPORTING BUGS
+Please, check the latest development code and report at https://github.com/mentebinaria/readpe/issues
+
+.SH SEE ALSO
+\fBofs2rva\fP(1), \fBpedis\fP(1), \fBpehash\fP(1), \fBpeldd\fP(1), \fBpepack\fP(1), \fBperes\fP(1), \fBpescan\fP(1), \fBpesec\fP(1), \fBreadpe\fP(1), \fBrva2ofs\fP(1)
+
+.SH COPYRIGHT
+Copyright (C) 2012 - 2020 pev authors. License GPLv2+: GNU GPL version 2 or later <https://www.gnu.org/licenses/gpl-2.0.txt>.
+This is free software: you are free to change and redistribute it. There is NO WARRANTY, to the extent permitted by law.

@@ -1,0 +1,19 @@
+Source: pev
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+XSBC-Original-Maintainer: Debian QA Group <packages@qa.debian.org>
+Homepage: http://pev.sourceforge.net
+Section: utils
+Priority: optional
+Standards-Version: 4.1.2
+Build-Depends: debhelper (>= 9), libssl-dev
+Rules-Requires-Root: no
+Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/pev.git
+Vcs-Git: git://anonscm.debian.org/collab-maint/pev.git
+
+Package: pev
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: text-based tool to analyze PE files
+ pev is a tool to get information of PE32/PE32+
+ executables (EXE, DLL, OCX etc) like  headers,
+ sections, resources and more.

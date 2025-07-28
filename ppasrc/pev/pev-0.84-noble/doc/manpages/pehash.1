@@ -1,0 +1,61 @@
+.TH PEHASH 1
+.SH NAME
+pehash - calculate hashes of PE pieces
+
+.SH SYNOPSIS
+.B pehash
+[OPTIONS]...
+.IR pefile
+
+.SH DESCRIPTION
+pehash uses libssl, libfuzzy and other black magic to calculate PE file hashes. It's part of pev, the PE file analysis toolkit.
+.PP
+\&\fIpefile\fR is a PE32/PE32+ executable or dynamic linked library file.
+
+.SH OPTIONS
+.TP
+.BR \-a ", " \-\-all
+Hash file, sections and headers with md5, sha1, sha256, ssdeep and imphash.
+
+.TP
+.BR \-c ", " \-\-content
+Hash only the file content (default).
+
+.TP
+.BR \-f ", " \-\-format\ <text|csv|xml|html>
+Change output format (default is text).
+
+.TP
+.BR \-h ", " \-\-header\ <dos|coff|optional>
+Hash only the header with the specified name.
+
+.TP
+.BR \-s ", " \-\-section\ <section_name>
+Hash only the section with the specified name.
+
+.TP
+.BR \-\-section-\index\ <section_index>
+Hash only the section at the specified index (1..n).
+
+.TP
+.BR \-V ", " \-\-version
+Show version.
+
+.TP
+.BR \-\-help
+Show this help.
+
+.SH EXAMPLES
+Check all supported checksums of \fBputty.exe\fP file:
+.IP
+$ pehash -a putty.exe
+
+.SH REPORTING BUGS
+Please, check the latest development code and report at https://github.com/mentebinaria/readpe/issues
+
+.SH SEE ALSO
+\fBofs2rva\fP(1), \fBpedis\fP(1), \fBpeldd\fP(1), \fBpepack\fP(1), \fBperes\fP(1), \fBpescan\fP(1), \fBpesec\fP(1), \fBpestr\fP(1), \fBreadpe\fP(1), \fBrva2ofs\fP(1)
+
+.SH COPYRIGHT
+Copyright (C) 2012 - 2020 pev authors. License GPLv2+: GNU GPL version 2 or later <https://www.gnu.org/licenses/gpl-2.0.txt>.
+This is free software: you are free to change and redistribute it. There is NO WARRANTY, to the extent permitted by law.

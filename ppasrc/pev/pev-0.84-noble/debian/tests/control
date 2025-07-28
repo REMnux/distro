@@ -1,0 +1,2 @@
+Depends: @, gzip-win32, valgrind
+Tests: test-runs

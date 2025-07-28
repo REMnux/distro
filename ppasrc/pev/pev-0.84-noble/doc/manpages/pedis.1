@@ -1,0 +1,84 @@
+.TH PEDIS 1
+.SH NAME
+pedis - disassemble PE sections and functions
+
+.SH SYNOPSIS
+.B pedis
+[OPTIONS]...
+.IR pefile
+
+.SH DESCRIPTION
+pedis is a PE disassembler relyng on udis86 library. It can disassembly entire sections, functions or any file position you want.
+It's part of pev, the PE file analysis toolkit.
+.PP
+\&\fIpefile\fR is a PE32/PE32+ executable or dynamic linked library file.
+
+.SH OPTIONS
+.TP
+.BR \-\-att
+Set AT&T assembly syntax (default: Intel).
+
+.TP
+.BR \-e ", " \-\-entrypoint
+Disassemble the entire entrypoint function.
+
+.TP
+.BR \-f ", " \-\-format\ <text|csv|xml|html>
+Change output format (default: text).
+
+.TP
+.BR \-m ", " \-\-mode\ <16|32|64>
+Disassembly mode (default: auto).
+
+.TP
+.BR \-i\ <number>
+Number of instructions to disassemble.
+
+.TP
+.BR \-n\ <number>
+Number of bytes to disassemble.
+
+.TP
+.BR \-o ", " \-\-offset\ <offset>
+Disassemble at specified offset, either in decimal or hexadecimal format (prefixed with 0x).
+
+.TP
+.BR \-r ", " \-\-rva\ <rva>
+Disassemble at specified RVA, either in decimal or hexadecimal format (prefixed with 0x).
+
+.TP
+.BR \-s ", " \-\-section\ <name>
+Disassemble en entire section given.
+
+.TP
+.BR \-V ", " \-\-version
+Show version.
+
+.TP
+.BR \-\-help
+Show this help.
+
+.SH EXAMPLES
+Disassemble RVA 0x4c4df from \fBputty.exe\fP:
+.IP
+$ pedis -r 0x4c4df putty.exe
+
+.PP
+Disassembly the entrypoint of a 64-bit PE32+ \fBwordpad.exe\fP:
+.IP
+$ pedis -m 64 --entrypoint putty.exe
+
+.PP
+Disassembly in 16-bits mode, starting from offset 0x40, 32 bytes of code from \fBgame.exe\fP:
+.IP
+$ pedis -m 16 -o 0x40 -n 32 game.exe
+
+.SH REPORTING BUGS
+Please, check the latest development code and report at https://github.com/mentebinaria/readpe/issues
+
+.SH SEE ALSO
+\fBofs2rva\fP(1), \fBpehash\fP(1), \fBpeldd\fP(1), \fBpepack\fP(1), \fBperes\fP(1), \fBpescan\fP(1), \fBpesec\fP(1), \fBpestr\fP(1), \fBreadpe\fP(1), \fBrva2ofs\fP(1)
+
+.SH COPYRIGHT
+Copyright (C) 2012 - 2020 pev authors. License GPLv2+: GNU GPL version 2 or later <https://www.gnu.org/licenses/gpl-2.0.txt>.
+This is free software: you are free to change and redistribute it. There is NO WARRANTY, to the extent permitted by law.

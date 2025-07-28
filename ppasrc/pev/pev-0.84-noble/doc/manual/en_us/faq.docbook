@@ -1,0 +1,181 @@
+<chapter id="faq">
+<title>FAQ (Frequently Asked Questions)</title>
+
+<qandaset defaultlabel='qanda'>
+
+<qandaentry>
+<question>
+<para>
+What's imphash?
+</para>
+</question>
+<answer>
+<para>
+It's a MD5 hash from the imported functions names, normally used to search for variants of the same file. The ideas was took in place by Mandiant and it is explained in their blog <ulink url="https://www.fireeye.com/blog/threat-research/2014/01/tracking-malware-import-hashing.html">Tracking malware with Import Hashing</ulink>, but keep in mind there are some people out there saying that the current algorithm for calculating imphash is broken. See <ulink url="https://github.com/erocarrera/pefile/issues/113">Imphash implementation</ulink> and <ulink url="https://github.com/erocarrera/pefile/issues/141">Imphash implementation does not follows convention</ulink> to understand better. This implementation from pefile is the one used in all software that we are aware of - and it's the one we use too.
+</para>
+</answer>
+</qandaentry>
+
+<qandaentry>
+<question>
+<para>
+I use pev in Windows and every time I run one of the pev tools I see CYGWIN complaining about Windows-style file paths.
+</para>
+</question>
+<answer>
+<para>
+Windows version of pev are dependent on CYGWIN libraries that are included in the ZIP package provided for Windows users, so CYGWIN is still there. A workaround is setting the CYGWIN environment variable to disable these warnings:
+
+<screen>
+<prompt>$ </prompt><command>set CYGWIN=nodosfilewarning</command>
+</screen>
+
+<para>
+You can confirm the variable is set by running the following command on MS-DOS Prompt or Powershell:
+</para>
+
+<screen>
+<prompt>$ </prompt><command>set | findstr CYGWIN</command>
+</screen>
+
+<para>
+If you want to make it permanent, you'll have to add this variable with this value set in System Properties - Advanced - Environment Variables, as the image below shows:
+</para>
+
+<imageobject>
+	<imagedata fileref="figures/cygwin-warning.png" format="PNG" />
+</imageobject>
+
+</para>
+</answer>
+</qandaentry>
+
+<qandaentry>
+<question>
+<para>
+How can I get the File Version from PE files like I'm used to do with previous versions of pev?
+</para>
+</question>
+<answer>
+<para>
+Use peres tool -v switch.
+</para>
+</answer>
+</qandaentry>
+
+<qandaentry>
+<question>
+<para>
+Can my machine be infected when analyzing malware with pev tools?
+</para>
+</question>
+<answer>
+<para>
+Yes. We have cpload tool that actually EXECUTES the target on Windows machines.
+Apart from that, attackers could exploit a vulnerability we don't know about
+in one of the tools to execute arbitrary code by sending you a specially crafted PE file.
+So please, consider using pev tools in a protected/isolated virtual machine for binary file analysis.
+</para>
+</answer>
+</qandaentry>
+
+<qandaentry>
+<question>
+<para>
+Can any pev tool rate a file as malicious?
+</para>
+</question>
+<answer>
+<para>
+No. Some tools can give you a hint but it's nearly impossible to programmatically
+claim a piece of code is malicious.
+</para>
+</answer>
+</qandaentry>
+
+<qandaentry>
+<question>
+<para>
+I can't compile pev from the latest source code on git repository. What can I do?
+</para>
+</question>
+<answer>
+<para>
+You can open an issue on GitHub. The repository usually has under development code and
+sometimes things are, indeed, broken.
+</para>
+</answer>
+</qandaentry>
+
+<qandaentry>
+<question>
+<para>
+How do I uninstall the pev version I've installed from source code?
+</para>
+</question>
+<answer>
+<para>
+On Linux and OS X, just point to the pev source code directory and run
+<emphasis>make uninstall</emphasis>. On Windows, just delete the pev folder.
+</para>
+</answer>
+</qandaentry>
+
+<qandaentry>
+<question>
+<para>
+Can I use pev with my project?
+</para>
+</question>
+<answer>
+<para>
+Yes, as long as you respect GPLv2 terms for pev tools and LGPLv3 terms for libpe.
+</para>
+</answer>
+</qandaentry>
+
+<qandaentry>
+<question>
+<para>
+I like pev. How do I let you guys know that?
+</para>
+</question>
+<answer>
+<para>
+We're glad you like it. Please, consider star it on GitHub or SourceForge
+(you can also make a comment), send your feedback to the pev-users list, tell your
+friends that pev exists, anything. We look forward to hear from you. Really.
+</para>
+</answer>
+</qandaentry>
+
+<qandaentry>
+<question>
+<para>
+I found a bug. What do I do?
+</para>
+</question>
+<answer>
+<para>
+If you suspect it is a bug we recommend you to first discuss that in the
+pev-users mailing list. If you are sure, please open an issue on GitHub project page.
+</para>
+</answer>
+</qandaentry>
+
+<qandaentry>
+<question>
+<para>
+My question is not listed here. How do I get an answer for that?
+</para>
+</question>
+<answer>
+<para>
+Send it over to pev-users mailing list or, if you're a developer, send it to pev-devel mailing list.
+</para>
+</answer>
+</qandaentry>
+
+</qandaset>
+
+</chapter>

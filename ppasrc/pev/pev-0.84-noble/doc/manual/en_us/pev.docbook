@@ -1,0 +1,188 @@
+<chapter id="pev">
+<title>What is pev?</title>
+
+<para>
+Since version 0.50, pev is a multiplatform toolkit to work with PE (Portable
+Executable) binaries. Its main goal is to provide feature-rich tool for proper
+analyze binaries, specially suspicious ones.</para>
+
+<sect1 id="history">
+<title>History</title>
+
+<para>
+pev was born back in 2010 from a simple need: a program to find out the version (File Version) of
+a PE32 file and that could run in Linux. This version number is stored in
+Resources (.rsrc) section but at the time we've decided to simply search for
+the string in the whole binary, without any optimization.
+</para>
+
+<para>
+Later on we've decided to parse the PE32 file until reach .rsrc section and
+get the File Version field. In order to do that, we realized we had to parse the
+entire file and we thought if we could print out all the fields and values we went
+through as well.
+</para>
+
+<para>
+Until version 0.40, pev was a unique program to parse the PE headers and sections
+(now readpe is responsible for this). In version 0.50 we focused on binary analysis
+and split pev into various programs beyond a library, called libpe. Currently
+most of pev toolkit programs depends on libpe.
+</para>
+
+</sect1>
+
+<sect1 id="changelog">
+<title>Changelog</title>
+<screen>
+pev - the PE file analysis toolkit - ChangeLog
+
+Legend:
++ Added feature
+* Improved/changed feature
+- Bug fixed
+! Known issue / missing feature
+
+pev 0.84 - February 1, 2024
+ * Add test executable
+
+pev 0.83 - November 28, 2023
+ * Add Linux install info to readme
+ * Remove _FORTIFY_SOURCE definitions
+ - Fix 8 character long section names being cut off
+ - Various improvements for readpe
+ - Removed all exit() calls from libpe
+ - Fix and improve tests
+
+
+pev 0.82 - May 12, 2023
+ * added more image machine types
+ - fix build on GNU/hurd and kFreeBSD
+ - fix crash on executables with zero segments
+ - fix various minor memory leaks
+ - improve makefile to make build reproducible
+ - pedis: show error on not x86 code
+ - peres: ignore header resource size
+ - pestr: fix bug with wide character detection
+ - readpe: fix date overflow bug
+ - rva2ofs: fix bug when exe has no offset
+
+pev 0.81 - January 12, 2021
+
+ + peldd: new tool to display what DLL's a PE file depends on.
+
+pev 0.80 - January 7, 2017
+ ! Missing documentation for libpe.
+ ! peres does not reconstruct icons and cursors extracted from resources section.
+ * Now the -V switch is used by all pev programs to show their version number.
+ * pehash: Now the hash of the whole file is shown by default (-c option).
+ * pestr: --net option removed.
+ * udis86 upgraded to version 1.7.2.
+ + Basic plugins support.
+ + cpload: new tool for CPL file debugging (Windows only).
+ + pehash: Import Hash (imphash) support.
+ + peres: -v swtich outputs PE File Version from resources section.
+ + Support for pev.conf configuration file.
+ - pestr: unable to handle big strings.
+ - readpe can now read virtual import descriptors.
+ - Valid XML and HTML output formats (Jan Seidl).
+ - readpe: Unecessary error message when there is no export directory.
+
+pev 0.70 - December 26, 2013
+ ! Missing full/English documentation.
+ ! Missing valid XML and HTML output formats.
+ ! pestr: no support for --net option when parsing unicode strings.
+ ! pestr: unable to handle too big strings.
+ * libpe: rewritten, now using mmap. (Jardel Weyrich).
+ * pestr: added countries domains suffixes.
+ * readpe and peres: output enhancements (Jardel Weyrich).
+ + pehash: sections and headers hash calculation (Jardel Weyrich).
+ + pehash: ssdeep fuzzy hash calculation.
+ + pehash: support for new digest hashes like sha512, ripemd160 and more.
+ + peres: added new tool to analyze/extract PE resources (Marcelo Fleury).
+ + pescan: cpl malware detection.
+ + pescan: undocumented anti-disassembly fpu trick detection.
+ + pesec: show and extract certificates from digitally signed binaries (Jardel Weyrich).
+ - readpe can't show functions exported by ID only.
+ - readpe: fixed subsystem types (Dmitry Mostovenko).
+
+pev 0.60 - October 31, 2012
+ ! Missing full/English documentation.
+ ! Missing valid XML and HTML output formats.
+ ! pestr: no support for --net option with unicode strings.
+ ! readpe can't show functions exported by ID only.
+ * pedis: -F/--function option replaced by -r/--rva.
+ + added manpages for all tools.
+ + pedis: added -m/--mode option to set disassembly mode (16, 32 or 64-bit).
+ + pedis: added -n option to limit number of disassembled instructions.
+ + pedis: added options to disassembly entrypoint and raw fille offset.
+ + pedis: disassemble bytes number specified by -n option.
+ + pehash: new tool to calculate PE file hashes (Jan Seidl).
+ + pepack: added PEiD signature search (Rodrigo Escobar).
+ + pescan: added -f/--format option to format output.
+ + pescan: added section, imagebase and timestamp analysis.
+ + readpe: added --exports option to show exported functions.
+ - pedis: fixed address representation in calls and jump instructions.
+
+pev 0.50 - June 25, 2012
+ ! Missing documentation.
+ ! Missing valid XML and HTML output formats.
+ ! pedis shows arguments of jumps and calls as relative positions.
+ * Improved pev tools Makefile (Gabriel Barbosa).
+ * MEW packer detection in packid (Rodrigo Rubira).
+ * pev now is a collection of binaries and a library to work with PE executables.
+ + libpe: xmalloc trick and fixes (Rodrigo Rubira).
+ + Output in monospaced text and csv in most programs.
+ + pedis: disassemble functions and sections (Tiago Zaniquelli).
+ + pepack: detect fake EP (Wagner Barongello).
+ + pescan: new tool to search for suspicious things in PE files including TLS callbacks.
+ + pesec: find security features in PE files.
+ + readpe can now show imported functions with --imports or -i switch.
+ + readpe: show PE headers and sections information (most of obsolete pev binary).
+ + Released libpe 1.0 to support our programs.
+ + rva2ofs and ofs2rva: convert from rva to raw file offset and vice-versa.
+ - Fixed erroneous ord numbers in functions imported without name.
+ - Fixed two bugs with fake TLS callbacks in petls (thanks to Qualys guys for reporting).
+
+pev 0.40 - August 7, 2011
+ * Compatible with PE/COFF specification v8.2.
+ * Date format in COFF header similar to RFC 2822.
+ * Improved function to get machine type (Gabriel Duarte).
+ + Added "-r" option to show resource items at first level.
+ + Added more human-readable fields, like subsystem and section characteristics.
+ + Added TLS callback functions detection in every PE section.
+ + ASLR and DEP identification.
+ + PE32+ support. Now pev can handle 64-bits executables.
+ + Variable data directories support (no more fixed in 16).
+
+pev 0.31 - May 11, 2011
+ + Added characteristics flags in COFF output.
+ + Added human-readable machine types in COFF output.
+ - Fixed compilation in OS X. (Gustavo Roberto).
+ - Fixed warning with Linux 32-bits boxes when compiling.
+
+pev 0.30 - February 20, 2011
+ * Improved memory usage.
+ * Now pev shows the Product Version with option "-p".
+ + Added option "-a" to show all information.
+ + Added option "-c" to show the COFF header.
+ + Added option "-d" to show the DOS header.
+ + Added option "-o" to show the Option (PE) header.
+ + Added option "-s" to show executable sections.
+ 
+pev 0.22 - January 9, 2011
+ ! Does not support PE32+ files.
+ ! Plans to read more PE information.
+ * Improved Makefile.
+ + Added manpage.
+
+pev 0.2 - December 26, 2011
+ * Improved search algorithm.
+ - Fixed bug compiling in MS-Windows platform.
+
+pev 0.1 - December 12, 2010
+   Initial release. (Eduardo Fernandes, Fernando Mercês, Francivan Bezerra and Thiago Moraes).
+</screen>
+</sect1>
+
+</chapter>
