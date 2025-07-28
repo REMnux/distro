@@ -1,0 +1,11 @@
+Name = Files List
+Author = Beercow
+Version = 1.0
+Type = MainMenuItem
+Architecture = Linux64BitExe
+File = File_list
+Priority = 9
+RunHidden = 0
+RunExclusively = 1
+CanOverrideOtherPlugins = 0
+CanOverrideProcDot = 0

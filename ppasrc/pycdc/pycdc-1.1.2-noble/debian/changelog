@@ -1,0 +1,17 @@
+pycdc (1.1.2-noble) noble; urgency=medium
+
+  * Updated to latest upstream release and for Noble. 
+
+ -- REMnux Distribution <distro@remnux.org>  Mon, 28 Jul 2025 15:10:43 -0400
+
+pycdc (1.1.1-focal) focal; urgency=medium
+
+  * Updated to latest upstream release and for bionic and focal
+
+ -- REMnux Distribution <distro@remnux.org>  Sun, 28 Jun 2020 14:05:37 -0400
+
+pycdc (1.0.0-1) trusty; urgency=medium
+
+  * Initial Release.
+
+ -- REMnux Distribution (https://REMnux.org) <distro@remnux.org>  Tue, 09 Jun 2015 08:25:16 -0400
