@@ -1,0 +1,75 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.\" First parameter, NAME, should be all caps
+.\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
+.\" other parameters are allowed: see man(7), man(1)
+.TH PDFRESURRECT 1 "September 9, 2022"
+.\" Please adjust this date whenever revising the manpage.
+.\"
+.\" Some roff macros, for reference:
+.\" .nh        disable hyphenation
+.\" .hy        enable hyphenation
+.\" .ad l      left justify
+.\" .ad b      justify to both left and right margins
+.\" .nf        disable filling
+.\" .fi        enable filling
+.\" .br        insert line break
+.\" .sp <n>    insert n+1 empty lines
+.\" for manpage-specific macros, see man(7)
+.SH NAME
+pdfresurrect \- tool for extracting versioning data from PDF documents
+.SH SYNOPSIS
+
+.B pdfresurrect
+.RI " file.pdf " [-w] [-q] [-i]
+.SH DESCRIPTION
+This manual page documents briefly the
+.B pdfresurrect
+command.
+.PP
+.\" TeX users may be more comfortable with the \fB<whatever>\fP and
+.\" \fI<whatever>\fP escape sequences to invoke bold face and italics,
+.\" respectively.
+\fBpdfresurrect\fP is a tool for extracting versioning data from PDF documents.
+.SH OPTIONS
+A summary of options is included below.
+.TP
+.B \-w
+Write the PDF versions and summary to disk.
+.TP
+.B \-q
+Display only the number of versions contained in the PDF.
+.TP
+.B \-i
+Display the creator information from the specified PDF.
+.SH NOTES
+.PP
+This tool relies on the application reading the pdfresurrect extracted versions
+to treat the last xref(cross-reference) table as the most recent in the
+document.  This should typically be the case.
+.PP
+The verbose output, which tries to deduce the PDF object type (e.g. stream,
+page), is not always accurate, and the object counts might not be 100%
+accurate.  However, this should not prevent the extraction of the versions.
+This output is merely to provide a hint for the user as to what might be
+different between the documents.
+.PP
+Object counts might appear off in linearized PDF documents.  That is not truly
+the case, the reason for this is that each version of the PDF consists of the
+objects that compose the linear portion of the PDF plus all of the objects that
+compose the version in question.  Suppose there is a linearized PDF with 59
+objects in its linear portion, and suppose the PDF has a second version that
+consists of 21 objects.  The total number of objects in "version 2"
+would be 59 + 21 or 80 objects.
+.SH COPYRIGHT
+BSD-3-Clause
+.SH AUTHORS
+pdfresurrect was originally written by Matt Davis <mattdavis9@gmail.com>.
+
+The original man page and some additional configure and Makefile hackage was
+contributed by Francois Marier <francois@debian.org>.
+.PP
+This manual page was originally written by Francois Marier
+<francois@debian.org>, for the Debian project (and may be used by others).
+This manual page has since been modified by Matt Davis.
+.PP
+See the AUTHORS file for a list of other contributors.

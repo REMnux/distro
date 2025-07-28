@@ -1,0 +1,12 @@
+Source: pdfresurrect
+Section: utils
+Priority: optional
+Maintainer: REMnux Distribution <distro@remnux.org>
+Build-Depends: debhelper (>= 10), autotools-dev
+Standards-Version: 4.1.2
+Homepage: https://github.com/enferex/pdfresurrect
+
+Package: pdfresurrect
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Analyze and help extract older "hidden" versions of the PDF file from the current PDF file.

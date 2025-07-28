@@ -1,0 +1,11 @@
+pdfresurrect (0.23-noble) noble; urgency=medium
+
+  * Updated to latest upstream version and for Noble. 
+
+ -- REMnux Distribution <distro@remnux.org>  Mon, 28 Jul 2025 14:19:25 -0400
+
+pdfresurrect (0.20-focal) focal; urgency=medium
+
+  * Initial Release.
+
+ -- REMnux Distribution <distro@remnux.org>  Thu, 11 Jun 2020 20:48:31 -0400
