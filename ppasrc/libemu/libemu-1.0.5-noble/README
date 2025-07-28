@@ -1,0 +1,33 @@
+
+	  _______________
+	 |               |
+	 |               |
+	 |    libemu     |
+	 | x86 emulation |
+	 |               |
+	 |               |
+	 |               |
+	 \ O             |
+	  \______________|
+
+	
+homepage: http://libemu.mwcollect.org
+
+
+building from svn:
+  autoreconf -v -i
+  ./configure --prefix=/opt/libemu; make install
+
+building from tarball:
+  tar xvfz libemu-VERSION.tar.gz
+  cd libemu-VERSION
+  ./configure --prefix=/opt/libemu; make install
+
+
+specific configure options:
+
+--enable-debug          enable debug code generation [default=yes]
+	debug messages, instruction strings, nothing one wants to miss, even if it takes a lot of cpu cycles.
+
+
+

@@ -1,0 +1,11 @@
+libemu (1.0.5-noble) noble; urgency=medium
+
+  * Noble update. 
+
+ -- REMnux Distribution <distro@remnux.org>  Mon, 28 Jul 2025 11:41:46 -0400
+
+libemu (0.2.0-1) unstable; urgency=low
+
+  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- common <common@unknown>  Mon, 17 May 2010 22:14:41 +0200
