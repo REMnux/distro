@@ -1,0 +1,12 @@
+Source: jd-gui
+Section: utils
+Priority: optional
+Maintainer: REMnux Distribution (https://REMnux.org) <distro@remnux.org>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.4
+Homepage: https://java-decompiler.github.io/
+
+Package: jd-gui
+Architecture: amd64
+Depends: default-jre, apt-utils
+Description: Java decompiler with GUI
