@@ -1,0 +1,12 @@
+Source: xorsearch
+Section: utils
+Priority: optional
+Maintainer: REMnux Distribution <distro@remnux.org>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.4
+Homepage: https://blog.didierstevens.com/programs/xorsearch/
+
+Package: xorsearch
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Locate and decode strings obfuscated using common techniques.
