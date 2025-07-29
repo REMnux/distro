@@ -1,0 +1,7 @@
+file format elf32-bigmips
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn  Flags
+  0 .text         0  0  0  034  2**2  CONTENTS
+SYMBOL TABLE:
+no symbols

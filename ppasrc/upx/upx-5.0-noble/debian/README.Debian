@@ -1,0 +1,13 @@
+upx-ucl for Debian
+------------------
+
+UPX is an advanced executable file compressor. UPX will typically
+reduce the file size of programs and DLLs by around 50%-70%, thus
+reducing disk space, network load times, download times and
+other distribution and storage costs.
+
+Programs and libraries compressed by UPX are completely self-contained
+and run exactly as before, with no runtime or memory penalty for most
+of the supported formats.
+
+This package is linked with the UCL library.

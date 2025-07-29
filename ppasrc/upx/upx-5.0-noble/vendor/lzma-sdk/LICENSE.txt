@@ -1,0 +1,7 @@
+LICENSE
+-------
+
+LZMA SDK is written and placed in the public domain by Igor Pavlov.
+
+https://www.7-zip.org/sdk.html
+https://sourceforge.net/p/sevenzip/discussion/45797/thread/685169cf/

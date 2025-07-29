@@ -1,0 +1,19 @@
+# Architectures for which UPX provides native support (i.e. can compress
+# binaries for these archs), so that we can run tests there.
+# Every architecture listed should start its own line.
+#
+# TODO: the following seem to fail on last upstream test:
+# ppc64  # https://buildd.debian.org/status/fetch.php?pkg=upx-ucl&arch=ppc64&ver=4.2.2-2&stamp=1705094999&raw=0
+# ppc64el # https://launchpad.net/ubuntu/+source/upx-ucl/4.2.2-2/+build/27640654
+# hurd-i386  # check if hurd is supprted at all
+# hurd-amd64
+amd64
+arm64
+armel
+armhf
+i386
+mips
+mipsel
+m68k
+powerpc
+sh4

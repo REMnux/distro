@@ -1,0 +1,11 @@
+Name: upx
+Bug-Database: https://github.com/upx/upx/issues
+Bug-Submit: https://github.com/upx/upx/issues/new
+Changelog: https://github.com/upx/upx/blob/master/NEWS
+Contact:
+ - Markus F.X.J. Oberhumer <markus@oberhumer.com>
+ - John F. Reiser <jreiser@BitWagon.com>
+ - Laszlo Molnar <ezerotven+github@gmail.com>
+Documentation: https://github.com/upx/upx/blob/master/doc/upx.pod
+Repository: https://github.com/upx/upx.git
+Repository-Browse: https://github.com/upx/upx

@@ -1,0 +1,68 @@
+file format elf32-i386
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn  Flags
+  0 HUMF_A        05  0  0  034  2**0  CONTENTS
+  1 HUMF_L        05  0  0  039  2**0  CONTENTS
+  2 UMF_ANDROID   04bf  0  0  040  2**2  CONTENTS
+  3 UMF_LINUX     011f  0  0  0500  2**2  CONTENTS
+  4 ELFMAINX      0200  0  0  0620  2**2  CONTENTS
+  5 ELFMAINZ      0a  0  0  0820  2**0  CONTENTS
+SYMBOL TABLE:
+00000000 l    d  ELFMAINX 0 ELFMAINX
+00000000 l    d  ELFMAINZ 0 ELFMAINZ
+00000000 l    d  HUMF_A 0 HUMF_A
+00000000 l    d  HUMF_L 0 HUMF_L
+00000000 l    d  UMF_ANDROID 0 UMF_ANDROID
+00000000 l    d  UMF_LINUX 0 UMF_LINUX
+000001f8 g       ELFMAINX 0 get_page_mask
+00000200 g       ELFMAINX 0 upx_mmap_and_fd
+00000000         *UND* 0 O_BINFO
+000001d6 g       ELFMAINX 0 mempcpy
+00000000 g     F UMF_ANDROID 0235 upx_mmap_and_fd_android
+0000017c g       ELFMAINX 0 mmap
+00000000 g     F UMF_LINUX 011f upx_mmap_and_fd_linux
+0000019f g       ELFMAINX 0 uname
+0000018a g       ELFMAINX 0 get_upxfn_path
+00000000 g       ELFMAINX 0 _start
+000001c4 g       ELFMAINX 0 memset
+000001f6 g       ELFMAINX 0 my_bkpt
+0000018d g       ELFMAINX 0 stat
+000001ae g       ELFMAINX 0 mkdir
+
+RELOCATION RECORDS FOR [HUMF_A]:
+OFFSET   TYPE              VALUE
+00000001 R_386_PC32        upx_mmap_and_fd_android
+
+RELOCATION RECORDS FOR [HUMF_L]:
+OFFSET   TYPE              VALUE
+00000001 R_386_PC32        upx_mmap_and_fd_linux
+
+RELOCATION RECORDS FOR [UMF_ANDROID]:
+OFFSET   TYPE              VALUE
+0000007c R_386_PC32        my_bkpt
+000000f1 R_386_PC32        get_upxfn_path
+0000016f R_386_PC32        get_page_mask
+000001e0 R_386_PC32        get_page_mask
+00000212 R_386_PC32        mmap
+00000249 R_386_PC32        memset
+00000298 R_386_PC32        my_bkpt
+0000035e R_386_PC32        my_bkpt
+00000392 R_386_PC32        mempcpy
+000003ee R_386_PC32        mempcpy
+
+RELOCATION RECORDS FOR [UMF_LINUX]:
+OFFSET   TYPE              VALUE
+000000fd R_386_PC32        mmap
+00000104 R_386_PC32        get_page_mask
+
+RELOCATION RECORDS FOR [ELFMAINX]:
+OFFSET   TYPE              VALUE
+00000005 R_386_PC32        ELFMAINZ
+000000a9 R_386_PC32        upx_mmap_and_fd
+00000154 R_386_PC32        mmap
+
+RELOCATION RECORDS FOR [ELFMAINZ]:
+OFFSET   TYPE              VALUE
+00000002 R_386_PC32        ELFMAINX
+00000006 R_386_32          O_BINFO

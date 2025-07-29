@@ -1,0 +1,8 @@
+# Disable useless checks on debian/tests, see also https://bugs.debian.org/1025452
+upx-ucl source: source-contains-prebuilt-binary [debian/tests/data/*
+upx-ucl source: source-is-missing [debian/tests/data/*
+upx-ucl source: elf-warning *
+upx-ucl source: elf-error *
+upx-ucl source: very-long-line-length-in-source-file *
+# Lintian is wrong here, doc/upx-doc.html can be built from doc/upx-doc.pod
+upx-ucl source: source-is-missing [doc/upx-doc.html]

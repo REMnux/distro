@@ -1,0 +1,33 @@
+#!/bin/sh
+# autopkgtest check: Run regression checks, based on a few bugs reported in Debian BTS
+
+set -e
+[ "$2" ] || { echo "Usage: $0 [ --no-qq ] [ -d ] file-inside-data-dir expected-failure-message [ expected-status ]" >&2; exit 100; }
+
+set -o nounset
+
+UPXCMD="upx-ucl"
+[ "$1" = "--no-qq" ] && shift || { UPXCMD="$UPXCMD -qq"; }
+[ "$1" != "-d" ] || { UPXCMD="$UPXCMD $1"; shift; }
+
+readonly DATAFILE="$(dirname $0)/data/$1"
+readonly EXPECTEDMSG="$2"
+readonly EXPECTEDSTATUS="${3:-1}"
+
+test -e "$DATAFILE" || { echo "$DATAFILE does not exist" >&2; exit 101; }
+test -n "$EXPECTEDMSG" || { echo "expected message cannot be empty" >&2; exit 102; }
+
+readonly UPXTMPFILE="$(mktemp)"
+trap "cd /; rm -f $UPXTMPFILE" 0 INT QUIT TERM ABRT
+
+run()
+{
+  echo "+ $@"
+  "$@"
+}
+
+run $UPXCMD "$DATAFILE" 2>"$UPXTMPFILE" || status=$?
+echo "++ status: $status; stderr: $(cat $UPXTMPFILE)"
+
+run test "$status" = "$EXPECTEDSTATUS"
+run grep -qF "$EXPECTEDMSG" "$UPXTMPFILE"

@@ -1,0 +1,126 @@
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+*default*        0x0000000000000000 0xffffffffffffffff
+
+Linker script and memory map
+
+
+.text           0x0000000000000000      0xcb8
+ .text          0x0000000000000000      0x398 tmp/arm.v5a-linux.elf-fold.o
+                0x0000000000000004                get_page_mask
+                0x0000000000000338                memcpy
+                0x0000000000000048                Psync
+                0x000000000000037c                mempcpy
+                0x00000000000000b0                mmap
+                0x0000000000000098                mmap_privanon
+                0x000000000000000c                get_upxfn_path
+                0x000000000000035c                memset
+                0x00000000fffffff4                page_mask
+                0x0000000000000024                Pprotect
+                0x0000000000000024                mprotect
+ .text          0x0000000000000398        0x0 tmp/arm.v5a-linux.elf-help_umf.o
+ .text          0x0000000000000398        0x0 tmp/arm.v5a-expand.o
+ .text          0x0000000000000398      0x920 tmp/arm.v5a-linux.elf-main2.o
+                0x0000000000000c54                underlay
+                0x0000000000000b24                upx_main
+
+SYSCALLS        0x0000000000000000      0x214
+ SYSCALLS       0x0000000000000000      0x214 tmp/arm.v5a-linux.elf-fold.o
+                0x00000000000000ec                munmap
+                0x0000000000000000                get_sys_munmap
+                0x0000000000000090                getpid
+                0x0000000000000128                readlink
+                0x00000000000001b8                __udivsi3
+                0x000000000000007c                ftruncate
+                0x00000000000000a4                lseek
+                0x000000000000018c                __clear_cache
+                0x0000000000000150                uname
+                0x0000000000000178                write
+                0x0000000000000068                fstat
+                0x0000000000000040                fdatasync
+                0x00000000000000b8                memfd_create
+                0x0000000000000114                read
+                0x0000000000000164                unlink
+                0x00000000000001b0                my_bkpt
+                0x0000000000000054                fsync
+                0x000000000000013c                stat
+                0x0000000000000030                exit
+                0x0000000000000008                brk
+                0x0000000000000100                open
+                0x00000000000001b8                div10
+                0x00000000000000d8                mkdir
+                0x000000000000001c                close
+
+HUMF_A          0x0000000000000000        0x4
+ HUMF_A         0x0000000000000000        0x4 tmp/arm.v5a-linux.elf-help_umf.o
+
+HUMF_L          0x0000000000000000        0x4
+ HUMF_L         0x0000000000000000        0x4 tmp/arm.v5a-linux.elf-help_umf.o
+
+UMF_ANDROID     0x0000000000000000      0x54c
+ UMF_ANDROID    0x0000000000000000      0x54c tmp/arm.v5a-linux.elf-upxfd_android.o
+                0x00000000000002cc                upx_mmap_and_fd_android
+
+UMF_LINUX       0x0000000000000000      0x140
+ UMF_LINUX      0x0000000000000000      0x140 tmp/arm.v5a-linux.elf-upxfd_linux.o
+                0x0000000000000000                upx_mmap_and_fd_linux
+
+EXP_HEAD        0x0000000000000000       0xdc
+ EXP_HEAD       0x0000000000000000       0xdc tmp/arm.v5a-expand.o
+                0x0000000000000074                f_expand
+
+EXP_TAIL        0x0000000000000000       0x2c
+ EXP_TAIL       0x0000000000000000       0x2c tmp/arm.v5a-expand.o
+                0x000000000000002c                upx_mmap_and_fd
+                0x0000000000000000                eof
+
+NRV2E           0x0000000000000000      0x11c
+ NRV2E          0x0000000000000000      0x11c tmp/arm.v5a-expand.o
+                0x0000000000000008                ucl_nrv2e_decompress_8
+
+NRV2D           0x0000000000000000      0x108
+ NRV2D          0x0000000000000000      0x108 tmp/arm.v5a-expand.o
+                0x0000000000000008                ucl_nrv2d_decompress_8
+
+NRV2B           0x0000000000000000       0xcc
+ NRV2B          0x0000000000000000       0xcc tmp/arm.v5a-expand.o
+                0x0000000000000008                ucl_nrv2b_decompress_8
+
+LZMA_DAISY      0x0000000000000000        0x8
+ LZMA_DAISY     0x0000000000000000        0x8 tmp/arm.v5a-expand.o
+
+.data           0x0000000000000000        0x0
+ .data          0x0000000000000000        0x0 tmp/arm.v5a-linux.elf-fold.o
+ .data          0x0000000000000000        0x0 tmp/arm.v5a-linux.elf-help_umf.o
+ .data          0x0000000000000000        0x0 tmp/arm.v5a-expand.o
+ .data          0x0000000000000000        0x0 tmp/arm.v5a-linux.elf-main2.o
+
+.bss            0x0000000000000000        0x0
+ .bss           0x0000000000000000        0x0 tmp/arm.v5a-linux.elf-fold.o
+ .bss           0x0000000000000000        0x0 tmp/arm.v5a-linux.elf-help_umf.o
+ .bss           0x0000000000000000        0x0 tmp/arm.v5a-expand.o
+ .bss           0x0000000000000000        0x0 tmp/arm.v5a-linux.elf-main2.o
+TARGET(elf32-littlearm)
+                0x0000000000000034                . = SIZEOF_HEADERS
+LOAD tmp/arm.v5a-linux.elf-fold.o
+LOAD tmp/arm.v5a-linux.elf-help_umf.o
+LOAD tmp/arm.v5a-linux.elf-upxfd_android.o
+LOAD tmp/arm.v5a-linux.elf-upxfd_linux.o
+LOAD tmp/arm.v5a-expand.o
+LOAD tmp/arm.v5a-linux.elf-main2.o
+OUTPUT(tmp/arm.v5a-linux.elf-fold.bin elf32-littlearm)
+
+LZMA_ELF00      0x0000000000000000       0x80
+ LZMA_ELF00     0x0000000000000000       0x80 tmp/arm.v5a-expand.o
+
+LZMA_DEC20      0x0000000000000000      0x938
+ LZMA_DEC20     0x0000000000000000      0x938 tmp/arm.v5a-expand.o
+
+LZMA_DEC10      0x0000000000000000      0x478
+ LZMA_DEC10     0x0000000000000000      0x478 tmp/arm.v5a-expand.o
+                0x0000000000000000                LzmaDecode
+
+LZMA_DEC30      0x0000000000000000        0x0
+ LZMA_DEC30     0x0000000000000000        0x0 tmp/arm.v5a-expand.o

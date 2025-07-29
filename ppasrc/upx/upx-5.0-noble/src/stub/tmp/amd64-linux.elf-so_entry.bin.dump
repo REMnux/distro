@@ -1,0 +1,71 @@
+file format elf64-x86-64
+
+Sections:
+Idx Name          Size      VMA               LMA               File off  Algn  Flags
+  0 HUMF_A        05  0  0  040  2**0  CONTENTS
+  1 HUMF_L        05  0  0  045  2**0  CONTENTS
+  2 UMF_ANDROID   0133  0  0  050  2**4  CONTENTS
+  3 UMF_LINUX     0f9  0  0  0184  2**2  CONTENTS
+  4 ELFMAINX      0188  0  0  0280  2**2  CONTENTS
+  5 ELFMAINZ      0  0  0  0408  2**0  CONTENTS
+  6 STRCON        065  0  0  0408  2**0  CONTENTS
+SYMBOL TABLE:
+0000000000000000 l    d  ELFMAINZ 0 ELFMAINZ
+0000000000000000 l    d  STRCON 0 STRCON
+0000000000000000 l       ELFMAINX 0 _start
+0000000000000000 l    d  HUMF_A 0 HUMF_A
+0000000000000000 l    d  HUMF_L 0 HUMF_L
+0000000000000000 l    d  UMF_ANDROID 0 UMF_ANDROID
+0000000000000000 l    d  UMF_LINUX 0 UMF_LINUX
+0000000000000000 l    d  ELFMAINX 0 ELFMAINX
+0000000000000000         *UND* 0 get_page_mask
+0000000000000000         *UND* 0 ftruncate
+0000000000000000 g     F UMF_ANDROID 0133 upx_mmap_and_fd_android
+0000000000000000         *UND* 0 mmap
+0000000000000000 g     F UMF_LINUX 0f9 upx_mmap_and_fd_linux
+0000000000000000         *UND* 0 write
+0000000000000000         *UND* 0 memfd_create
+0000000000000000         *UND* 0 my_bkpt
+0000000000000000         *UND* 0 exit
+0000000000000000         *UND* 0 open
+
+RELOCATION RECORDS FOR [HUMF_A]:
+OFFSET           TYPE              VALUE
+0000000000000001 R_X86_64_PC32     upx_mmap_and_fd_android+0xfffffffffffffffc
+
+RELOCATION RECORDS FOR [HUMF_L]:
+OFFSET           TYPE              VALUE
+0000000000000001 R_X86_64_PC32     upx_mmap_and_fd_linux+0xfffffffffffffffc
+
+RELOCATION RECORDS FOR [UMF_ANDROID]:
+OFFSET           TYPE              VALUE
+0000000000000021 R_X86_64_PC32     STRCON+0xfffffffffffffffc
+000000000000002e R_X86_64_PLT32    memfd_create+0xfffffffffffffffc
+0000000000000043 R_X86_64_PLT32    memfd_create+0xfffffffffffffffc
+0000000000000052 R_X86_64_PC32     STRCON
+0000000000000061 R_X86_64_PLT32    open+0xfffffffffffffffc
+000000000000006f R_X86_64_PC32     STRCON+0x0000000000000009
+0000000000000079 R_X86_64_PLT32    my_bkpt+0xfffffffffffffffc
+0000000000000083 R_X86_64_PLT32    get_page_mask+0xfffffffffffffffc
+00000000000000a8 R_X86_64_PLT32    ftruncate+0xfffffffffffffffc
+00000000000000b9 R_X86_64_PLT32    get_page_mask+0xfffffffffffffffc
+00000000000000d0 R_X86_64_PLT32    write+0xfffffffffffffffc
+00000000000000f8 R_X86_64_PLT32    mmap+0xfffffffffffffffc
+
+RELOCATION RECORDS FOR [UMF_LINUX]:
+OFFSET           TYPE              VALUE
+0000000000000021 R_X86_64_PC32     STRCON+0x0000000000000016
+000000000000002e R_X86_64_PLT32    memfd_create+0xfffffffffffffffc
+0000000000000042 R_X86_64_PLT32    memfd_create+0xfffffffffffffffc
+000000000000004f R_X86_64_PC32     STRCON+0x000000000000001a
+000000000000005e R_X86_64_PLT32    open+0xfffffffffffffffc
+0000000000000073 R_X86_64_PC32     STRCON+0x0000000000000023
+0000000000000082 R_X86_64_PLT32    write+0xfffffffffffffffc
+000000000000008c R_X86_64_PLT32    exit+0xfffffffffffffffc
+0000000000000096 R_X86_64_PLT32    ftruncate+0xfffffffffffffffc
+00000000000000c2 R_X86_64_PLT32    mmap+0xfffffffffffffffc
+00000000000000ca R_X86_64_PLT32    get_page_mask+0xfffffffffffffffc
+
+RELOCATION RECORDS FOR [ELFMAINX]:
+OFFSET           TYPE              VALUE
+000000000000000c R_X86_64_PC32     ELFMAINZ+0xfffffffffffffffc

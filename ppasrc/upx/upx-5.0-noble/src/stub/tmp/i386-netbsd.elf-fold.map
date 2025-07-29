@@ -1,0 +1,56 @@
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+*default*        0x0000000000000000 0xffffffffffffffff
+
+Linker script and memory map
+
+TARGET(elf32-i386)
+                0x0000000000000074                . = SIZEOF_HEADERS
+
+.text           0x0000000000000074      0x76c
+ *(.text)
+ .text          0x0000000000000074       0xc4 tmp/i386-bsd.elf-fold.o
+ .text          0x0000000000000138      0x635 tmp/i386-bsd.elf-main.o
+                0x0000000000000626                upx_main
+ *fill*         0x000000000000076d        0x3 00
+ .text          0x0000000000000770       0x6d tmp/i386-bsd.syscall.o
+                0x00000000000007d9                waitpid
+                0x00000000000007ad                munmap
+                0x00000000000007c1                execve
+                0x00000000000007b9                getpid
+                0x00000000000007c9                ftruncate
+                0x0000000000000770                mmap
+                0x00000000000007d1                nanosleep
+                0x00000000000007a1                write
+                0x000000000000079d                read
+                0x00000000000007d5                unlink
+                0x00000000000007c5                fork
+                0x00000000000007cd                gettimeofday
+                0x00000000000007b5                access
+                0x0000000000000795                exit
+                0x0000000000000794                brk
+                0x00000000000007a5                open
+                0x00000000000007b1                mprotect
+                0x00000000000007bd                fcntl
+                0x00000000000007a9                close
+ *(.data)
+ *fill*         0x00000000000007dd        0x3 00
+ .data          0x00000000000007e0        0x0 tmp/i386-bsd.elf-fold.o
+ .data          0x00000000000007e0        0x0 tmp/i386-bsd.elf-main.o
+ .data          0x00000000000007e0        0x0 tmp/i386-bsd.syscall.o
+
+.data
+
+.bss            0x00000000000007e0        0x0
+ .bss           0x00000000000007e0        0x0 tmp/i386-bsd.elf-fold.o
+ .bss           0x00000000000007e0        0x0 tmp/i386-bsd.elf-main.o
+ .bss           0x00000000000007e0        0x0 tmp/i386-bsd.syscall.o
+
+.rel.dyn        0x00000000000007e0        0x0
+ .rel.text      0x0000000000000000        0x0 tmp/i386-bsd.elf-fold.o
+LOAD tmp/i386-bsd.elf-fold.o
+LOAD tmp/i386-bsd.elf-main.o
+LOAD tmp/i386-bsd.syscall.o
+OUTPUT(tmp/i386-netbsd.elf-fold.bin elf32-i386)
