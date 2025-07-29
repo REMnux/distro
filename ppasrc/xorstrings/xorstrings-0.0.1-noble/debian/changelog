@@ -1,0 +1,11 @@
+xorstrings (0.0.1-noble) noble; urgency=medium
+
+  * Updated for Noble. 
+
+ -- REMnux Distribution <distro@remnux.org>  Mon, 28 Jul 2025 20:19:06 -0400
+
+xorstrings (0.0.1-focal) focal; urgency=medium
+
+  * Initial Release.
+
+ -- REMnux Distribution (https://REMnux.org) <distro@remnux.org>  Tue, 02 Jun 2020 20:42:23 -0400

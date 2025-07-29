@@ -1,0 +1,13 @@
+Source: xorstrings
+Section: utils
+Priority: optional
+Maintainer: REMnux <distro@remnux.org>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.4
+Homepage: http://blog.didierstevens.com/programs/xorsearch/
+
+Package: xorstrings
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: XORStrings extracts strings encoded using a variety of common algorithms.
+ XORStrings will search for strings in the (binary) file you provide it, using the same encodings as XORSearch (XOR, ROL, ROT and SHIFT).
