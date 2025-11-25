@@ -1,3 +1,9 @@
+ilspycmd (9.1.0-noble2) noble; urgency=medium
+
+  * Addressed an issue with an unnecessary symlink.
+
+ -- REMnux Distribution <distro@remnux.org>  Tue, 25 Nov 2025 16:18:06 -0500
+
 ilspycmd (9.1.0-noble1) noble; urgency=medium
 
   * Fixed a typo in the installer. 
