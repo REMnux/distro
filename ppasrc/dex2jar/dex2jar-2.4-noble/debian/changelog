@@ -1,3 +1,17 @@
+dex2jar (2.4.1+repack2-noble4) noble; urgency=medium
+
+  * Fixed the install file and also added the correct directory path to every
+    .sh script. 
+
+ -- REMnux Distribution <distro@remnux.org>  Tue, 25 Nov 2025 17:05:52 -0500
+
+dex2jar (2.4.1+repack1-noble3) noble; urgency=medium
+
+  * Added path for locating tghe library dependencies in dex2jar and made sure
+    dex2jar gets installed. 
+
+ -- REMnux Distribution <distro@remnux.org>  Tue, 25 Nov 2025 16:38:42 -0500
+
 dex2jar (2.4.1-noble2) noble; urgency=medium
 
   * Fixed the dex-tools script to define the APP_HOME variable to point to the correct location.

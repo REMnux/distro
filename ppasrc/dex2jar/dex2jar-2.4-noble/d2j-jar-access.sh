@@ -29,7 +29,8 @@ while [ -h "$PRG" ] ; do
     PRG=`dirname "$PRG"`/"$link"
   fi
 done
-PRGDIR=`dirname "$PRG"`
+#PRGDIR=`dirname "$PRG"`
+PRGDIR="/usr/share/dex2jar"
 #
 
 _classpath="."
