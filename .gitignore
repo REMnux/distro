@@ -1,5 +1,8 @@
 burpsuite-community.jar
 lost+found
+.DS_Store
+__pycache__/
+*.pyc
 *.build
 *.upload
 *.changes

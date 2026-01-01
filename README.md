@@ -8,7 +8,6 @@ This repository contains supplemental files for the [REMnux](https://REMnux.org)
 
 Supplemental files used by the REMnux distribution, including:
 
-- **`remnux-installer.sh`** – The REMnux installer script. Download and run this to install or upgrade REMnux on a compatible Ubuntu system.
 - Helper scripts and utilities deployed during installation
 - Mirror copies of dependencies for resilience
 
