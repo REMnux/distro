@@ -30,7 +30,7 @@ CAST_GITHUB_BASE_URL="https://github.com/ekristen/cast/releases/download"
 
 # Fallback base URL (leave empty to disable fallback)
 # Example: "https://remnux.org/files"
-CAST_FALLBACK_BASE_URL=""
+CAST_FALLBACK_BASE_URL="https://raw.githubusercontent.com/REMnux/distro/master/files"
 
 # Installation path (where dpkg installs cast)
 CAST_BIN="/usr/bin/cast"
