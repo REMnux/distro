@@ -495,7 +495,7 @@ def print_report(root_causes: list[FailedState],
 
         hint = format_hint(rc.category)
         if hint:
-            print(f"\n    {Colors.CYAN}💡 {hint}{Colors.RESET}")
+            print(f"\n    {Colors.CYAN}Hint: {hint}{Colors.RESET}")
 
         if cascade_failures:
             print(f"\n    {Colors.ORANGE}Cascaded failures ({len(cascade_failures)}):{Colors.RESET}")
