@@ -6,7 +6,7 @@ Analyzes salt-states results to identify root causes of failures and their
 cascading effects. Helps diagnose issues from 'remnux upgrade' or 'remnux install'.
 
 Usage:
-    remnux-diag.py [results.yaml] [--log saltstack.log]
+    remnux-diag.py [<results.yaml> | <directory>] [--log <saltstack.log>]
 
 File locations (checked in order if not specified):
     1. /var/cache/cast/installer/logs/results.yaml
@@ -14,6 +14,7 @@ File locations (checked in order if not specified):
 """
 
 import argparse
+import os
 import re
 import sys
 from collections import defaultdict
@@ -160,7 +161,7 @@ ERROR_CATEGORIES = {
             r"Command .* failed with return code",
             r"non-zero exit status",
         ],
-        "hint": "Shell command failed. Run with -v for more details.",
+        "hint": "Shell command failed. Check the error details above.",
     },
 }
 
@@ -249,9 +250,10 @@ def parse_yaml_fallback(content: str) -> dict:
                 elif value == "{}":
                     current_entry[key] = {}
                 else:
+                    # Try parsing as number, fall back to string
                     try:
                         current_entry[key] = float(value) if "." in value else int(value)
-                    except ValueError:
+                    except (ValueError, OverflowError):
                         current_entry[key] = value.strip("'\"")
 
         i += 1
@@ -263,8 +265,14 @@ def parse_yaml_fallback(content: str) -> dict:
 
 
 def load_results(filepath: Path) -> dict:
-    """Load and parse the results.yaml file."""
-    content = filepath.read_text(encoding='utf-8', errors='replace')
+    """
+    Load and parse the results.yaml file.
+    Raises PermissionError if file cannot be read due to permissions.
+    """
+    try:
+        content = filepath.read_text(encoding='utf-8', errors='replace')
+    except PermissionError:
+        raise PermissionError(f"Cannot read {filepath} - permission denied")
 
     if HAS_YAML:
         try:
@@ -523,13 +531,16 @@ class LogParser:
     def __init__(self, log_path: Optional[Path]):
         self.content = ""
         self.state_sections: dict[str, str] = {}
+        self.load_error: Optional[str] = None
 
         if log_path and log_path.exists():
             try:
                 self.content = log_path.read_text(encoding='utf-8', errors='replace')
                 self._index_states()
-            except (OSError, IOError):
-                pass
+            except PermissionError:
+                self.load_error = f"Cannot read {log_path} - permission denied"
+            except (OSError, IOError) as e:
+                self.load_error = f"Cannot read {log_path}: {e}"
 
     def _index_states(self):
         """Build index of state names to their log sections."""
@@ -613,35 +624,89 @@ class LogParser:
 # Main Entry Point
 # ============================================================================
 
-def find_results_file(specified: Optional[str]) -> Optional[Path]:
-    """Find the results file, checking multiple locations if needed."""
+def check_file_readable(path: Path) -> tuple[bool, Optional[str]]:
+    """
+    Check if a file exists and is readable.
+    Returns (is_readable, error_message).
+    """
+    if not path.exists():
+        return False, None  # Not found, no error
+    if not path.is_file():
+        return False, f"Not a regular file: {path}"
+    if not os.access(path, os.R_OK):
+        return False, f"Permission denied: {path}"
+    return True, None
+
+
+def find_results_file(specified: Optional[str]) -> tuple[Optional[Path], Optional[str]]:
+    """
+    Find the results file, checking multiple locations if needed.
+    If specified is a directory, look for results.yaml in that directory.
+    Returns (path, error_message). Error is set if file exists but isn't readable.
+    """
     if specified:
         path = Path(specified)
-        return path if path.exists() else None
+        
+        # If it's a directory, look for results.yaml inside it
+        if path.is_dir():
+            for name in ("results.yaml", "results.yml"):
+                candidate = path / name
+                readable, error = check_file_readable(candidate)
+                if error:
+                    return None, error
+                if readable:
+                    return candidate, None
+            # Directory exists but no results file found inside
+            return None, None
+        
+        # It's a file path
+        readable, error = check_file_readable(path)
+        if error:
+            return None, error
+        return (path, None) if readable else (None, None)
 
     for path in DEFAULT_RESULTS_PATHS:
-        if path.exists():
-            return path
-    return None
+        readable, error = check_file_readable(path)
+        if error:
+            return None, error  # File exists but not readable
+        if readable:
+            return path, None
+
+    return None, None
 
 
-def find_log_file(results_path: Path, specified: Optional[str]) -> Optional[Path]:
-    """Find the saltstack.log file."""
+def find_log_file(results_path: Path, specified: Optional[str]) -> tuple[Optional[Path], Optional[str]]:
+    """
+    Find the saltstack.log file.
+    Returns (path, error_message). Error is set if file exists but isn't readable.
+    """
     if specified:
         path = Path(specified)
-        return path if path.exists() else None
+        readable, error = check_file_readable(path)
+        if error:
+            return None, error
+        return (path, None) if readable else (None, None)
 
     # Look in same directory as results file
     auto_log = results_path.parent / LOG_FILENAME
-    if auto_log.exists():
-        return auto_log
+    readable, error = check_file_readable(auto_log)
+    if readable:
+        return auto_log, None
+    # Don't report error for auto-detected files, just skip them
 
     # Also check current directory
     cwd_log = Path(LOG_FILENAME)
-    if cwd_log.exists():
-        return cwd_log
+    readable, error = check_file_readable(cwd_log)
+    if readable:
+        return cwd_log, None
 
-    return None
+    return None, None
+
+
+def print_permission_hint():
+    """Print a hint about running with sudo."""
+    print(f"{Colors.DIM}Hint: Log files may require elevated privileges. "
+          f"Try: sudo {Path(sys.argv[0]).name} ...{Colors.RESET}", file=sys.stderr)
 
 
 def main():
@@ -651,7 +716,8 @@ def main():
         epilog="""
 Examples:
   %(prog)s                              # Use default path
-  %(prog)s /path/to/results.yaml        # Specify results file
+  %(prog)s /path/to/logs/               # Specify directory containing logs
+  %(prog)s /path/to/results.yaml        # Specify results file directly
   %(prog)s --log /path/to/saltstack.log # Specify log file location
         """
     )
@@ -659,7 +725,7 @@ Examples:
     parser.add_argument(
         "results_file",
         nargs="?",
-        help="Path to results.yaml (default: /var/cache/cast/installer/logs/results.yaml)"
+        help="Path to results.yaml or directory containing it (default: /var/cache/cast/installer/logs/)"
     )
 
     parser.add_argument(
@@ -682,21 +748,43 @@ Examples:
         Colors.disable()
 
     # Find results file
-    results_path = find_results_file(args.results_file)
+    results_path, results_error = find_results_file(args.results_file)
+
+    if results_error:
+        # File exists but not readable (permission issue)
+        print(f"{Colors.RED}Error:{Colors.RESET} {results_error}", file=sys.stderr)
+        print_permission_hint()
+        sys.exit(1)
+
     if not results_path:
-        searched = args.results_file or ", ".join(str(p) for p in DEFAULT_RESULTS_PATHS)
-        print(f"{Colors.RED}Error:{Colors.RESET} Results file not found: {searched}")
+        # File not found
+        if args.results_file and Path(args.results_file).is_dir():
+            print(f"{Colors.RED}Error:{Colors.RESET} No results.yaml found in directory: {args.results_file}")
+        else:
+            searched = args.results_file or ", ".join(str(p) for p in DEFAULT_RESULTS_PATHS)
+            print(f"{Colors.RED}Error:{Colors.RESET} Results file not found: {searched}")
         sys.exit(1)
 
     # Find log file
-    log_path = find_log_file(results_path, args.log)
-    if args.log and not log_path:
+    log_path, log_error = find_log_file(results_path, args.log)
+
+    if log_error:
+        # Explicitly specified log file has permission issue
+        print(f"{Colors.ORANGE}Warning:{Colors.RESET} {log_error}", file=sys.stderr)
+        print_permission_hint()
+        log_path = None
+    elif args.log and not log_path:
+        # Explicitly specified log file not found
         print(f"{Colors.ORANGE}Warning:{Colors.RESET} Log file not found: {args.log}",
               file=sys.stderr)
 
     # Load and parse results
     try:
         results = load_results(results_path)
+    except PermissionError as e:
+        print(f"{Colors.RED}Error:{Colors.RESET} {e}", file=sys.stderr)
+        print_permission_hint()
+        sys.exit(1)
     except Exception as e:
         print(f"{Colors.RED}Error:{Colors.RESET} Failed to parse results file: {e}")
         sys.exit(1)
@@ -706,7 +794,13 @@ Examples:
         sys.exit(1)
 
     # Initialize log parser
-    log_parser = LogParser(log_path) if log_path else None
+    log_parser = None
+    if log_path:
+        log_parser = LogParser(log_path)
+        if log_parser.load_error:
+            print(f"{Colors.ORANGE}Warning:{Colors.RESET} {log_parser.load_error}",
+                  file=sys.stderr)
+            log_parser = None
 
     # Analyze and report
     root_causes, cascades = analyze_failures(results)
