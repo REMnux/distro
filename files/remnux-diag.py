@@ -12,6 +12,7 @@ File locations (checked in order if not specified):
     1. /var/cache/cast/installer/logs/results.yaml
     2. ./results.yaml (current directory)
 """
+from __future__ import annotations
 
 import argparse
 import os
