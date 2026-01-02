@@ -567,13 +567,11 @@ cmd_results() {
         echo "  - Logs have been cleaned up"
     fi
 
-    echo ""
-    echo "Log files location: ${cast_log_dir}"
-    if [[ -f "$saltstack_log" ]]; then
-        echo "  saltstack.log: $(wc -l < "$saltstack_log") lines"
+    # Run remnux-diag if available
+    local diag_script="/usr/local/bin/remnux-diag"
+    if [[ -x "$diag_script" ]]; then
         echo ""
-        echo "To view the last 20 lines of the saltstack log:"
-        echo "  tail -20 ${saltstack_log}"
+        "$diag_script"
     fi
 }
 
