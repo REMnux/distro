@@ -16,7 +16,7 @@ set -euo pipefail
 # Configuration
 #############################################################################
 
-SCRIPT_NAME="remnux-ng"
+SCRIPT_NAME="remnux"
 SCRIPT_VERSION="1.0.0"
 CAST_VERSION="v1.0.0"
 # IMPORTANT: When updating CAST_VERSION, also update CAST_DEB_SHA256_* checksums below
