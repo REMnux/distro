@@ -177,6 +177,49 @@ ERROR_CATEGORIES = {
 }
 
 
+# Patterns that indicate critical issues even in "successful" states
+# These catch cases where a command returns exit code 0 but actually failed
+CRITICAL_WARNING_PATTERNS = {
+    "dns": {
+        "name": "DNS Resolution Failures",
+        "patterns": [
+            r"Temporary failure resolving",
+            r"Could not resolve host",
+            r"Name or service not known",
+            r"getaddrinfo.*failed",
+        ],
+        "impact": "Network operations and package downloads may fail",
+    },
+    "apt_fetch": {
+        "name": "APT Repository Fetch Failures",
+        "patterns": [
+            r"W: Failed to fetch",
+            r"W: Some index files failed to download",
+            r"Err:\d+\s+https?://",
+        ],
+        "impact": "Package installation may fail due to outdated/missing package lists",
+    },
+    "network": {
+        "name": "Network Connectivity Issues",
+        "patterns": [
+            r"Connection refused",
+            r"Connection timed out",
+            r"Network is unreachable",
+        ],
+        "impact": "Downloads and remote operations may fail",
+    },
+    "cpan": {
+        "name": "CPAN Module Installation Failed",
+        "patterns": [
+            r"Could not expand \[",
+            r"couldn't find a matching namespace",
+            r"Skipping .* because I couldn't find",
+        ],
+        "impact": "Perl modules may not be installed despite successful state",
+    },
+}
+
+
 # ============================================================================
 # YAML Parsing (with fallback for systems without PyYAML)
 # ============================================================================
@@ -492,6 +535,141 @@ def build_cascade_tree(root_causes: list[FailedState],
 
 
 # ============================================================================
+# Successful State Warning Analysis
+# ============================================================================
+
+class SuccessfulStateWarning:
+    """Represents a warning found in a successful state's output."""
+
+    def __init__(self, key: str, data: dict, warning_type: str, matches: list[str]):
+        self.key = key
+        self.data = data
+        self.state_id = data.get("__id__", key)
+        self.sls_file = data.get("__sls__", "unknown")
+        self.warning_type = warning_type
+        self.matches = matches  # Actual matched warning text
+        self.run_num = data.get("__run_num__", 0)
+
+        # Get retcode from changes if available
+        changes = data.get("changes", {})
+        if isinstance(changes, dict):
+            self.retcode = changes.get("retcode")
+        else:
+            self.retcode = None
+
+    @property
+    def tool_name(self) -> str:
+        """Extract human-readable tool name from sls file."""
+        if not self.sls_file:
+            return "unknown"
+        parts = self.sls_file.split(".")
+        return parts[-1] if len(parts) >= 2 else self.sls_file
+
+    @property
+    def warning_name(self) -> str:
+        """Get human-readable warning category name."""
+        return CRITICAL_WARNING_PATTERNS.get(self.warning_type, {}).get("name", self.warning_type)
+
+    @property
+    def impact(self) -> str:
+        """Get impact description for this warning type."""
+        return CRITICAL_WARNING_PATTERNS.get(self.warning_type, {}).get("impact", "")
+
+
+def analyze_successful_state_warnings(results: dict) -> list[SuccessfulStateWarning]:
+    """
+    Scan successful states for critical warning patterns.
+    These are states that "succeeded" but contain errors in stdout/stderr.
+    """
+    local = results.get("local", {})
+    warnings_found = []
+
+    for key, data in local.items():
+        # Skip malformed entries
+        if not isinstance(data, dict):
+            continue
+
+        # Only check successful states
+        if data.get("result") is not True:
+            continue
+
+        # Get text to search (stdout, stderr from changes dict)
+        changes = data.get("changes", {})
+        if not isinstance(changes, dict):
+            continue
+
+        search_text = ""
+        stdout = changes.get("stdout", "")
+        stderr = changes.get("stderr", "")
+        if stdout:
+            search_text += str(stdout) + "\n"
+        if stderr:
+            search_text += str(stderr)
+
+        if not search_text.strip():
+            continue
+
+        # Check each warning pattern category
+        for warn_type, warn_info in CRITICAL_WARNING_PATTERNS.items():
+            matches = []
+            for pattern in warn_info["patterns"]:
+                # Extract context for each match
+                for match in re.finditer(pattern, search_text, re.IGNORECASE):
+                    # Get the line containing the match
+                    start = search_text.rfind('\n', 0, match.start()) + 1
+                    end = search_text.find('\n', match.end())
+                    if end == -1:
+                        end = len(search_text)
+                    line = search_text[start:end].strip()
+                    if line and line not in matches:
+                        matches.append(line)
+
+            if matches:
+                warnings_found.append(
+                    SuccessfulStateWarning(key, data, warn_type, matches[:10])  # Limit matches
+                )
+
+    # Sort by execution order
+    warnings_found.sort(key=lambda x: x.run_num)
+
+    return warnings_found
+
+
+def count_potentially_affected_failures(warnings: list[SuccessfulStateWarning],
+                                        root_causes: list[FailedState],
+                                        cascades: list[FailedState]) -> int:
+    """
+    Estimate how many failures might be caused by warnings in successful states.
+    This is a heuristic based on matching warning types to error categories.
+    Only counts root causes since cascades don't have categories assigned.
+    """
+    if not warnings:
+        return 0
+
+    # Map warning types to related error categories
+    # DNS/network failures can cause downloads to fail, which causes missing files
+    warning_to_error_categories = {
+        "dns": ["network", "download", "git", "missing_file"],
+        "apt_fetch": ["package"],
+        "network": ["network", "download", "git", "missing_file"],
+        "cpan": ["command"],
+    }
+
+    affected_categories = set()
+    for w in warnings:
+        affected_categories.update(warning_to_error_categories.get(w.warning_type, []))
+
+    # Count root cause failures in affected categories
+    # (Cascades don't have categories assigned - they return None)
+    count = 0
+    for rc in root_causes:
+        if rc.category in affected_categories:
+            count += 1
+
+    return count
+
+
+# ============================================================================
 # Output Formatting
 # ============================================================================
 
@@ -655,26 +833,31 @@ def _print_wrapped_error(text: str, max_len: int = 500):
     error_text = clean_text(text)
     if len(error_text) > max_len:
         error_text = error_text[:max_len] + "..."
-    # Simple word wrap at ~74 chars
+    # Simple word wrap at ~74 chars with 4-space indent
     words = error_text.split()
-    current = "    "
+    current_line = ""
+    indent = "    "
     for word in words:
-        if len(current) + len(word) + 1 > 78:
-            print(current)
-            current = "    " + word
+        if not current_line:
+            current_line = word
+        elif len(indent) + len(current_line) + 1 + len(word) > 78:
+            print(indent + current_line)
+            current_line = word
         else:
-            current += (" " + word) if current.strip() else ("    " + word)
-    if current.strip():
-        print(current)
+            current_line += " " + word
+    if current_line:
+        print(indent + current_line)
 
 
 def print_report(root_causes: list[FailedState],
                  cascades: list[FailedState],
                  cascade_tree: dict[str, list[FailedState]],
-                 log_parser: Optional['LogParser'] = None):
+                 log_parser: Optional['LogParser'] = None,
+                 has_warnings: bool = False):
     """Print diagnostic report with cascade trees and log details."""
     if not root_causes and not cascades:
-        print(f"\n{Colors.GREEN}✓ All states completed successfully!{Colors.RESET}\n")
+        if not has_warnings:
+            print(f"\n{Colors.GREEN}✓ All states completed successfully!{Colors.RESET}\n")
         return
 
     # Header
@@ -757,6 +940,68 @@ def print_report(root_causes: list[FailedState],
         if len(orphans) > 10:
             print(f"  ... and {len(orphans) - 10} more")
         print()
+
+
+def print_warnings_section(warnings: list[SuccessfulStateWarning],
+                           num_failures: int,
+                           potentially_affected: int):
+    """Print section about warnings found in successful states."""
+    if not warnings:
+        return
+
+    # Deduplicate warnings by type (show one example per type)
+    by_type: dict[str, list[SuccessfulStateWarning]] = defaultdict(list)
+    for w in warnings:
+        by_type[w.warning_type].append(w)
+
+    print(f"\n{Colors.BOLD}{'═' * 78}{Colors.RESET}")
+    print(f"{Colors.BOLD}Warnings in Successful States{Colors.RESET}")
+    print(f"{Colors.BOLD}{'═' * 78}{Colors.RESET}\n")
+
+    print(f"{Colors.ORANGE}⚠ Found {len(warnings)} state(s) that succeeded but contain error indicators.{Colors.RESET}")
+    if potentially_affected > 0:
+        print(f"{Colors.DIM}  These may have caused up to {potentially_affected} of the {num_failures} failures above.{Colors.RESET}")
+    print()
+
+    for warn_type, warns in sorted(by_type.items()):
+        # Pick the first warning of this type as representative
+        representative = warns[0]
+        warn_info = CRITICAL_WARNING_PATTERNS.get(warn_type, {})
+
+        print(f"{Colors.ORANGE}[{warn_info.get('name', warn_type)}]{Colors.RESET}")
+        print(f"{Colors.DIM}    State: {representative.state_id}{Colors.RESET}")
+        if representative.retcode is not None:
+            print(f"{Colors.DIM}    Exit code: {representative.retcode} (success){Colors.RESET}")
+
+        # Show sample of matched warnings
+        print(f"\n    {Colors.ORANGE}Detected issues:{Colors.RESET}")
+        shown = set()
+        for w in warns:
+            for match in w.matches[:3]:  # Limit per warning
+                # Truncate long matches
+                display = match if len(match) <= 70 else match[:67] + "..."
+                if display not in shown:
+                    print(f"      • {display}")
+                    shown.add(display)
+                if len(shown) >= 5:  # Max 5 unique examples per type
+                    break
+            if len(shown) >= 5:
+                break
+
+        # Count additional warnings not shown
+        total_matches = sum(len(w.matches) for w in warns)
+        if total_matches > len(shown):
+            print(f"      {Colors.DIM}... and {total_matches - len(shown)} more{Colors.RESET}")
+
+        # Show impact
+        impact = warn_info.get("impact", "")
+        if impact:
+            print(f"\n    {Colors.CYAN}Impact: {impact}{Colors.RESET}")
+
+        if len(warns) > 1:
+            print(f"\n    {Colors.DIM}({len(warns)} states affected by this issue){Colors.RESET}")
+
+        print(f"\n{Colors.DIM}{'─' * 78}{Colors.RESET}\n")
 
 
 # ============================================================================
@@ -1065,10 +1310,27 @@ Examples:
                   file=sys.stderr)
             log_parser = None
 
-    # Analyze and report
+    # Analyze failures and warnings
     root_causes, cascades = analyze_failures(results)
     cascade_tree = build_cascade_tree(root_causes, cascades)
-    print_report(root_causes, cascades, cascade_tree, log_parser)
+    successful_warnings = analyze_successful_state_warnings(results)
+
+    # Print main report (pass has_warnings to suppress misleading success message)
+    print_report(root_causes, cascades, cascade_tree, log_parser,
+                 has_warnings=bool(successful_warnings))
+
+    # Print warnings section if there are hidden issues in successful states
+    if successful_warnings:
+        num_failures = len(root_causes) + len(cascades)
+        potentially_affected = count_potentially_affected_failures(
+            successful_warnings, root_causes, cascades
+        )
+        print_warnings_section(successful_warnings, num_failures, potentially_affected)
+
+        # If no failures but warnings exist, show a qualified success message
+        if not root_causes and not cascades:
+            print(f"{Colors.ORANGE}⚠ All states completed, but some contain warnings "
+                  f"that may indicate issues.{Colors.RESET}\n")
 
     sys.exit(1 if root_causes else 0)
 
