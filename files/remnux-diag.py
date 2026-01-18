@@ -96,6 +96,7 @@ ERROR_CATEGORIES = {
             r"Depends:.*but it is not",
             r"unmet dependencies",
             r"Problem encountered installing package",
+            r"Couldn't find any package by regex",
         ],
         "hint": "Try: sudo apt-get update && sudo apt-get -f install",
     },
@@ -119,8 +120,17 @@ ERROR_CATEGORIES = {
             r"ImportError",
             r"error: subprocess-exited-with-error",
             r"Failed to install packages:",
+            r"InvalidVersion",
+            r"Invalid version:",
+            r"pip\._vendor\.packaging",
+            r"ResolutionImpossible",
         ],
         "hint": "Python package installation failed. Check pip logs for details.",
+        "specific_hints": {
+            "InvalidVersion": "A package has a non-PEP-440 version string ('{bad_version}'). "
+                             "Try: pip install --upgrade pip setuptools packaging",
+            "ResolutionImpossible": "Dependency conflict - packages have incompatible version requirements.",
+        },
     },
     "git": {
         "name": "Git Clone/Fetch Failed",
@@ -196,6 +206,39 @@ def parse_yaml_fallback(content: str) -> dict:
             i += 1
             continue
 
+        # Handle YAML complex key format: "  ? key_part1\n    key_part2\n  : ..."
+        if line.startswith("  ? "):
+            if current_key:
+                result["local"][current_key] = current_entry
+            # Collect the complex key (may span multiple lines)
+            key_parts = [line[4:]]  # Remove "  ? "
+            i += 1
+            while i < len(lines):
+                next_line = lines[i]
+                if next_line.startswith("    ") and not next_line.startswith("     "):
+                    # Continuation of key
+                    key_parts.append(next_line.strip())
+                    i += 1
+                elif next_line.startswith("  : "):
+                    # End of complex key, start of value
+                    current_key = " ".join(key_parts).strip()
+                    current_entry = {}
+                    # The line after ": " might have field data
+                    rest = next_line[4:]  # Remove "  : "
+                    if rest.strip():
+                        # Parse inline field like "  : __id__: value"
+                        field_match = re.match(r"(\w+):\s*(.*)", rest.strip())
+                        if field_match:
+                            fkey, fval = field_match.groups()
+                            current_entry[fkey] = fval.strip("'\"")
+                    i += 1
+                    break
+                else:
+                    # Unexpected format, skip
+                    i += 1
+                    break
+            continue
+
         # Detect state entry key (2-space indent, ends with :)
         if line.startswith("  ") and not line.startswith("    ") and line.rstrip().endswith(":"):
             if current_key:
@@ -211,10 +254,49 @@ def parse_yaml_fallback(content: str) -> dict:
             if match:
                 key, value = match.groups()
 
-                # Handle multi-line values (block scalar or quoted with continuation)
+                # Handle multi-line values (block scalar, nested dict, or quoted continuation)
                 if value.strip() == "" or value.strip() in ["|", ">", "|-", ">-"]:
-                    multi_value = []
                     i += 1
+                    # Check if this is a nested dict (first line has "key: value" format)
+                    if i < len(lines) and lines[i].startswith("      "):
+                        first_nested = lines[i].strip()
+                        # Match keys with word chars, hyphens, or underscores
+                        if re.match(r'[\w-]+:\s*', first_nested):
+                            # Parse as nested dict
+                            nested_dict = {}
+                            while i < len(lines) and lines[i].startswith("      "):
+                                nested_line = lines[i].strip()
+                                nested_match = re.match(r"([\w-]+):\s*(.*)", nested_line)
+                                if nested_match:
+                                    nkey, nval = nested_match.groups()
+                                    # Handle quoted multi-line values in nested dict
+                                    if nval.startswith("'") and not nval.endswith("'"):
+                                        # Multi-line quoted value
+                                        nval_parts = [nval[1:]]  # Remove opening quote
+                                        i += 1
+                                        while i < len(lines):
+                                            cont = lines[i]
+                                            if cont.startswith("        "):
+                                                stripped = cont.strip()
+                                                if stripped.endswith("'"):
+                                                    nval_parts.append(stripped[:-1])
+                                                    i += 1
+                                                    break
+                                                nval_parts.append(stripped)
+                                                i += 1
+                                            else:
+                                                break
+                                        nested_dict[nkey] = " ".join(nval_parts)
+                                    else:
+                                        # Simple value - strip quotes
+                                        nested_dict[nkey] = nval.strip("'\"")
+                                        i += 1
+                                else:
+                                    i += 1
+                            current_entry[key] = nested_dict
+                            continue
+                    # Fall back to joining as string
+                    multi_value = []
                     while i < len(lines) and (lines[i].startswith("      ") or lines[i].strip() == ""):
                         if lines[i].strip():
                             multi_value.append(lines[i].strip())
@@ -300,6 +382,15 @@ class FailedState:
         self.name = data.get("name", "")
         self.run_num = data.get("__run_num__", 0)
 
+        # Extract stderr/retcode from changes dict (for cmd.run states)
+        changes = data.get("changes", {})
+        if isinstance(changes, dict):
+            self.stderr = str(changes.get("stderr", "")) if changes.get("stderr") else ""
+            self.retcode = changes.get("retcode")
+        else:
+            self.stderr = ""
+            self.retcode = None
+
         # Parse state type from key (format: type_|-id_|-name_|-function)
         parts = key.split("_|-")
         self.state_type = parts[0] if parts else "unknown"
@@ -322,10 +413,11 @@ class FailedState:
         if self.is_cascade:
             return None
 
-        # Match against error patterns
+        # Match against error patterns using BOTH comment and stderr
+        search_text = f"{self.comment} {self.stderr}"
         for cat_id, cat_info in ERROR_CATEGORIES.items():
             for pattern in cat_info["patterns"]:
-                if re.search(pattern, self.comment, re.IGNORECASE):
+                if re.search(pattern, search_text, re.IGNORECASE):
                     return cat_id
 
         # Fallback: infer from sls file path
@@ -367,6 +459,9 @@ def analyze_failures(results: dict) -> tuple[list[FailedState], list[FailedState
     cascades = []
 
     for key, data in local.items():
+        # Skip malformed entries
+        if not isinstance(data, dict):
+            continue
         if data.get("result") is False:
             failed = FailedState(key, data)
             (cascades if failed.is_cascade else root_causes).append(failed)
@@ -426,6 +521,96 @@ def clean_text(text: str) -> str:
     return text.strip()
 
 
+class TracebackParser:
+    """Extracts structured information from Python tracebacks."""
+
+    # Pattern to match the final exception line in a traceback
+    # Uses word boundary to correctly capture exception name after module path
+    EXCEPTION_PATTERN = re.compile(
+        r"^(?:(?P<module>[\w._]+)\.)?\b(?P<exception>[A-Z]\w*(?:Error|Exception|Warning|Version|Failure|Impossible)):\s*(?P<message>.+)$",
+        re.MULTILINE
+    )
+
+    # Patterns to extract specific problematic values from exception messages
+    VALUE_PATTERNS = [
+        # pip InvalidVersion: Invalid version: '0.1.36ubuntu1'
+        # Requires quotes to avoid matching f-string template in source code
+        (r"Invalid version:\s*['\"]([^'\"]+)['\"]", "bad_version"),
+        # ModuleNotFoundError: No module named 'foo'
+        (r"No module named\s*['\"]([^'\"]+)['\"]", "missing_module"),
+        # FileNotFoundError: [Errno 2] No such file or directory: '/path'
+        (r"No such file or directory:\s*['\"]([^'\"]+)['\"]", "missing_file"),
+        # PermissionError: [Errno 13] Permission denied: '/path'
+        (r"Permission denied:\s*['\"]([^'\"]+)['\"]", "permission_denied_path"),
+        # Package not found patterns
+        (r"Could not find a version that satisfies.*from\s+(\S+)", "missing_package"),
+        (r"No matching distribution found for\s+(\S+)", "missing_package"),
+    ]
+
+    @classmethod
+    def parse(cls, text: str) -> dict:
+        """
+        Parse text containing a traceback and extract structured information.
+        Returns dict with keys: exception_type, module, message, extracted_values, short_summary
+        """
+        result = {
+            "exception_type": None,
+            "module": None,
+            "message": None,
+            "extracted_values": {},
+            "short_summary": None,
+        }
+
+        if not text:
+            return result
+
+        try:
+            # Find the exception line (search entire text for exception pattern)
+            match = cls.EXCEPTION_PATTERN.search(text)
+            if match:
+                result["module"] = match.group("module")
+                result["exception_type"] = match.group("exception")
+                result["message"] = match.group("message").strip()
+
+                # Extract specific values from the message
+                for pattern, value_name in cls.VALUE_PATTERNS:
+                    value_match = re.search(pattern, text, re.IGNORECASE)
+                    if value_match:
+                        result["extracted_values"][value_name] = value_match.group(1)
+
+                # Create short summary
+                result["short_summary"] = cls._create_summary(result)
+        except (re.error, AttributeError, IndexError):
+            # If regex fails or groups are missing, return empty result
+            pass
+
+        return result
+
+    @classmethod
+    def _create_summary(cls, parsed: dict) -> str:
+        """Create a human-readable short summary of the exception."""
+        exc_type = parsed.get("exception_type")
+        values = parsed.get("extracted_values", {})
+
+        if exc_type == "InvalidVersion" and "bad_version" in values:
+            return f"Package version '{values['bad_version']}' is not PEP-440 compliant"
+        if exc_type == "ModuleNotFoundError" and "missing_module" in values:
+            return f"Python module '{values['missing_module']}' not installed"
+        if "missing_file" in values:
+            return f"File not found: {values['missing_file']}"
+        if exc_type == "ResolutionImpossible":
+            return "Package dependency conflict"
+
+        # Fallback to exception type and message
+        if exc_type and parsed.get("message"):
+            msg = parsed["message"]
+            if len(msg) > 80:
+                msg = msg[:77] + "..."
+            return f"{exc_type}: {msg}"
+
+        return None
+
+
 def format_category(category: Optional[str]) -> str:
     """Format error category for display."""
     if not category:
@@ -437,11 +622,50 @@ def format_category(category: Optional[str]) -> str:
     return f"{Colors.BLUE}[{name}]{Colors.RESET}"
 
 
-def format_hint(category: Optional[str]) -> str:
-    """Get the hint for an error category."""
+def format_hint(category: Optional[str], exception_type: str = None,
+                extracted_values: dict = None) -> str:
+    """
+    Get the hint for an error category, with optional specific hint override.
+    If exception_type matches a specific_hints entry, use that instead.
+    Extracted values are interpolated into the hint.
+    """
     if not category or category == "unknown":
         return ""
-    return ERROR_CATEGORIES.get(category, {}).get("hint", "")
+
+    cat_info = ERROR_CATEGORIES.get(category, {})
+
+    # Check for specific hint based on exception type
+    if exception_type and "specific_hints" in cat_info:
+        specific_hint = cat_info["specific_hints"].get(exception_type)
+        if specific_hint:
+            # Interpolate extracted values
+            if extracted_values:
+                try:
+                    return specific_hint.format(**extracted_values)
+                except KeyError:
+                    # If a placeholder is missing, use the template as-is
+                    return specific_hint
+            return specific_hint
+
+    return cat_info.get("hint", "")
+
+
+def _print_wrapped_error(text: str, max_len: int = 500):
+    """Print error text with word wrapping."""
+    error_text = clean_text(text)
+    if len(error_text) > max_len:
+        error_text = error_text[:max_len] + "..."
+    # Simple word wrap at ~74 chars
+    words = error_text.split()
+    current = "    "
+    for word in words:
+        if len(current) + len(word) + 1 > 78:
+            print(current)
+            current = "    " + word
+        else:
+            current += (" " + word) if current.strip() else ("    " + word)
+    if current.strip():
+        print(current)
 
 
 def print_report(root_causes: list[FailedState],
@@ -470,30 +694,43 @@ def print_report(root_causes: list[FailedState],
         print(f"{Colors.DIM}    File:  {rc.sls_file}{Colors.RESET}")
 
         # Get detailed error from log if available
-        log_error = log_parser.get_error_context(rc) if log_parser else None
+        log_context = log_parser.get_error_context(rc) if log_parser else None
 
-        if log_error:
-            print(f"\n    {Colors.RED}Error (from log):{Colors.RESET}")
-            for line in log_error.split('\n'):
-                print(f"    {line}")
+        # Track exception type and extracted values for hints
+        exception_type = None
+        extracted_values = {}
+
+        if log_context:
+            # Extract traceback info for hints
+            if log_context.get("traceback_info"):
+                exception_type = log_context["traceback_info"].get("exception_type")
+            extracted_values = log_context.get("extracted_values", {})
+
+            # Display error from log
+            error_text = log_context.get("error_text")
+            if error_text:
+                print(f"\n    {Colors.RED}Error (from log):{Colors.RESET}")
+                for line in error_text.split('\n'):
+                    print(f"    {line}")
+            else:
+                # Fallback to comment
+                print(f"\n    {Colors.RED}Error:{Colors.RESET}")
+                _print_wrapped_error(rc.comment)
         else:
+            # No log context - use comment and stderr from results.yaml
             print(f"\n    {Colors.RED}Error:{Colors.RESET}")
-            error_text = clean_text(rc.comment)
-            if len(error_text) > 500:
-                error_text = error_text[:500] + "..."
-            # Simple word wrap at ~74 chars
-            words = error_text.split()
-            current = "    "
-            for word in words:
-                if len(current) + len(word) + 1 > 78:
-                    print(current)
-                    current = "    " + word
-                else:
-                    current += (" " + word) if current.strip() else ("    " + word)
-            if current.strip():
-                print(current)
 
-        hint = format_hint(rc.category)
+            # Prefer stderr if it contains error indicators (E:, ERROR, etc.)
+            stderr_has_error = rc.stderr and any(
+                indicator in rc.stderr for indicator in ('E: ', 'ERROR', 'Error:', 'error:', 'failed')
+            )
+            if stderr_has_error:
+                _print_wrapped_error(rc.stderr)
+            else:
+                _print_wrapped_error(rc.comment)
+
+        # Generate hint with specific overrides if available
+        hint = format_hint(rc.category, exception_type, extracted_values)
         if hint:
             print(f"\n    {Colors.CYAN}Hint: {hint}{Colors.RESET}")
 
@@ -549,8 +786,11 @@ class LogParser:
         for match in re.finditer(pattern, self.content, re.DOTALL):
             self.state_sections[match.group(1)] = match.group(0)
 
-    def get_error_context(self, state: FailedState) -> Optional[str]:
-        """Extract concise error context for a failed state."""
+    def get_error_context(self, state: FailedState) -> Optional[dict]:
+        """
+        Extract error context for a failed state.
+        Returns dict with: error_text, traceback_info, extracted_values
+        """
         if not self.content:
             return None
 
@@ -564,6 +804,25 @@ class LogParser:
 
         if not section:
             return None
+
+        result = {
+            "error_text": None,
+            "traceback_info": None,
+            "extracted_values": {},
+        }
+
+        # Check for tracebacks and parse them
+        traceback_match = re.search(
+            r'Traceback \(most recent call last\):.*?(?=\n#\s*\[|\n\n|$)',
+            section,
+            re.DOTALL
+        )
+        if traceback_match:
+            tb_text = traceback_match.group(0)
+            result["traceback_info"] = TracebackParser.parse(tb_text)
+            result["extracted_values"].update(
+                result["traceback_info"].get("extracted_values", {})
+            )
 
         # Extract ERROR lines with continuations
         errors = []
@@ -592,23 +851,26 @@ class LogParser:
                     errors.append(error_text)
             i += 1
 
-        if not errors:
-            return None
+        # Use traceback summary if available, otherwise use error lines
+        if result["traceback_info"] and result["traceback_info"].get("short_summary"):
+            result["error_text"] = result["traceback_info"]["short_summary"]
+        elif errors:
+            # Prioritize non-traceback error lines for display
+            useful = [e for e in errors if 'Traceback' not in e and 'File "/' not in e]
+            display_errors = useful if useful else errors
 
-        # Prioritize non-traceback errors
-        useful = [e for e in errors if 'Traceback' not in e and 'File "/' not in e]
-        errors = useful if useful else errors
+            # Deduplicate and limit
+            seen = set()
+            unique = []
+            for err in display_errors:
+                key = err[:80]
+                if key not in seen:
+                    seen.add(key)
+                    unique.append(err)
 
-        # Deduplicate and limit
-        seen = set()
-        unique = []
-        for err in errors:
-            key = err[:80]
-            if key not in seen:
-                seen.add(key)
-                unique.append(err)
+            result["error_text"] = self._format_errors(unique[:2])
 
-        return self._format_errors(unique[:2])
+        return result if (result["error_text"] or result["traceback_info"]) else None
 
     def _format_errors(self, errors: list[str]) -> str:
         """Format error messages for display."""
