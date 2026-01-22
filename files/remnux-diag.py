@@ -38,10 +38,31 @@ DEFAULT_RESULTS_PATHS = [
 # Log file name to look for alongside results
 LOG_FILENAME = "saltstack.log"
 
+# Display formatting
+REPORT_WIDTH = 35  # Width for separators
+TEXT_WRAP_WIDTH = 78  # Width for word-wrapped error text
+
 
 # ============================================================================
 # Error Category Definitions
 # ============================================================================
+
+# Path patterns for context-aware missing file/directory hints
+MISSING_PATH_HINTS = {
+    r"/opt/[^/]+/lib/python[0-9.]+/site-packages/": (
+        "Package installed but expected file not found. "
+        "The package structure may have changed."
+    ),
+    r"/usr/local/src/remnux/[^/]+": (
+        "Source directory missing. A prior download or extract step may have failed."
+    ),
+    r"/opt/[^/]+/bin/": (
+        "Virtualenv binary missing. Check if virtualenv creation succeeded."
+    ),
+    r"/home/[^/]+/\.": (
+        "User config file missing. May need to be created or copied from a template."
+    ),
+}
 
 ERROR_CATEGORIES = {
     "network": {
@@ -346,7 +367,7 @@ def parse_yaml_fallback(content: str) -> dict:
                         i += 1
                     current_entry[key] = " ".join(multi_value)
                     continue
-                elif value.startswith('"') or (value.startswith("'") and not value.endswith("'")):
+                elif (value.startswith('"') and not value.endswith('"')) or (value.startswith("'") and not value.endswith("'")):
                     multi_value = [value.lstrip("'\"")]
                     i += 1
                     while i < len(lines):
@@ -366,6 +387,8 @@ def parse_yaml_fallback(content: str) -> dict:
                     current_entry[key] = full_value
                     continue
                 elif value.startswith("'") and value.endswith("'"):
+                    current_entry[key] = value[1:-1]
+                elif value.startswith('"') and value.endswith('"'):
                     current_entry[key] = value[1:-1]
                 elif value == "true":
                     current_entry[key] = True
@@ -532,6 +555,166 @@ def build_cascade_tree(root_causes: list[FailedState],
                     break
 
     return tree
+
+
+# ============================================================================
+# Enhanced Analysis: Predecessor States, Skipped States, Context
+# ============================================================================
+
+def find_succeeded_predecessors(failed_state: FailedState, results: dict) -> list[dict]:
+    """
+    Find states in the same SLS file that succeeded and might be related.
+    Returns list of dicts with state info.
+    """
+    predecessors = []
+    local = results.get("local", {})
+
+    for key, data in local.items():
+        if not isinstance(data, dict):
+            continue
+        if data.get("__sls__") != failed_state.sls_file:
+            continue
+        if data.get("result") is not True:
+            continue
+        # Only include states that ran before the failed state
+        if data.get("__run_num__", 0) >= failed_state.run_num:
+            continue
+
+        # Parse state type from key
+        parts = key.split("_|-")
+        state_type = parts[0] if parts else "unknown"
+
+        predecessors.append({
+            "state_id": data.get("__id__", key),
+            "state_type": state_type,
+            "name": data.get("name", ""),
+            "run_num": data.get("__run_num__", 0),
+        })
+
+    return predecessors
+
+
+def find_skipped_states(failed_state: FailedState, results: dict) -> list[dict]:
+    """
+    Find states in the same SLS file that were skipped (unless/onlyif conditions).
+    These might explain why a resource is missing.
+    """
+    skipped = []
+    local = results.get("local", {})
+
+    for key, data in local.items():
+        if not isinstance(data, dict):
+            continue
+        if data.get("__sls__") != failed_state.sls_file:
+            continue
+
+        comment = str(data.get("comment", ""))
+        # Check for skipped conditions
+        # Note: "onlyif condition is true" means the state RUNS (condition passed)
+        # Only "onlyif condition is false" and "unless condition is true" indicate skipping
+        if any(skip_indicator in comment for skip_indicator in [
+            "unless condition is true",
+            "onlyif condition is false",
+        ]):
+            parts = key.split("_|-")
+            state_type = parts[0] if parts else "unknown"
+            skipped.append({
+                "state_id": data.get("__id__", key),
+                "state_type": state_type,
+                "name": data.get("name", ""),
+                "comment": comment,
+            })
+
+    return skipped
+
+
+def get_enhanced_hint(failed_state: FailedState, results: dict) -> Optional[str]:
+    """
+    Generate an enhanced hint based on predecessor state analysis.
+    Returns a more specific hint if pattern is detected, else None.
+    """
+    # Check both comment and stderr for error indicators
+    search_text = f"{failed_state.comment} {failed_state.stderr}"
+
+    # Check if this is a missing file/directory error
+    # Salt-specific patterns handle truncated comments that may not include the full message
+    is_missing_error = any(p in search_text for p in [
+        "does not exist", "not available", "No such file",
+        "Source file", "not found", "File not found",
+        "Local file source",  # Salt: truncated "Local file source ... does not exist"
+        "Desired working directory"  # Salt: truncated "Desired working directory ... is not available"
+    ])
+
+    if not is_missing_error:
+        return None
+
+    # Extract path from error message
+    path_match = re.search(r'["\']?(/[^\s"\']+)["\']?', search_text)
+    if not path_match:
+        return None
+    missing_path = path_match.group(1)
+
+    # Check for context-aware path hints
+    for pattern, hint in MISSING_PATH_HINTS.items():
+        if re.search(pattern, missing_path):
+            # Check if a related predecessor succeeded
+            predecessors = find_succeeded_predecessors(failed_state, results)
+
+            # Look for pip/virtualenv states that succeeded
+            for pred in predecessors:
+                if pred["state_type"] in ("pip", "virtualenv"):
+                    return (f"{hint}\n"
+                            f"    Note: {pred['state_type']}.{pred['state_id']} succeeded, "
+                            f"suggesting the package/virtualenv exists but internal structure changed.")
+
+            return hint
+
+    # Check for skipped states that might explain the missing resource
+    skipped = find_skipped_states(failed_state, results)
+    if skipped:
+        skipped_names = [s["state_id"] for s in skipped[:3]]
+        return (f"Required file/directory missing. "
+                f"Note: These related states were skipped: {', '.join(skipped_names)}")
+
+    return None
+
+
+def group_root_causes_by_category(root_causes: list[FailedState]) -> dict[str, list[FailedState]]:
+    """Group root causes by their error category for summarized display."""
+    groups = defaultdict(list)
+    for rc in root_causes:
+        category = rc.category or "unknown"
+        groups[category].append(rc)
+    return groups
+
+
+def map_warnings_to_root_causes(warnings: list['SuccessfulStateWarning'],
+                                 root_causes: list[FailedState]) -> dict[str, list[str]]:
+    """
+    Map warning types to specific root causes they likely caused.
+    Returns dict of warning_type -> list of affected tool names.
+    """
+    # Map warning types to related error categories
+    warning_to_categories = {
+        "dns": ["network", "download", "git"],
+        "apt_fetch": ["package"],
+        "network": ["network", "download", "git"],
+        "cpan": ["command"],
+    }
+
+    mapping = defaultdict(list)
+
+    # Get unique warning types present
+    warning_types = {w.warning_type for w in warnings}
+
+    for warn_type in warning_types:
+        related_categories = warning_to_categories.get(warn_type, [])
+        for rc in root_causes:
+            if rc.category in related_categories:
+                if rc.tool_name not in mapping[warn_type]:
+                    mapping[warn_type].append(rc.tool_name)
+
+    return dict(mapping)
 
 
 # ============================================================================
@@ -765,7 +948,7 @@ class TracebackParser:
         return result
 
     @classmethod
-    def _create_summary(cls, parsed: dict) -> str:
+    def _create_summary(cls, parsed: dict) -> Optional[str]:
         """Create a human-readable short summary of the exception."""
         exc_type = parsed.get("exception_type")
         values = parsed.get("extracted_values", {})
@@ -840,7 +1023,7 @@ def _print_wrapped_error(text: str, max_len: int = 500):
     for word in words:
         if not current_line:
             current_line = word
-        elif len(indent) + len(current_line) + 1 + len(word) > 78:
+        elif len(indent) + len(current_line) + 1 + len(word) > TEXT_WRAP_WIDTH:
             print(indent + current_line)
             current_line = word
         else:
@@ -853,7 +1036,8 @@ def print_report(root_causes: list[FailedState],
                  cascades: list[FailedState],
                  cascade_tree: dict[str, list[FailedState]],
                  log_parser: Optional['LogParser'] = None,
-                 has_warnings: bool = False):
+                 has_warnings: bool = False,
+                 results: dict = None):
     """Print diagnostic report with cascade trees and log details."""
     if not root_causes and not cascades:
         if not has_warnings:
@@ -861,12 +1045,27 @@ def print_report(root_causes: list[FailedState],
         return
 
     # Header
-    print(f"\n{Colors.BOLD}{'═' * 78}{Colors.RESET}")
+    print(f"\n{Colors.BOLD}{'═' * REPORT_WIDTH}{Colors.RESET}")
     print(f"{Colors.BOLD}REMnux Salt State Diagnostic Report{Colors.RESET}")
-    print(f"{Colors.BOLD}{'═' * 78}{Colors.RESET}\n")
+    print(f"{Colors.BOLD}{'═' * REPORT_WIDTH}{Colors.RESET}\n")
 
     print(f"{Colors.RED}✗ {len(root_causes)} root cause failure(s){Colors.RESET} → "
           f"{Colors.ORANGE}{len(cascades)} cascaded failure(s){Colors.RESET}\n")
+
+    # Group root causes by category for summary if many failures
+    if len(root_causes) > 5:
+        groups = group_root_causes_by_category(root_causes)
+        # Check if any category has multiple failures
+        multi_category = {cat: rcs for cat, rcs in groups.items() if len(rcs) > 2}
+        if multi_category:
+            print(f"{Colors.DIM}Category summary:{Colors.RESET}")
+            for cat, rcs in sorted(multi_category.items(), key=lambda x: len(x[1]), reverse=True):
+                cat_name = ERROR_CATEGORIES.get(cat, {}).get("name", cat.title())
+                tools = ", ".join(rc.tool_name for rc in rcs[:5])
+                if len(rcs) > 5:
+                    tools += f", ... (+{len(rcs) - 5} more)"
+                print(f"  • {cat_name}: {len(rcs)} failures ({tools})")
+            print()
 
     for i, rc in enumerate(root_causes, 1):
         cat_display = format_category(rc.category)
@@ -912,8 +1111,12 @@ def print_report(root_causes: list[FailedState],
             else:
                 _print_wrapped_error(rc.comment)
 
-        # Generate hint with specific overrides if available
-        hint = format_hint(rc.category, exception_type, extracted_values)
+        # Generate hint - try enhanced hint first, then standard hint
+        hint = None
+        if results:
+            hint = get_enhanced_hint(rc, results)
+        if not hint:
+            hint = format_hint(rc.category, exception_type, extracted_values)
         if hint:
             print(f"\n    {Colors.CYAN}Hint: {hint}{Colors.RESET}")
 
@@ -928,23 +1131,41 @@ def print_report(root_causes: list[FailedState],
                 else:
                     print(f"      └─ {tool}: {len(failures)} states affected")
 
-        print(f"\n{Colors.DIM}{'─' * 78}{Colors.RESET}\n")
+        print(f"\n{Colors.DIM}{'─' * REPORT_WIDTH}{Colors.RESET}\n")
 
-    # Orphan cascades
+    # Orphan cascades with improved summary for large sets
     linked = {c.state_id for lst in cascade_tree.values() for c in lst}
     orphans = [c for c in cascades if c.state_id not in linked]
     if orphans:
         print(f"{Colors.ORANGE}Additional cascade failures (indirect):{Colors.RESET}")
-        for orphan in orphans[:10]:
-            print(f"  • {orphan.tool_name}: {orphan.short_id}")
-        if len(orphans) > 10:
-            print(f"  ... and {len(orphans) - 10} more")
+
+        # Group by SLS category for better summary when many orphans
+        if len(orphans) > 15:
+            by_category = defaultdict(list)
+            for orphan in orphans:
+                parts = orphan.sls_file.split(".")
+                category = parts[1] if len(parts) > 1 else "other"
+                by_category[category].append(orphan)
+
+            for category, items in sorted(by_category.items(), key=lambda x: len(x[1]), reverse=True):
+                if len(items) > 3:
+                    sample = ", ".join(i.tool_name for i in items[:3])
+                    print(f"  • {category}: {len(items)} states ({sample}, ...)")
+                else:
+                    for item in items:
+                        print(f"  • {item.tool_name}: {item.short_id}")
+        else:
+            for orphan in orphans[:10]:
+                print(f"  • {orphan.tool_name}: {orphan.short_id}")
+            if len(orphans) > 10:
+                print(f"  ... and {len(orphans) - 10} more")
         print()
 
 
 def print_warnings_section(warnings: list[SuccessfulStateWarning],
                            num_failures: int,
-                           potentially_affected: int):
+                           potentially_affected: int,
+                           root_causes: list[FailedState] = None):
     """Print section about warnings found in successful states."""
     if not warnings:
         return
@@ -954,9 +1175,14 @@ def print_warnings_section(warnings: list[SuccessfulStateWarning],
     for w in warnings:
         by_type[w.warning_type].append(w)
 
-    print(f"\n{Colors.BOLD}{'═' * 78}{Colors.RESET}")
+    # Map warnings to affected root causes
+    warning_to_root_causes = {}
+    if root_causes:
+        warning_to_root_causes = map_warnings_to_root_causes(warnings, root_causes)
+
+    print(f"\n{Colors.BOLD}{'═' * REPORT_WIDTH}{Colors.RESET}")
     print(f"{Colors.BOLD}Warnings in Successful States{Colors.RESET}")
-    print(f"{Colors.BOLD}{'═' * 78}{Colors.RESET}\n")
+    print(f"{Colors.BOLD}{'═' * REPORT_WIDTH}{Colors.RESET}\n")
 
     print(f"{Colors.ORANGE}⚠ Found {len(warnings)} state(s) that succeeded but contain error indicators.{Colors.RESET}")
     if potentially_affected > 0:
@@ -998,10 +1224,18 @@ def print_warnings_section(warnings: list[SuccessfulStateWarning],
         if impact:
             print(f"\n    {Colors.CYAN}Impact: {impact}{Colors.RESET}")
 
+        # Show affected root causes for this warning type
+        affected = warning_to_root_causes.get(warn_type, [])
+        if affected:
+            tools_list = ", ".join(affected[:5])
+            if len(affected) > 5:
+                tools_list += f", ... (+{len(affected) - 5} more)"
+            print(f"\n    {Colors.RED}Likely affected: {tools_list}{Colors.RESET}")
+
         if len(warns) > 1:
             print(f"\n    {Colors.DIM}({len(warns)} states affected by this issue){Colors.RESET}")
 
-        print(f"\n{Colors.DIM}{'─' * 78}{Colors.RESET}\n")
+        print(f"\n{Colors.DIM}{'─' * REPORT_WIDTH}{Colors.RESET}\n")
 
 
 # ============================================================================
@@ -1317,7 +1551,7 @@ Examples:
 
     # Print main report (pass has_warnings to suppress misleading success message)
     print_report(root_causes, cascades, cascade_tree, log_parser,
-                 has_warnings=bool(successful_warnings))
+                 has_warnings=bool(successful_warnings), results=results)
 
     # Print warnings section if there are hidden issues in successful states
     if successful_warnings:
@@ -1325,7 +1559,8 @@ Examples:
         potentially_affected = count_potentially_affected_failures(
             successful_warnings, root_causes, cascades
         )
-        print_warnings_section(successful_warnings, num_failures, potentially_affected)
+        print_warnings_section(successful_warnings, num_failures, potentially_affected,
+                               root_causes=root_causes)
 
         # If no failures but warnings exist, show a qualified success message
         if not root_causes and not cascades:
