@@ -2,47 +2,148 @@
 # set-scaling - Adjust display scaling for REMnux
 # Works with VMware's dynamic display resize
 
-show_current() {
-    SF=$(gsettings get org.gnome.desktop.interface scaling-factor 2>/dev/null | grep -oE '[0-9]+')
-    TF=$(gsettings get org.gnome.desktop.interface text-scaling-factor 2>/dev/null)
+# Ensure DISPLAY is set for xrandr
+: "${DISPLAY:=:0}"
+export DISPLAY
 
-    if [ "$SF" = "2" ]; then
-        echo "Current: 2x scaling"
-    elif [ "$TF" = "1.5" ]; then
-        echo "Current: 1.5x scaling"
+# Threshold for auto-detection (QHD and above gets 2x)
+THRESHOLD_WIDTH=2560
+THRESHOLD_HEIGHT=1440
+
+get_current_scaling() {
+    local sf
+    # gsettings returns "uint32 N" - extract just the number
+    sf=$(gsettings get org.gnome.desktop.interface scaling-factor 2>/dev/null | awk '{print $2}')
+
+    case "$sf" in
+        1) echo "1x" ;;
+        2) echo "2x" ;;
+        3) echo "3x" ;;
+        *) echo "1x" ;;
+    esac
+}
+
+get_resolution() {
+    local res
+
+    if ! command -v xrandr &>/dev/null; then
+        echo "Error: xrandr not found" >&2
+        return 1
+    fi
+
+    # Extract "current WxH" from xrandr output
+    res=$(xrandr 2>/dev/null | sed -n 's/.*current \([0-9]*\) x \([0-9]*\).*/\1x\2/p' | head -1)
+    if [ -z "$res" ]; then
+        echo "Error: Could not detect resolution" >&2
+        return 1
+    fi
+
+    echo "$res"
+}
+
+detect_scaling() {
+    local res width height
+
+    res=$(get_resolution) || return 1
+    width="${res%x*}"   # Remove x and everything after
+    height="${res#*x}"  # Remove everything before and including x
+
+    echo "Detected resolution: ${res}" >&2
+
+    # Auto selects 1x or 2x only (3x is manual choice)
+    if [ "$width" -ge "$THRESHOLD_WIDTH" ] && [ "$height" -ge "$THRESHOLD_HEIGHT" ]; then
+        echo "2x"
     else
-        echo "Current: 1x scaling"
+        echo "1x"
     fi
 }
 
-case "$1" in
-  1x|1)
-    gsettings set org.gnome.desktop.interface scaling-factor 1
-    gsettings set org.gnome.desktop.interface text-scaling-factor 1.0
-    echo "Set to 1x scaling. Reboot for changes to take effect."
-    ;;
-  1.5x|1.5)
-    gsettings set org.gnome.desktop.interface scaling-factor 1
-    gsettings set org.gnome.desktop.interface text-scaling-factor 1.5
-    echo "Set to 1.5x scaling. Reboot for changes to take effect."
-    ;;
-  2x|2)
-    gsettings set org.gnome.desktop.interface scaling-factor 2
-    gsettings set org.gnome.desktop.interface text-scaling-factor 1.0
-    echo "Set to 2x scaling. Reboot for changes to take effect."
-    ;;
-  *)
-    show_current
-    cat << 'EOF'
+apply_scaling() {
+    local scale="$1"
+    local factor
 
-Usage: set-scaling [1x|1.5x|2x]
+    case "$scale" in
+        1x|1) factor=1 ;;
+        2x|2) factor=2 ;;
+        3x|3) factor=3 ;;
+        *)
+            echo "Error: Invalid scale '$scale'" >&2
+            return 1
+            ;;
+    esac
+
+    if ! gsettings set org.gnome.desktop.interface scaling-factor "$factor" 2>/dev/null; then
+        echo "Error: Failed to set scaling-factor" >&2
+        return 1
+    fi
+
+    if ! gsettings set org.gnome.desktop.interface text-scaling-factor 1.0 2>/dev/null; then
+        echo "Error: Failed to set text-scaling-factor" >&2
+        return 1
+    fi
+
+    echo "${factor}x"
+}
+
+show_help() {
+    cat << 'EOF'
+Usage: set-scaling [1|2|3|auto|detect]
 
 Options:
-  1x    - Normal size (default for most displays)
-  1.5x  - Larger text (if 1x feels too small)
-  2x    - Extra large (for 4K or high-resolution displays)
+  1, 1x     Normal size (default for most displays)
+  2, 2x     Double size (for high-resolution displays)
+  3, 3x     Triple size (for very high-resolution displays)
+  auto      Detect resolution and apply 1x or 2x
+  detect    Show recommended scaling (no changes)
 
+Run without arguments to show current scaling.
 Reboot after changing for settings to take effect.
 EOF
-    ;;
+}
+
+# Main
+case "$1" in
+    1x|1|2x|2|3x|3)
+        current=$(get_current_scaling)
+        if ! applied=$(apply_scaling "$1"); then
+            exit 1
+        fi
+        echo "Changed from ${current} to ${applied}. Reboot for changes to take effect."
+        ;;
+    auto)
+        current=$(get_current_scaling)
+        recommended=$(detect_scaling) || exit 1
+        if [ "$current" = "$recommended" ]; then
+            echo "Already at recommended scaling (${recommended})."
+        else
+            if ! applied=$(apply_scaling "$recommended"); then
+                exit 1
+            fi
+            echo "Changed from ${current} to ${applied}. Reboot for changes to take effect."
+        fi
+        ;;
+    detect)
+        current=$(get_current_scaling)
+        recommended=$(detect_scaling) || exit 1
+        echo "Current: ${current}"
+        echo "Recommended: ${recommended}"
+        if [ "$current" = "$recommended" ]; then
+            echo "No change needed."
+        else
+            echo "Run 'set-scaling auto' to apply."
+        fi
+        ;;
+    -h|--help)
+        show_help
+        ;;
+    "")
+        echo "Current: $(get_current_scaling)"
+        echo ""
+        show_help
+        ;;
+    *)
+        echo "Error: Unknown option '$1'" >&2
+        show_help
+        exit 1
+        ;;
 esac
