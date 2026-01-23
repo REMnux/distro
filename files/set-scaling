@@ -1,0 +1,33 @@
+#!/bin/bash
+# set-scaling - Adjust display scaling for REMnux
+# Works with VMware's dynamic display resize
+
+case "$1" in
+  1x|1)
+    gsettings set org.gnome.desktop.interface scaling-factor 1
+    gsettings set org.gnome.desktop.interface text-scaling-factor 1.0
+    echo "Set to 1x scaling"
+    ;;
+  1.5x|1.5)
+    gsettings set org.gnome.desktop.interface scaling-factor 1
+    gsettings set org.gnome.desktop.interface text-scaling-factor 1.5
+    echo "Set to 1.5x scaling"
+    ;;
+  2x|2)
+    gsettings set org.gnome.desktop.interface scaling-factor 2
+    gsettings set org.gnome.desktop.interface text-scaling-factor 1.0
+    echo "Set to 2x scaling"
+    ;;
+  *)
+    cat << 'EOF'
+Usage: set-scaling [1x|1.5x|2x]
+
+Options:
+  1x    - Normal size (default for most displays)
+  1.5x  - Larger text (if 1x feels too small)
+  2x    - Extra large (for 4K or high-resolution displays)
+
+Run without rebooting - changes apply immediately.
+EOF
+    ;;
+esac
