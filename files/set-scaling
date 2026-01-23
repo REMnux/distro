@@ -82,6 +82,10 @@ apply_scaling() {
         return 1
     fi
 
+    # Dismiss the scaling hint (user has now used set-scaling)
+    mkdir -p "$HOME/.config/remnux" 2>/dev/null
+    touch "$HOME/.config/remnux/.scaling-hint-dismissed" 2>/dev/null
+
     echo "${factor}x"
 }
 
