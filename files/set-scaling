@@ -2,24 +2,39 @@
 # set-scaling - Adjust display scaling for REMnux
 # Works with VMware's dynamic display resize
 
+show_current() {
+    SF=$(gsettings get org.gnome.desktop.interface scaling-factor 2>/dev/null | grep -oE '[0-9]+')
+    TF=$(gsettings get org.gnome.desktop.interface text-scaling-factor 2>/dev/null)
+
+    if [ "$SF" = "2" ]; then
+        echo "Current: 2x scaling"
+    elif [ "$TF" = "1.5" ]; then
+        echo "Current: 1.5x scaling"
+    else
+        echo "Current: 1x scaling"
+    fi
+}
+
 case "$1" in
   1x|1)
     gsettings set org.gnome.desktop.interface scaling-factor 1
     gsettings set org.gnome.desktop.interface text-scaling-factor 1.0
-    echo "Set to 1x scaling"
+    echo "Set to 1x scaling. Reboot for changes to take effect."
     ;;
   1.5x|1.5)
     gsettings set org.gnome.desktop.interface scaling-factor 1
     gsettings set org.gnome.desktop.interface text-scaling-factor 1.5
-    echo "Set to 1.5x scaling"
+    echo "Set to 1.5x scaling. Reboot for changes to take effect."
     ;;
   2x|2)
     gsettings set org.gnome.desktop.interface scaling-factor 2
     gsettings set org.gnome.desktop.interface text-scaling-factor 1.0
-    echo "Set to 2x scaling"
+    echo "Set to 2x scaling. Reboot for changes to take effect."
     ;;
   *)
+    show_current
     cat << 'EOF'
+
 Usage: set-scaling [1x|1.5x|2x]
 
 Options:
@@ -27,7 +42,7 @@ Options:
   1.5x  - Larger text (if 1x feels too small)
   2x    - Extra large (for 4K or high-resolution displays)
 
-Run without rebooting - changes apply immediately.
+Reboot after changing for settings to take effect.
 EOF
     ;;
 esac
