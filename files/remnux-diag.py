@@ -195,6 +195,16 @@ ERROR_CATEGORIES = {
         ],
         "hint": "Shell command failed. Check the error details above.",
     },
+    "salt_requisite": {
+        "name": "Salt Requisite Not Found",
+        "patterns": [
+            r"The following requisites were not found",
+            r"requisite.*not found",
+            r"could not find state",
+            r"sls: .* is not available",
+        ],
+        "hint": "A required Salt state was not found. The SLS file may be empty or not define the expected states.",
+    },
 }
 
 
@@ -472,6 +482,56 @@ class FailedState:
                 reqs = match.group(1).replace("\n", " ").strip()
                 self.failed_requisites = [r.strip() for r in reqs.split(",")]
 
+        # Extract missing requisites (requisites not found)
+        self.missing_requisites = []
+        if "requisites were not found" in self.comment:
+            # Parse format like: "require:\n  sls: remnux.config.grub-kvm"
+            req_match = re.search(
+                r"The following requisites were not found:\s*(.+?)(?:\n\n|\Z)",
+                self.comment,
+                re.DOTALL
+            )
+            if req_match:
+                req_text = req_match.group(1).strip()
+                # Clean up YAML artifacts (backslash continuations)
+                req_text = re.sub(r'\\+\s*', ' ', req_text)
+
+                # Parse requisite types and their targets
+                # Format can be: "require:\n  sls: foo" or "require: sls: foo" (after cleanup)
+                current_type = None
+
+                # First, try to find requisite type patterns like "require:", "watch:", etc.
+                # These are Salt requisite types
+                requisite_types = ('require', 'watch', 'onchanges', 'onfail', 'use', 'prereq')
+
+                # Split by requisite type keywords to handle multi-requisite cases
+                # e.g., "require: sls: foo watch: sls: bar"
+                tokens = req_text.split()
+                i = 0
+                while i < len(tokens):
+                    token = tokens[i].rstrip(':')
+                    if token in requisite_types:
+                        current_type = token
+                    elif token == 'sls' or tokens[i].startswith('sls:'):
+                        # Handle "sls: path" or "sls:path"
+                        if tokens[i] == 'sls:' and i + 1 < len(tokens):
+                            target = f"sls: {tokens[i + 1]}"
+                            i += 1
+                        elif tokens[i].startswith('sls:'):
+                            target = tokens[i]
+                        else:
+                            # "sls" followed by ":"
+                            if i + 1 < len(tokens) and tokens[i + 1].startswith(':'):
+                                target = f"sls:{tokens[i + 1][1:]}" if len(tokens[i + 1]) > 1 else f"sls: {tokens[i + 2] if i + 2 < len(tokens) else ''}"
+                            else:
+                                target = f"sls: {tokens[i + 1]}" if i + 1 < len(tokens) else "sls: unknown"
+                            i += 1
+                        self.missing_requisites.append({
+                            "type": current_type or "require",
+                            "target": target.strip(),
+                        })
+                    i += 1
+
         self.category = self._categorize()
 
     def _categorize(self) -> Optional[str]:
@@ -555,6 +615,74 @@ def build_cascade_tree(root_causes: list[FailedState],
                     break
 
     return tree
+
+
+def build_dependency_chain(state: FailedState, all_failed: list[FailedState],
+                           visited: set = None, depth: int = 0, max_depth: int = 10) -> list[dict]:
+    """
+    Build the dependency chain leading to a failure.
+    Returns a list of dicts with 'state', 'depth', and 'is_missing' keys.
+
+    For requisite-not-found errors, the chain ends with the missing requisite.
+    For cascade failures, recursively traces back to root causes.
+    """
+    if visited is None:
+        visited = set()
+
+    if depth > max_depth or state.state_id in visited:
+        return []
+
+    visited.add(state.state_id)
+    chain = [{"state": state, "depth": depth, "is_missing": False}]
+
+    # Check for missing requisites (requisites not found)
+    if state.missing_requisites:
+        for req in state.missing_requisites:
+            req_target = req.get("target", "")
+            chain.append({
+                "state": None,
+                "depth": depth + 1,
+                "is_missing": True,
+                "missing_target": req_target,
+                "req_type": req.get("type", "require"),
+            })
+        return chain
+
+    # Check for cascade failures (one or more requisite failed)
+    if state.is_cascade and state.failed_requisites:
+        for req in state.failed_requisites:
+            # Find the failed requisite in all_failed
+            parts = req.rsplit(".", 1)
+            req_id = parts[-1] if parts else req
+
+            for failed in all_failed:
+                if failed.state_id == req_id or req.endswith(failed.state_id):
+                    sub_chain = build_dependency_chain(failed, all_failed, visited, depth + 1, max_depth)
+                    chain.extend(sub_chain)
+                    break
+
+    return chain
+
+
+def format_dependency_chain(chain: list[dict]) -> list[str]:
+    """Format a dependency chain for display."""
+    lines = []
+    for item in chain:
+        indent = "    " + "    " * item["depth"]
+
+        if item.get("is_missing"):
+            # This is the missing requisite at the end of the chain
+            req_type = item.get("req_type", "require")
+            target = item.get("missing_target", "unknown")
+            lines.append(f"{indent}└── {req_type}: {target} {Colors.RED}← NOT FOUND{Colors.RESET}")
+        else:
+            state = item["state"]
+            if item["depth"] > 0:
+                lines.append(f"{indent}└── requires: {state.sls_file}")
+            else:
+                lines.append(f"{indent}{state.sls_file}")
+
+    return lines
 
 
 # ============================================================================
@@ -1120,6 +1248,33 @@ def print_report(root_causes: list[FailedState],
         if hint:
             print(f"\n    {Colors.CYAN}Hint: {hint}{Colors.RESET}")
 
+        # Display missing requisite details for salt_requisite errors
+        if rc.category == "salt_requisite" and rc.missing_requisites:
+            print(f"\n    {Colors.ORANGE}Missing requisites:{Colors.RESET}")
+            for req in rc.missing_requisites:
+                req_type = req.get("type", "require")
+                req_target = req.get("target", "unknown")
+                print(f"      • {req_type}: {req_target}")
+
+                # Cross-reference with log to determine if file was fetched
+                if log_parser:
+                    analysis = log_parser.analyze_fetched_vs_missing(req_target)
+                    if analysis:
+                        status = analysis.get("status")
+                        if status == "fetched_but_empty":
+                            print(f"        {Colors.CYAN}↳ {analysis.get('message')}{Colors.RESET}")
+                        elif status == "not_fetched":
+                            print(f"        {Colors.DIM}↳ {analysis.get('message')}{Colors.RESET}")
+
+            # Show dependency chain for requisite failures
+            all_failed = root_causes + cascades
+            chain = build_dependency_chain(rc, all_failed)
+            if len(chain) > 1:  # Only show if there's actually a chain
+                print(f"\n    {Colors.DIM}Dependency chain:{Colors.RESET}")
+                chain_lines = format_dependency_chain(chain)
+                for line in chain_lines:
+                    print(line)
+
         if cascade_failures:
             print(f"\n    {Colors.ORANGE}Cascaded failures ({len(cascade_failures)}):{Colors.RESET}")
             by_tool = defaultdict(list)
@@ -1249,6 +1404,7 @@ class LogParser:
         self.content = ""
         self.state_sections: dict[str, str] = {}
         self.load_error: Optional[str] = None
+        self._fetched_files_cache: Optional[set[str]] = None
 
         if log_path and log_path.exists():
             try:
@@ -1264,6 +1420,101 @@ class LogParser:
         pattern = r"# \[INFO\s*\] Running state \[([^\]]+)\].*?# \[INFO\s*\] Completed state \[\1\]"
         for match in re.finditer(pattern, self.content, re.DOTALL):
             self.state_sections[match.group(1)] = match.group(0)
+
+    def get_fetched_sls_files(self) -> set[str]:
+        """
+        Extract all SLS files that were successfully fetched from the log.
+        Returns set of SLS file paths (e.g., 'salt-states/remnux/config/grub-kvm.sls').
+        Results are cached after first call.
+        """
+        if self._fetched_files_cache is not None:
+            return self._fetched_files_cache
+
+        if not self.content:
+            self._fetched_files_cache = set()
+            return self._fetched_files_cache
+
+        fetched = set()
+        # Match patterns like: "Fetching file from saltenv 'base', ** done ** 'salt-states/remnux/config/grub-kvm.sls'"
+        # or: "Fetching file from saltenv 'base', ** done ** '/var/cache/salt/minion/files/base/salt-states/foo.sls'"
+        pattern = r"Fetching file from saltenv.*\*\* done \*\*.*?['\"]([^'\"]+\.sls)['\"]"
+        for match in re.finditer(pattern, self.content, re.IGNORECASE):
+            sls_path = match.group(1)
+            fetched.add(sls_path)
+
+        self._fetched_files_cache = fetched
+        return fetched
+
+    def sls_to_dot_notation(self, sls_path: str) -> Optional[str]:
+        """
+        Convert SLS file path to Salt's dot notation.
+        e.g., 'salt-states/remnux/config/grub-kvm.sls' -> 'remnux.config.grub-kvm'
+        """
+        if not sls_path:
+            return None
+
+        # Remove common prefixes and .sls extension
+        path = sls_path
+        for prefix in ('salt-states/', '/var/cache/salt/minion/files/base/salt-states/'):
+            if path.startswith(prefix):
+                path = path[len(prefix):]
+                break
+
+        if path.endswith('.sls'):
+            path = path[:-4]
+
+        # Handle init.sls files (e.g., remnux/config/init.sls -> remnux.config)
+        if path.endswith('/init'):
+            path = path[:-5]
+
+        # Convert slashes to dots
+        return path.replace('/', '.')
+
+    def analyze_fetched_vs_missing(self, missing_requisite: str) -> Optional[dict]:
+        """
+        Cross-reference a missing requisite with fetched files to determine why it failed.
+
+        Args:
+            missing_requisite: The missing requisite target (e.g., 'sls: remnux.config.grub-kvm')
+
+        Returns:
+            Dict with 'status' ('fetched_but_empty', 'not_fetched', None) and 'sls_path' if found.
+        """
+        if not self.content or not missing_requisite:
+            return None
+
+        # Extract the SLS path from the requisite (e.g., "sls: remnux.config.grub-kvm" -> "remnux.config.grub-kvm")
+        sls_match = re.search(r'sls:\s*(\S+)', missing_requisite)
+        if not sls_match:
+            return None
+
+        sls_dot_path = sls_match.group(1).strip()
+
+        # Get all fetched files
+        fetched_files = self.get_fetched_sls_files()
+
+        # Convert fetched files to dot notation for comparison
+        fetched_dot_paths = {}
+        for f in fetched_files:
+            dot_path = self.sls_to_dot_notation(f)
+            if dot_path:
+                fetched_dot_paths[dot_path] = f
+
+        # Check if the missing requisite's SLS was fetched
+        if sls_dot_path in fetched_dot_paths:
+            return {
+                "status": "fetched_but_empty",
+                "sls_path": fetched_dot_paths[sls_dot_path],
+                "sls_dot_path": sls_dot_path,
+                "message": f"File '{fetched_dot_paths[sls_dot_path]}' was loaded but defines no matching states. "
+                          f"The SLS file may be empty or not contain expected state IDs."
+            }
+
+        return {
+            "status": "not_fetched",
+            "sls_dot_path": sls_dot_path,
+            "message": f"SLS file '{sls_dot_path}' was not found or could not be loaded."
+        }
 
     def get_error_context(self, state: FailedState) -> Optional[dict]:
         """
