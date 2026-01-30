@@ -18,7 +18,7 @@ import argparse
 import os
 import re
 import sys
-from collections import defaultdict
+from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Optional
 
@@ -105,6 +105,16 @@ ERROR_CATEGORIES = {
             r"File not found",
         ],
         "hint": "Required file/directory missing. May be caused by a prior failure.",
+    },
+    "disk_space": {
+        "name": "Disk Space Exhausted",
+        "patterns": [
+            r"enough free space",
+            r"No space left on device",
+            r"ENOSPC",
+            r"cannot write.*No space",
+        ],
+        "hint": "Insufficient disk space. Check: df -h /var/cache/apt/archives/ and consider: sudo apt-get clean",
     },
     "package": {
         "name": "Package Installation Failed",
@@ -247,6 +257,14 @@ CRITICAL_WARNING_PATTERNS = {
             r"Skipping .* because I couldn't find",
         ],
         "impact": "Perl modules may not be installed despite successful state",
+    },
+    "disk_space": {
+        "name": "Disk Space Issues",
+        "patterns": [
+            r"No space left on device",
+            r"enough free space",
+        ],
+        "impact": "Package installations and file writes may fail",
     },
 }
 
@@ -816,6 +834,65 @@ def group_root_causes_by_category(root_causes: list[FailedState]) -> dict[str, l
     return groups
 
 
+def detect_common_cause(root_causes: list[FailedState]) -> Optional[dict]:
+    """
+    Detect if a majority of root causes share the same underlying error.
+    Returns dict with 'count', 'total', 'error_line', 'category', 'hint' if found, else None.
+    """
+    if len(root_causes) < 2:
+        return None
+
+    # Collect error lines from each root cause (comment + stderr)
+    error_lines_per_rc = []
+    for rc in root_causes:
+        lines = set()
+        for text in (rc.comment, rc.stderr):
+            if not text:
+                continue
+            for line in text.replace("\\n", "\n").split("\n"):
+                line = line.strip().lstrip("- ")
+                # Only consider lines that look like errors
+                if line and any(ind in line for ind in ("E: ", "ERROR", "Error:", "error:", "ENOSPC", "No space")):
+                    lines.add(line)
+        error_lines_per_rc.append(lines)
+
+    # Find the most common error line across root causes
+    line_counts = Counter()
+    for lines in error_lines_per_rc:
+        for line in lines:
+            line_counts[line] += 1
+
+    if not line_counts:
+        return None
+
+    most_common_line, count = line_counts.most_common(1)[0]
+    total = len(root_causes)
+
+    # Threshold: more than 50% of root causes share the same error
+    if count <= total / 2:
+        return None
+
+    # Determine category and hint from the shared error
+    category = None
+    for cat_id, cat_info in ERROR_CATEGORIES.items():
+        for pattern in cat_info["patterns"]:
+            if re.search(pattern, most_common_line, re.IGNORECASE):
+                category = cat_id
+                break
+        if category:
+            break
+
+    hint = ERROR_CATEGORIES.get(category, {}).get("hint") if category else None
+
+    return {
+        "count": count,
+        "total": total,
+        "error_line": most_common_line,
+        "category": category,
+        "hint": hint,
+    }
+
+
 def map_warnings_to_root_causes(warnings: list['SuccessfulStateWarning'],
                                  root_causes: list[FailedState]) -> dict[str, list[str]]:
     """
@@ -825,8 +902,9 @@ def map_warnings_to_root_causes(warnings: list['SuccessfulStateWarning'],
     # Map warning types to related error categories
     warning_to_categories = {
         "dns": ["network", "download", "git"],
-        "apt_fetch": ["package"],
+        "apt_fetch": ["package", "disk_space"],
         "network": ["network", "download", "git"],
+        "disk_space": ["disk_space", "package"],
         "cpan": ["command"],
     }
 
@@ -961,8 +1039,9 @@ def count_potentially_affected_failures(warnings: list[SuccessfulStateWarning],
     # DNS/network failures can cause downloads to fail, which causes missing files
     warning_to_error_categories = {
         "dns": ["network", "download", "git", "missing_file"],
-        "apt_fetch": ["package"],
+        "apt_fetch": ["package", "disk_space"],
         "network": ["network", "download", "git", "missing_file"],
+        "disk_space": ["disk_space", "package"],
         "cpan": ["command"],
     }
 
@@ -1179,6 +1258,16 @@ def print_report(root_causes: list[FailedState],
 
     print(f"{Colors.RED}✗ {len(root_causes)} root cause failure(s){Colors.RESET} → "
           f"{Colors.ORANGE}{len(cascades)} cascaded failure(s){Colors.RESET}\n")
+
+    # Check for common cause across root failures
+    common = detect_common_cause(root_causes)
+    if common:
+        print(f"{Colors.RED}⚠ Common cause detected: "
+              f"{common['count']}/{common['total']} root failures share the same error:{Colors.RESET}")
+        print(f"    \"{common['error_line']}\"")
+        if common.get("hint"):
+            print(f"\n    {Colors.CYAN}Hint: {common['hint']}{Colors.RESET}")
+        print()
 
     # Group root causes by category for summary if many failures
     if len(root_causes) > 5:
@@ -1581,9 +1670,33 @@ class LogParser:
                     errors.append(error_text)
             i += 1
 
-        # Use traceback summary if available, otherwise use error lines
+        # Extract stderr content from log section (# [ERROR   ] stderr: lines)
+        stderr_errors = []
+        in_stderr = False
+        for line in lines:
+            if '# [ERROR' in line and 'stderr:' in line:
+                in_stderr = True
+                stderr_text = re.sub(r'^#\s*\[ERROR\s*\]\s*stderr:\s*', '', line).strip()
+                if stderr_text:
+                    stderr_errors.append(stderr_text)
+                continue
+            if in_stderr:
+                if line.startswith('# [') or not line.strip():
+                    in_stderr = False
+                else:
+                    stderr_errors.append(line.strip())
+
+        # Prefer stderr lines that contain error indicators over general ERROR lines
+        stderr_has_errors = [
+            l for l in stderr_errors
+            if any(ind in l for ind in ('E: ', 'ERROR', 'Error:', 'error:', 'failed', 'ENOSPC', 'No space'))
+        ]
+
+        # Use traceback summary if available, otherwise prefer stderr errors, then general errors
         if result["traceback_info"] and result["traceback_info"].get("short_summary"):
             result["error_text"] = result["traceback_info"]["short_summary"]
+        elif stderr_has_errors:
+            result["error_text"] = self._format_errors(stderr_has_errors[:3])
         elif errors:
             # Prioritize non-traceback error lines for display
             useful = [e for e in errors if 'Traceback' not in e and 'File "/' not in e]
