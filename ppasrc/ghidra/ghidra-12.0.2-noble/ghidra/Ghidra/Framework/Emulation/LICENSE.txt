@@ -1,0 +1,16 @@
+Ghidra software is released under the Apache 2.0 license. In addition, 
+there are numerous 3rd party components that each have their 
+own license. The license file for each of these licenses can be found
+in the licenses directory in the installation root directory.
+
+The 3rd party files in this module are as follows:
+
+
+INRIA License:
+
+	lib/asm-analysis-9.7.1.jar
+	lib/asm-tree-9.7.1.jar
+	lib/asm-9.7.1.jar
+	lib/asm-util-9.7.1.jar
+	lib/asm-commons-9.7.1.jar
+

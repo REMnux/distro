@@ -1,0 +1,23 @@
+portex (5.0.6-noble) noble; urgency=medium
+
+  * Updated to latest upstream version.
+
+ -- REMnux Distribution <distro@remnux.org>  Sun, 02 Feb 2026 19:06:00 -0500
+
+portex (5.0-noble) noble; urgency=medium
+
+  * Updated to latest upstream version and for Noble.
+
+ -- REMnux Distribution <distro@remnux.org>  Mon, 28 Jul 2025 15:01:15 -0400
+
+portex (4.0.7-focal) focal; urgency=medium
+
+  * Updated to latest upstream version.
+
+ -- REMnux Distribution <distro@remnux.org>  Mon, 07 Oct 2024 12:12:13 -0400
+
+portex (2.0.9-focal) focal; urgency=medium
+
+  * Initial Release.
+
+ -- REMnux Distribution <distro@remnux.org>  Mon, 06 Jul 2020 21:38:40 -0400

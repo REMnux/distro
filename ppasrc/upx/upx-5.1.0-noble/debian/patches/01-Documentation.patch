@@ -1,0 +1,27 @@
+From: Robert Luberda <robert@debian.org>
+Date: Sun, 29 Sep 2002 13:50:30 +0100
+Subject: Add full path to the copyright file.
+
+---
+ doc/upx.pod | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/doc/upx.pod b/doc/upx.pod
+index bc3ad34..3af764f 100644
+--- a/doc/upx.pod
++++ b/doc/upx.pod
+@@ -944,12 +944,12 @@ B<UPX> is distributed with full source code under the terms of the
+ GNU General Public License v2+; either under the pure GPLv2+ (see
+ the file COPYING), or (at your option) under the GPLv+2 with special
+ exceptions and restrictions granting the free usage for all binaries
+-including commercial programs (see the file LICENSE).
++including commercial programs (see the file /usr/share/doc/upx-ucl/copyright).
+ 
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ 
+ You should have received a copy of the UPX License Agreements along
+-with this program; see the files COPYING and LICENSE. If not,
++with this program; see the file /usr/share/doc/upx-ucl/copyright. If not,
+ visit the UPX home page.

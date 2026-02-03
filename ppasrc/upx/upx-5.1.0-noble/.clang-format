@@ -1,0 +1,27 @@
+# vim:set ft=yaml ts=2 sw=2 et:
+# Copyright (C) Markus Franz Xaver Johannes Oberhumer
+# for clang-format-15.0.6 from https://github.com/upx/upx-stubtools/releases
+#
+# "Gofmt's style is nobody's favourite, but gofmt is everybody's favourite." --Rob Pike
+---
+BasedOnStyle: LLVM
+ColumnLimit: 100
+IndentWidth: 4
+---
+# settings for C and C++
+Language: Cpp
+AccessModifierOffset: -4
+AlignConsecutiveMacros: AcrossComments
+AlwaysBreakTemplateDeclarations: true
+AttributeMacros:
+  - DELETED_FUNCTION
+  - XSPAN_DELETED_FUNCTION
+  - may_throw
+EmptyLineBeforeAccessModifier: Leave
+# IndentPPDirectives: AfterHash # TODO later
+SortIncludes: false
+SpaceAfterCStyleCast: true
+Standard: Cpp03
+StatementMacros:
+  - CLANG_FORMAT_DUMMY_STATEMENT
+...

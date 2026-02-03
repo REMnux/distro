@@ -1,0 +1,38 @@
+#!/bin/sh
+# autopkgtest check: Run really basic tests to confirm upx-ucl works
+
+set -e
+
+readonly SUPPORTED_ARCHS_FILE=$(realpath $(dirname "$0")/../supported-archs)
+readonly UPXTMPDIR="$(mktemp -d)"
+trap "cd /; rm -rf $UPXTMPDIR" 0 INT QUIT TERM ABRT
+
+cd "$UPXTMPDIR"
+
+run()
+{
+  echo "+ $@"
+  "$@"
+}
+
+is_supported_arch()
+{
+  status="$1"
+  arch=$(dpkg-architecture -qDEB_HOST_ARCH)
+  ! grep -q "^${arch}\b" "$SUPPORTED_ARCHS_FILE" || exit $status
+  echo "Architecture ${arch} not in supported archs file, skipping the test"
+  exit 77
+
+}
+test -e "$SUPPORTED_ARCHS_FILE" || { echo "$SUPPORTED_ARCHS_FILE does not exist" >&2; exit 101; }
+
+run cp /bin/ls "$UPXTMPDIR"
+
+run upx-ucl ./ls || is_supported_arch "$?"
+run ./ls -al
+
+run upx-ucl -t ./ls
+
+run upx-ucl -d ./ls
+
+run cmp ./ls /bin/ls

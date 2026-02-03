@@ -1,0 +1,17 @@
+7zz (25.01-noble) noble; urgency=medium
+
+  * Updated to latest upstream version. Security fix for CVE-2025-55188.
+
+ -- REMnux Distribution <distro@remnux.org>  Sun, 02 Feb 2026 20:06:50 -0500
+
+7zz (25.00-noble) noble; urgency=medium
+
+  * Latest upstream version
+
+ -- REMnux Distribution <distro@remnux.org>  Fri, 25 Jul 2025 20:21:58 -0400
+
+7zz (21.02-focal) focal; urgency=medium
+
+  * Initial Release.
+
+ -- REMnux Distribution <distro@remnux.org>  Tue, 29 Jun 2021 13:21:06 -0400

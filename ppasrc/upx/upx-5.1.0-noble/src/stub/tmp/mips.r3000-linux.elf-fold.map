@@ -1,0 +1,108 @@
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+*default*        0x0000000000000000 0xffffffffffffffff
+
+Linker script and memory map
+
+
+.text           0x0000000000000000      0xd7c
+ .text          0x0000000000000000      0xd7c tmp/mips.r3000-linux.elf-fold.o
+                0x00000000000000d0                get_page_mask
+                0x00000000000000f0                get_upxfn_path
+                0x0000000000000d10                underlay
+                0x0000000000000b80                upx_main
+                0x0000000000000010                get4unal
+                0x0000000000000128                close
+
+SYSCALLS        0x0000000000000000      0x1c0
+ SYSCALLS       0x0000000000000000      0x1c0 tmp/mips.r3000-linux.elf-fold.o
+                0x0000000000000180                munmap
+                0x0000000000000150                getpid
+                0x00000000000000a0                memcpy
+                0x00000000000001a0                readlink
+                0x0000000000000034                Psync
+                0x00000000000000c8                mempcpy
+                0x0000000000000148                ftruncate
+                0x0000000000000158                lseek
+                0x00000000000000fc                mmap
+                0x00000000000000f0                mmap_privanon
+                0x00000000000001a8                uname
+                0x00000000000001b8                write
+                0x0000000000000160                memfd_create
+                0x0000000000000198                read
+                0x00000000000001b0                unlink
+                0x0000000000000080                memset
+                0x0000000000000178                msync
+                0x0000000000000074                my_bkpt
+                0x0000000000000000                Pprotect
+                0x0000000000000188                stat
+                0x0000000000000138                exit
+                0x0000000000000140                brk
+                0x0000000000000190                open
+                0x0000000000000170                mprotect
+                0x0000000000000168                mkdir
+
+HUMF_A          0x0000000000000000        0x8
+ HUMF_A         0x0000000000000000        0x8 tmp/mips.r3000-linux.elf-fold.o
+
+HUMF_L          0x0000000000000000        0x8
+ HUMF_L         0x0000000000000000        0x8 tmp/mips.r3000-linux.elf-fold.o
+
+UMF_LINUX       0x0000000000000000      0x174
+ UMF_LINUX      0x0000000000000000      0x174 tmp/mips.r3000-linux.elf-fold.o
+                0x0000000000000000                upx_mmap_and_fd_linux
+
+EXP_HEAD        0x0000000000000000       0xfc
+ EXP_HEAD       0x0000000000000000       0xfc tmp/mips.r3000-linux.elf-fold.o
+                0x00000000000000b4                eof_n2e
+                0x0000000000000000                f_expand
+                0x00000000000000b4                eof_n2b
+                0x00000000000000b4                eof_nrv
+                0x00000000000000b4                eof_n2d
+                0x00000000000000ac                ret_decompr
+
+EXP_TAIL        0x0000000000000000        0x0
+ EXP_TAIL       0x0000000000000000        0x0 tmp/mips.r3000-linux.elf-fold.o
+                0x0000000000000000                upx_mmap_and_fd
+
+NRV2E           0x0000000000000000      0x15c
+ NRV2E          0x0000000000000000      0x15c tmp/mips.r3000-linux.elf-fold.o
+
+NRV2D           0x0000000000000000      0x14c
+ NRV2D          0x0000000000000000      0x14c tmp/mips.r3000-linux.elf-fold.o
+
+NRV2B           0x0000000000000000      0x130
+ NRV2B          0x0000000000000000      0x130 tmp/mips.r3000-linux.elf-fold.o
+
+LZMA_DAISY      0x0000000000000000        0x8
+ LZMA_DAISY     0x0000000000000000        0x8 tmp/mips.r3000-linux.elf-fold.o
+
+LZMA_ELF00      0x0000000000000000       0xa8
+ LZMA_ELF00     0x0000000000000000       0xa8 tmp/mips.r3000-linux.elf-fold.o
+
+LZMA_DEC10      0x0000000000000000      0xad8
+ LZMA_DEC10     0x0000000000000000      0xad8 tmp/mips.r3000-linux.elf-fold.o
+
+LZMA_DEC20      0x0000000000000000      0xad8
+ LZMA_DEC20     0x0000000000000000      0xad8 tmp/mips.r3000-linux.elf-fold.o
+
+LZMA_DEC30      0x0000000000000000        0x8
+ LZMA_DEC30     0x0000000000000000        0x8 tmp/mips.r3000-linux.elf-fold.o
+
+.data           0x0000000000000000        0x0
+ .data          0x0000000000000000        0x0 tmp/mips.r3000-linux.elf-fold.o
+
+.bss            0x0000000000000000        0x0
+ .bss           0x0000000000000000        0x0 tmp/mips.r3000-linux.elf-fold.o
+TARGET(elf32-bigmips)
+                0x0000000000000034                . = SIZEOF_HEADERS
+LOAD tmp/mips.r3000-linux.elf-fold.o
+OUTPUT(tmp/mips.r3000-linux.elf-fold.bin elf32-bigmips)
+
+.reginfo        0x0000000000000000       0x18
+ .reginfo       0x0000000000000000       0x18 tmp/mips.r3000-linux.elf-fold.o
+
+.comment        0x0000000000000000       0x23
+ .comment       0x0000000000000000       0x23 tmp/mips.r3000-linux.elf-fold.o

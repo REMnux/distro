@@ -1,0 +1,55 @@
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+*default*        0x0000000000000000 0xffffffffffffffff
+
+Linker script and memory map
+
+TARGET(elf32-i386)
+                0x0000000000000074                . = SIZEOF_HEADERS
+
+.text           0x0000000000000074      0x854
+ *(.text)
+ .text          0x0000000000000074       0xc4 tmp/i386-openbsd.elf-fold.o
+ .text          0x0000000000000138      0x720 tmp/i386-openbsd.elf-main.o
+                0x00000000000006fb                upx_main
+ .text          0x0000000000000858       0x6d tmp/i386-bsd.syscall.o
+                0x00000000000008c1                waitpid
+                0x0000000000000895                munmap
+                0x00000000000008a9                execve
+                0x00000000000008a1                getpid
+                0x00000000000008b1                ftruncate
+                0x0000000000000858                mmap
+                0x00000000000008b9                nanosleep
+                0x0000000000000889                write
+                0x0000000000000885                read
+                0x00000000000008bd                unlink
+                0x00000000000008ad                fork
+                0x00000000000008b5                gettimeofday
+                0x000000000000089d                access
+                0x000000000000087d                exit
+                0x000000000000087c                brk
+                0x000000000000088d                open
+                0x0000000000000899                mprotect
+                0x00000000000008a5                fcntl
+                0x0000000000000891                close
+ *(.data)
+ *fill*         0x00000000000008c5        0x3 00
+ .data          0x00000000000008c8        0x0 tmp/i386-openbsd.elf-fold.o
+ .data          0x00000000000008c8        0x0 tmp/i386-openbsd.elf-main.o
+ .data          0x00000000000008c8        0x0 tmp/i386-bsd.syscall.o
+
+.data
+
+.bss            0x00000000000008c8        0x0
+ .bss           0x00000000000008c8        0x0 tmp/i386-openbsd.elf-fold.o
+ .bss           0x00000000000008c8        0x0 tmp/i386-openbsd.elf-main.o
+ .bss           0x00000000000008c8        0x0 tmp/i386-bsd.syscall.o
+
+.rel.dyn        0x00000000000008c8        0x0
+ .rel.text      0x0000000000000000        0x0 tmp/i386-openbsd.elf-fold.o
+LOAD tmp/i386-openbsd.elf-fold.o
+LOAD tmp/i386-openbsd.elf-main.o
+LOAD tmp/i386-bsd.syscall.o
+OUTPUT(tmp/i386-openbsd.elf-fold.bin elf32-i386)

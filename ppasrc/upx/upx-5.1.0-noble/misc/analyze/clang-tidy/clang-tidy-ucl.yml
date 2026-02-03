@@ -1,0 +1,24 @@
+# vim:set ft=yaml ts=2 sw=2 et:
+# Copyright (C) Markus Franz Xaver Johannes Oberhumer
+# for clang-tidy from https://clang.llvm.org/extra/clang-tidy/
+---
+Checks: >
+  -*,
+  bugprone-*,
+    -bugprone-assignment-in-if-condition,
+    -bugprone-casting-through-void,
+    -bugprone-easily-swappable-parameters,
+    -bugprone-implicit-widening-of-multiplication-result,
+    -bugprone-inc-dec-in-conditions,
+    -bugprone-macro-parentheses,
+    -bugprone-reserved-identifier,
+    -bugprone-sizeof-expression,
+    -bugprone-suspicious-include,
+  clang-analyzer-*,
+    -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
+  clang-diagnostic-*,
+  performance-*,
+FormatStyle: file
+HeaderFilterRegex: '.*'
+InheritParentConfig: false
+...

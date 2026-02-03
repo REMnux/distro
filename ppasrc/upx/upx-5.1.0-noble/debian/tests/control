@@ -1,0 +1,48 @@
+Tests: basic-check
+Restrictions: allow-stderr, skippable
+
+Test-Command: ./debian/tests/regressions-check 775451-assert149.elf "UnknownExecutableFormatException"
+Features: test-name=bug775451-check1
+
+Test-Command: ./debian/tests/regressions-check 775451-assert150.elf "UnknownExecutableFormatException"
+Features: test-name=bug775451-check2
+
+Test-Command: ./debian/tests/regressions-check 775455-crash.elf "UnknownExecutableFormatException"
+Features: test-name=bug775455-check
+
+Test-Command: ./debian/tests/regressions-check 873260-crash.upx "UnknownExecutableFormatException"
+Features: test-name=bug873260-check
+
+Test-Command: ./debian/tests/regressions-check 882401-segfault-macho "CantPackException: bad Mach_command"
+Features: test-name=bug882401-check
+
+Test-Command: ./debian/tests/regressions-check 899190-poc1 'CantPackException: bad DT_STRSZ 0'
+Features: test-name=bug899190-check1
+
+Test-Command: ./debian/tests/regressions-check 899190-poc2 'CantPackException: bad DT_{0x5} = 0x40031d (beyond EOF)'
+Features: test-name=bug899190-check2
+
+Test-Command: ./debian/tests/regressions-check -d 907426-poc_free "Exception: compressed data violation"
+Features: test-name=bug907426-check
+
+Test-Command: ./debian/tests/regressions-check -d 933232-poc-integer-overflow "CantUnpackException: bad e_phoff"
+Features: test-name=bug933232-check1
+
+Test-Command: ./debian/tests/regressions-check --no-qq -d 933232-poc-buffer-overflow "NotPackedException: not packed by UPX" 2
+Features: test-name=bug933232-check2
+
+# Data file downloaded from https://github.com/upx/upx/issues/314
+Test-Command: ./debian/tests/regressions-check -d 947471-poc1 "CantUnpackException: file corrupted"
+Features: test-name=bug947471-check1
+
+# Data file downloaded from https://github.com/upx/upx/issues/315
+Test-Command: ./debian/tests/regressions-check -d 947471-poc2 "CantUnpackException: file corrupted"
+Features: test-name=bug947471-check2
+
+# Data file downloaded from https://github.com/upx/upx/issues/632
+Test-Command: ./debian/tests/regressions-check 1031874-poc "UnknownExecutableFormatException"
+Features: test-name=bug1031874-check
+
+# Data file downloaded from https://github.com/upx/upx/issues/631
+Test-Command: ./debian/tests/regressions-check 1033258-poc "CantPackException: tmt/adam: bad header"
+Features: test-name=bug1033258-check

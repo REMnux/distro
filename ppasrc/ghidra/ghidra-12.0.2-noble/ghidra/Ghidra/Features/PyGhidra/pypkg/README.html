@@ -1,0 +1,562 @@
+<h1 id="pyghidra" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">PyGhidra</h1>
+<p>The PyGhidra Python library, originally developed by the
+<a href="https://www.dc3.mil">Department of Defense Cyber Crime Center (DC3)</a> under the name &quot;Pyhidra&quot;, is a
+Python library that provides direct access to the Ghidra API within a native CPython 3 interpreter
+using <a href="https://jpype.readthedocs.io/en/latest">JPype</a>. PyGhidra contains some conveniences for
+setting up analysis on a given sample and running a Ghidra script locally. It also contains a Ghidra
+plugin to allow the use of CPython 3 from the Ghidra GUI.</p>
+<h2 id="installation-and-setup" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Installation and Setup</h2>
+<p>Ghidra provides an out-of-the box integration with the PyGhidra Python library which makes
+installation and usage fairly straightforward. This enables the Ghidra GUI and headless Ghidra to
+run GhidraScript's written in native CPython 3, as well as interact with the Ghidra GUI through a
+built-in REPL. To launch Ghidra in PyGhidra-mode, see Ghidra's latest
+<a href="https://github.com/NationalSecurityAgency/ghidra/blob/stable/GhidraDocs/GettingStarted.md#pyghidra-mode">Getting Started</a>
+document.</p>
+<p>It is also possible (and encouraged!) to use PyGhidra as a standalone Python library for usage
+in reverse engineering workflows where Ghidra may be one of many components involved. The following
+instructions in this document focus on this type of usage.</p>
+<p>To install the PyGhidra Python library:</p>
+<ol>
+<li>Download and install
+<a href="https://github.com/NationalSecurityAgency/ghidra/releases">Ghidra 12.0 or later</a> to a desired
+location.</li>
+<li>Install PyGhidra:
+<ul>
+<li>Online: <code style="background: #f4f4f4;font-family: monospace;">pip install pyghidra</code></li>
+<li>Offline: <code style="background: #f4f4f4;font-family: monospace;">python3 -m pip install --no-index -f  &lt;GhidraInstallDir&gt;/Ghidra/Features/PyGhidra/pypkg/dist pyghidra</code></li>
+</ul>
+</li>
+<li>Optionally install the Ghidra type stubs to improve your development experience (assuming your
+Python editor supports it). The type stubs module is specific to each version of Ghidra:
+<ul>
+<li>Online: <code style="background: #f4f4f4;font-family: monospace;">pip install ghidra-stubs==&lt;version&gt;</code></li>
+<li>Offline: <code style="background: #f4f4f4;font-family: monospace;">python3 -m pip install --no-index -f &lt;GhidraInstallDir&gt;/docs/ghidra_stubs ghidra-stubs</code></li>
+</ul>
+</li>
+<li>Optionally install the Java type stubs to improve your development experience (assuming your
+Python editor supports it):
+<ul>
+<li>Online: <code style="background: #f4f4f4;font-family: monospace;">pip install java-stubs-converted-strings</code></li>
+<li>Offline: Not available</li>
+</ul>
+</li>
+<li>Optionally point PyGhidra at your Ghidra installation by setting the <code style="background: #f4f4f4;font-family: monospace;">GHIDRA_INSTALL_DIR</code>
+environment variable. If not set, PyGhidra will point itself at the last used installation of
+Ghidra. Alternatively, you can point PyGhidra at a Ghidra installation with
+<code style="background: #f4f4f4;font-family: monospace;">pyghidra.start(install_dir=&lt;GhidraInstallDir&gt;)</code> (see below).</li>
+</ol>
+<h2 id="api" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">API</h2>
+<p>The current version of PyGhidra introduces many new API methods with the goal of making the most
+common Ghidra tasks quick and easy, such as opening a project, getting a program, running a
+GhidraScript, etc. The inherited API from the original &quot;Pyhidra&quot; project is still available, but at
+this point it will only receive bug fixes.</p>
+<h3 id="pyghidrastart">pyghidra.start()</h3>
+<pre style="background: #f4f4f4;border: 1px solid #ddd;border-left: 3px solid #f36d33;color: #666;display: block;font-family: monospace;line-height: 1.6;margin-bottom: 1.6em;max-width: 100%;overflow: auto;padding: 1em 1.5em;page-break-inside: avoid;word-wrap: break-word;"><code class="language-python">def start(verbose=False, *, install_dir: Path = None) -&gt; &quot;PyGhidraLauncher&quot;:
+    &quot;&quot;&quot;
+    Starts the JVM and fully initializes Ghidra in Headless mode.
+
+    :param verbose: Enable verbose output during JVM startup (Defaults to False)
+    :param install_dir: The path to the Ghidra installation directory.
+        (Defaults to the GHIDRA_INSTALL_DIR environment variable or &quot;lastrun&quot; file)
+    :return: The PyGhidraLauncher used to start the JVM
+    &quot;&quot;&quot;
+</code></pre>
+<h3 id="pyghidrastarted">pyghidra.started()</h3>
+<pre style="background: #f4f4f4;border: 1px solid #ddd;border-left: 3px solid #f36d33;color: #666;display: block;font-family: monospace;line-height: 1.6;margin-bottom: 1.6em;max-width: 100%;overflow: auto;padding: 1em 1.5em;page-break-inside: avoid;word-wrap: break-word;"><code class="language-python">def started() -&gt; bool:
+    &quot;&quot;&quot;
+    Whether the PyGhidraLauncher has already started.
+    &quot;&quot;&quot;
+</code></pre>
+<h3 id="pyghidraopen_project">pyghidra.open_project()</h3>
+<pre style="background: #f4f4f4;border: 1px solid #ddd;border-left: 3px solid #f36d33;color: #666;display: block;font-family: monospace;line-height: 1.6;margin-bottom: 1.6em;max-width: 100%;overflow: auto;padding: 1em 1.5em;page-break-inside: avoid;word-wrap: break-word;"><code class="language-python">def open_project(
+        path: Union[str, Path],
+        name: str,
+        create: bool = False
+) -&gt; &quot;Project&quot;:
+    &quot;&quot;&quot;
+    Opens the Ghidra project at the given location, optionally creating it if it doesn't exist.
+
+    :param path: Path of Ghidra project parent directory.
+    :param name: Name of Ghidra project to open/create.
+    :param create: Whether to create the project if it doesn't exist
+    :return: A Ghidra &quot;Project&quot; object.
+    :raises FileNotFoundError: If the project to open was not found and it shouldn't be created.
+    &quot;&quot;&quot;
+</code></pre>
+<h3 id="pyghidraopen_filesystem">pyghidra.open_filesystem()</h3>
+<pre style="background: #f4f4f4;border: 1px solid #ddd;border-left: 3px solid #f36d33;color: #666;display: block;font-family: monospace;line-height: 1.6;margin-bottom: 1.6em;max-width: 100%;overflow: auto;padding: 1em 1.5em;page-break-inside: avoid;word-wrap: break-word;"><code class="language-python">def open_filesystem(
+        path: Union[str, Path]
+    ) -&gt; &quot;GFileSystem&quot;:
+    &quot;&quot;&quot;
+    Opens a filesystem in Ghidra.
+
+    :param path: Path of filesystem to open in Ghidra.
+    :return: A Ghidra &quot;GFileSystem&quot; object.
+    :raises ValueError: If the filesystem to open is not supported by Ghidra.
+    &quot;&quot;&quot;
+</code></pre>
+<h3 id="pyghidraconsume_program">pyghidra.consume_program()</h3>
+<pre style="background: #f4f4f4;border: 1px solid #ddd;border-left: 3px solid #f36d33;color: #666;display: block;font-family: monospace;line-height: 1.6;margin-bottom: 1.6em;max-width: 100%;overflow: auto;padding: 1em 1.5em;page-break-inside: avoid;word-wrap: break-word;"><code class="language-python">def consume_program(
+        project: &quot;Project&quot;, 
+        path: Union[str, Path],
+        consumer: Any = None
+    ) -&gt; Tuple[&quot;Program&quot;, &quot;Object&quot;]:
+    &quot;&quot;&quot;
+    Gets the Ghidra program from the given project with the given project path. The returned program
+    must be manually released when it is no longer needed.
+
+    :param project: The Ghidra project that has the program.
+    :param path: The project path of the program (should start with &quot;/&quot;)
+    :param consumer: An optional reference to the Java object &quot;consuming&quot; the returned program, used
+        to ensure the underlying DomainObject is only closed when every consumer is done with it. If
+        a consumer is not provided, one will be generated by this function.
+    :return: A 2-element tuple containing the program and a consumer object that must be used to
+        release the program when finished with it (i.e., program.release(consumer). If a consumer
+        object was provided, the same consumer object is returned. Otherwise, a new consumer object
+        is created and returned.
+    :raises FileNotFoundError: If the path does not exist in the project.
+    :raises pyghidra.ProgramTypeError: If the path in the project exists but is not a Program.
+    &quot;&quot;&quot;
+</code></pre>
+<h3 id="pyghidraprogram_context">pyghidra.program_context()</h3>
+<pre style="background: #f4f4f4;border: 1px solid #ddd;border-left: 3px solid #f36d33;color: #666;display: block;font-family: monospace;line-height: 1.6;margin-bottom: 1.6em;max-width: 100%;overflow: auto;padding: 1em 1.5em;page-break-inside: avoid;word-wrap: break-word;"><code class="language-python">@contextlib.contextmanager
+def program_context(
+        project: &quot;Project&quot;, 
+        path: Union[str, Path],
+    ) -&gt; Generator[&quot;Program&quot;, None, None]:
+    &quot;&quot;&quot;
+    Gets the Ghidra program from the given project with the given project path. The returned
+    program's resource cleanup is performed by a context manager.
+
+    :param project: The Ghidra project that has the program.
+    :param path: The project path of the program (should start with &quot;/&quot;).
+    :return: The Ghidra program.
+    :raises FileNotFoundError: If the path does not exist in the project.
+    :raises pyghidra.ProgramTypeError: If the path in the project exists but is not a Program.
+    &quot;&quot;&quot;
+</code></pre>
+<h3 id="pyghidraanalyze">pyghidra.analyze()</h3>
+<pre style="background: #f4f4f4;border: 1px solid #ddd;border-left: 3px solid #f36d33;color: #666;display: block;font-family: monospace;line-height: 1.6;margin-bottom: 1.6em;max-width: 100%;overflow: auto;padding: 1em 1.5em;page-break-inside: avoid;word-wrap: break-word;"><code class="language-python">def analyze(
+        program: &quot;Program&quot;, 
+        monitor: Optional[&quot;TaskMonitor&quot;] = None
+    ) -&gt; str:
+    &quot;&quot;&quot;
+    Analyzes the given program.
+
+    :param program: The Ghidra program to analyze.
+    :return: The analysis log.
+    &quot;&quot;&quot;
+</code></pre>
+<h3 id="pyghidraghidra_script">pyghidra.ghidra_script()</h3>
+<pre style="background: #f4f4f4;border: 1px solid #ddd;border-left: 3px solid #f36d33;color: #666;display: block;font-family: monospace;line-height: 1.6;margin-bottom: 1.6em;max-width: 100%;overflow: auto;padding: 1em 1.5em;page-break-inside: avoid;word-wrap: break-word;"><code class="language-python">def ghidra_script(
+        path: Union[str, Path],
+        project: &quot;Project&quot;,
+        program: &quot;Program&quot; = None,
+        echo_stdout = True,
+        echo_stderr = True
+    ) -&gt; Tuple[str, str]:
+    &quot;&quot;&quot;
+    Runs any type of GhidraScript (Java, PyGhidra, Jython, etc).
+
+    :param path: The GhidraScript's path.
+    :param project: The Ghidra project to run the GhidraScript in.
+    :param program: An optional Ghidra program that the GhidraScript will see as its &quot;currentProgram&quot;.
+    :param echo_stdout: Whether or not to echo the GhidraScript's standard output.
+    :param echo_stderr: Whether or not to echo the GhidraScript's standard error.
+    :return: A 2 element tuple consisting of the GhidraScript's standard output and standard error.
+    &quot;&quot;&quot;
+</code></pre>
+<h3 id="pyghidratransaction">pyghidra.transaction()</h3>
+<pre style="background: #f4f4f4;border: 1px solid #ddd;border-left: 3px solid #f36d33;color: #666;display: block;font-family: monospace;line-height: 1.6;margin-bottom: 1.6em;max-width: 100%;overflow: auto;padding: 1em 1.5em;page-break-inside: avoid;word-wrap: break-word;"><code class="language-python">@contextlib.contextmanager
+def transaction(
+        program: &quot;Program&quot;,
+        description: str = &quot;Unnamed Transaction&quot;
+    ) -&gt; Generator[int, None, None]:
+    &quot;&quot;&quot;
+    Creates a context for running a Ghidra transaction.
+
+    :param program: The Ghidra program that will be affected.
+    :param description: The transaction description
+    :return: The transaction ID.
+    &quot;&quot;&quot;
+</code></pre>
+<h3 id="pyghidraanalysis_properties">pyghidra.analysis_properties()</h3>
+<pre style="background: #f4f4f4;border: 1px solid #ddd;border-left: 3px solid #f36d33;color: #666;display: block;font-family: monospace;line-height: 1.6;margin-bottom: 1.6em;max-width: 100%;overflow: auto;padding: 1em 1.5em;page-break-inside: avoid;word-wrap: break-word;"><code class="language-python">def analysis_properties(program: &quot;Program&quot;) -&gt; &quot;Options&quot;:
+    &quot;&quot;&quot;
+    Convenience function to get the Ghidra &quot;Program.ANALYSIS_PROPERTIES&quot; options.
+
+    :return: the Ghidra &quot;Program.ANALYSIS_PROPERTIES&quot; options.
+    &quot;&quot;&quot;
+</code></pre>
+<h3 id="pyghidraprogram_info">pyghidra.program_info()</h3>
+<pre style="background: #f4f4f4;border: 1px solid #ddd;border-left: 3px solid #f36d33;color: #666;display: block;font-family: monospace;line-height: 1.6;margin-bottom: 1.6em;max-width: 100%;overflow: auto;padding: 1em 1.5em;page-break-inside: avoid;word-wrap: break-word;"><code class="language-python">def program_info(program: &quot;Program&quot;) -&gt; &quot;Options&quot;:
+    &quot;&quot;&quot;
+    Convenience function to get the Ghidra &quot;Program.PROGRAM_INFO&quot; options.
+
+    :return: the Ghidra &quot;Program.PROGRAM_INFO&quot; options.
+    &quot;&quot;&quot;
+</code></pre>
+<h3 id="pyghidraprogram_loader">pyghidra.program_loader()</h3>
+<pre style="background: #f4f4f4;border: 1px solid #ddd;border-left: 3px solid #f36d33;color: #666;display: block;font-family: monospace;line-height: 1.6;margin-bottom: 1.6em;max-width: 100%;overflow: auto;padding: 1em 1.5em;page-break-inside: avoid;word-wrap: break-word;"><code class="language-python">def program_loader() -&gt; &quot;ProgramLoader.Builder&quot;:
+    &quot;&quot;&quot;
+    Convenience function to get a Ghidra &quot;ProgramLoader.Builder&quot; object.
+
+    :return: A Ghidra &quot;ProgramLoader.Builder&quot; object.
+    &quot;&quot;&quot;
+</code></pre>
+<h3 id="pyghidratask_monitor">pyghidra.task_monitor()</h3>
+<pre style="background: #f4f4f4;border: 1px solid #ddd;border-left: 3px solid #f36d33;color: #666;display: block;font-family: monospace;line-height: 1.6;margin-bottom: 1.6em;max-width: 100%;overflow: auto;padding: 1em 1.5em;page-break-inside: avoid;word-wrap: break-word;"><code class="language-python">def task_monitor(
+        timeout: Optional[int] = None
+    ) -&gt; &quot;TaskMonitor&quot;:
+    &quot;&quot;&quot;
+    Convenience function to get a &quot;TaskMonitor&quot; object.
+
+    :param timeout: An optional number of seconds to wait before canceling the monitor.
+    :return: A &quot;TaskMonitor&quot; object.
+    &quot;&quot;&quot;
+</code></pre>
+<h3 id="pyghidrawalk_project">pyghidra.walk_project()</h3>
+<pre style="background: #f4f4f4;border: 1px solid #ddd;border-left: 3px solid #f36d33;color: #666;display: block;font-family: monospace;line-height: 1.6;margin-bottom: 1.6em;max-width: 100%;overflow: auto;padding: 1em 1.5em;page-break-inside: avoid;word-wrap: break-word;"><code class="language-python">def walk_project(
+        project: &quot;Project&quot;,
+        callback: Callable[[&quot;DomainFile&quot;], None],
+        start: Union[str, Path] = &quot;/&quot;,
+        file_filter: Callable[[&quot;DomainFile&quot;], bool] = lambda _f: True
+    ):
+    &quot;&quot;&quot;
+    Walks the the given Ghidra project, calling the provided function when each domain file is 
+    encountered.
+
+    :param project: The Ghidra project to walk.
+    :param callback: The callback to process each domain file.
+    :param start: An optional starting project folder path.
+    :param file_filter: A filter used to limit what domain files get processed.
+    :raises FileNotFoundError: If the starting folder is not found in the project.
+    &quot;&quot;&quot;
+</code></pre>
+<h3 id="pyghidrawalk_programs">pyghidra.walk_programs()</h3>
+<pre style="background: #f4f4f4;border: 1px solid #ddd;border-left: 3px solid #f36d33;color: #666;display: block;font-family: monospace;line-height: 1.6;margin-bottom: 1.6em;max-width: 100%;overflow: auto;padding: 1em 1.5em;page-break-inside: avoid;word-wrap: break-word;"><code class="language-python">def walk_programs(
+        project: &quot;Project&quot;,
+        callback: Callable[[&quot;DomainFile&quot;, &quot;Program&quot;], None],
+        start: Union[str, Path] = &quot;/&quot;,
+        program_filter: Callable[[&quot;DomainFile&quot;, &quot;Program&quot;], bool] = lambda _f, _p: True
+    ):
+    &quot;&quot;&quot;
+    Walks the the given Ghidra project, calling the provided function when each program is 
+    encountered. Non-programs in the project are skipped.
+
+    :param project: The Ghidra project to walk.
+    :param callback: The callback to process each program.
+    :param start: An optional starting project folder path.
+    :param program_filter: A filter used to limit what programs get processed.
+    :raises FileNotFoundError: If the starting folder is not found in the project.
+    &quot;&quot;&quot;
+</code></pre>
+<h3 id="pyghidraprogramtypeerror">pyghidra.ProgramTypeError</h3>
+<pre style="background: #f4f4f4;border: 1px solid #ddd;border-left: 3px solid #f36d33;color: #666;display: block;font-family: monospace;line-height: 1.6;margin-bottom: 1.6em;max-width: 100%;overflow: auto;padding: 1em 1.5em;page-break-inside: avoid;word-wrap: break-word;"><code class="language-python">class ProgramTypeError(TypeError):
+    &quot;&quot;&quot;Custom exception for when a Program was expected but not received.&quot;&quot;&quot;
+</code></pre>
+<h2 id="example" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Example</h2>
+<p>The following example, while not very useful, showcases much of the API:</p>
+<pre style="background: #f4f4f4;border: 1px solid #ddd;border-left: 3px solid #f36d33;color: #666;display: block;font-family: monospace;line-height: 1.6;margin-bottom: 1.6em;max-width: 100%;overflow: auto;padding: 1em 1.5em;page-break-inside: avoid;word-wrap: break-word;"><code class="language-python">import os, jpype, pyghidra
+pyghidra.start()
+
+# Open/create a project
+with pyghidra.open_project(os.environ[&quot;GHIDRA_PROJECT_DIR&quot;], &quot;ExampleProject&quot;, create=True) as project:
+
+    # Walk a Ghidra release zip file, load every decompiler binary, and save them to the project
+    with pyghidra.open_filesystem(f&quot;{os.environ['DOWNLOADS_DIR']}/ghidra_11.4_PUBLIC_20250620.zip&quot;) as fs:
+        loader = pyghidra.program_loader().project(project)
+        for f in fs.files(lambda f: &quot;os/&quot; in f.path and f.name.startswith(&quot;decompile&quot;)):
+            loader = loader.source(f.getFSRL()).projectFolderPath(&quot;/&quot; + f.parentFile.name)
+            with loader.load() as load_results:
+                load_results.save(pyghidra.task_monitor())
+
+    # Analyze the windows decompiler program for a maximum of 10 seconds
+    with pyghidra.program_context(project, &quot;/win_x86_64/decompile.exe&quot;) as program:
+        analysis_props = pyghidra.analysis_properties(program)
+        with pyghidra.transaction(program):
+            analysis_props.setBoolean(&quot;Non-Returning Functions - Discovered&quot;, False)
+        analysis_log = pyghidra.analyze(program, pyghidra.task_monitor(10))
+        program.save(&quot;Analyzed&quot;, pyghidra.task_monitor())
+    
+    # Walk the project and set a property in each decompiler program
+    def set_property(domain_file, program):
+        with pyghidra.transaction(program):
+            program_info = pyghidra.program_info(program)
+            program_info.setString(&quot;PyGhidra Property&quot;, &quot;Set by PyGhidra!&quot;)
+        program.save(&quot;Setting property&quot;, pyghidra.task_monitor())
+    pyghidra.walk_programs(project, set_property, program_filter=lambda f, p: p.name.startswith(&quot;decompile&quot;))
+
+    # Load some bytes as a new program
+    ByteArrayCls = jpype.JArray(jpype.JByte)
+    my_bytes = ByteArrayCls(b&quot;\xaa\xbb\xcc\xdd\xee\xff&quot;)
+    loader = pyghidra.program_loader().project(project).source(my_bytes).name(&quot;my_bytes&quot;)
+    loader = loader.loaders(&quot;BinaryLoader&quot;).language(&quot;DATA:LE:64:default&quot;)
+    with loader.load() as load_results:
+        load_results.save(pyghidra.task_monitor())
+
+    # Run a GhidraScript
+    pyghidra.ghidra_script(f&quot;{os.environ['GHIDRA_SCRIPTS_DIR']}/HelloWorldScript.java&quot;, project)
+</code></pre>
+<h2 id="legacy-api-deprecated" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Legacy API (deprecated)</h2>
+<h3 id="pyghidraopen_program">pyghidra.open_program()</h3>
+<p><strong>NOTE:</strong> This function has been deprecated.</p>
+<p>To have PyGhidra setup a binary file for you, use the <code style="background: #f4f4f4;font-family: monospace;">open_program()</code> function. This will setup a
+Ghidra project and import the given binary file as a program for you.</p>
+<p>Again, this will also allow you to import <code style="background: #f4f4f4;font-family: monospace;">ghidra</code> and <code style="background: #f4f4f4;font-family: monospace;">java</code> to perform more advanced processing.</p>
+<pre style="background: #f4f4f4;border: 1px solid #ddd;border-left: 3px solid #f36d33;color: #666;display: block;font-family: monospace;line-height: 1.6;margin-bottom: 1.6em;max-width: 100%;overflow: auto;padding: 1em 1.5em;page-break-inside: avoid;word-wrap: break-word;"><code class="language-python">def open_program(
+        binary_path: Union[str, Path],
+        project_location: Union[str, Path] = None,
+        project_name: str = None,
+        analyze=True,
+        language: str = None,
+        compiler: str = None,
+        loader: Union[str, JClass] = None,
+        program_name: str = None,
+        nested_project_location = True
+) -&gt; Generator[&quot;FlatProgramAPI&quot;, None, None]:
+    &quot;&quot;&quot;
+    Opens given binary path (or optional program name) in Ghidra and returns FlatProgramAPI object.
+
+    :param binary_path: Path to binary file, may be None.
+    :param project_location: Location of Ghidra project to open/create.
+        (Defaults to same directory as binary file)
+    :param project_name: Name of Ghidra project to open/create.
+        (Defaults to name of binary file suffixed with &quot;_ghidra&quot;)
+    :param analyze: Whether to run analysis before returning.
+    :param language: The LanguageID to use for the program.
+        (Defaults to Ghidra's detected LanguageID)
+    :param compiler: The CompilerSpecID to use for the program. Requires a provided language.
+        (Defaults to the Language's default compiler)
+    :param loader: The `ghidra.app.util.opinion.Loader` class to use when importing the program.
+        This may be either a Java class or its path. (Defaults to None)
+    :param program_name: The name of the program to open in Ghidra.
+        (Defaults to None, which results in the name being derived from &quot;binary_path&quot;)
+    :param nested_project_location: If True, assumes &quot;project_location&quot; contains an extra nested 
+        directory named &quot;project_name&quot;, which contains the actual Ghidra project files/directories.
+        By default, PyGhidra creates Ghidra projects with this nested layout, but the standalone
+        Ghidra program does not.  Nested project locations are True by default to maintain backwards
+        compatibility with older versions of PyGhidra.
+    :return: A Ghidra FlatProgramAPI object.
+    :raises ValueError: If the provided language, compiler or loader is invalid.
+    :raises TypeError: If the provided loader does not implement `ghidra.app.util.opinion.Loader`.
+    &quot;&quot;&quot;
+</code></pre>
+<h4 id="example-1">Example:</h4>
+<pre style="background: #f4f4f4;border: 1px solid #ddd;border-left: 3px solid #f36d33;color: #666;display: block;font-family: monospace;line-height: 1.6;margin-bottom: 1.6em;max-width: 100%;overflow: auto;padding: 1em 1.5em;page-break-inside: avoid;word-wrap: break-word;"><code class="language-python">import pyghidra
+
+with pyghidra.open_program(&quot;binary_file.exe&quot;) as flat_api:
+    program = flat_api.getCurrentProgram()
+    listing = program.getListing()
+    print(listing.getCodeUnitAt(flat_api.toAddr(0x1234)))
+
+    # We are also free to import ghidra while in this context to do more advanced things.
+    from ghidra.app.decompiler.flatapi import FlatDecompilerAPI
+    decomp_api = FlatDecompilerAPI(flat_api)
+    ...
+    decomp_api.dispose()
+</code></pre>
+<p>By default, PyGhidra will run analysis for you. If you would like to do this yourself, set <code style="background: #f4f4f4;font-family: monospace;">analyze</code>
+to <code style="background: #f4f4f4;font-family: monospace;">False</code>.</p>
+<pre style="background: #f4f4f4;border: 1px solid #ddd;border-left: 3px solid #f36d33;color: #666;display: block;font-family: monospace;line-height: 1.6;margin-bottom: 1.6em;max-width: 100%;overflow: auto;padding: 1em 1.5em;page-break-inside: avoid;word-wrap: break-word;"><code class="language-python">import pyghidra
+
+with pyghidra.open_program(&quot;binary_file.exe&quot;, analyze=False) as flat_api:
+    from ghidra.program.util import GhidraProgramUtilities
+
+    program = flat_api.getCurrentProgram()
+    if GhidraProgramUtilities.shouldAskToAnalyze(program):
+        flat_api.analyzeAll(program)
+</code></pre>
+<p>The <code style="background: #f4f4f4;font-family: monospace;">open_program()</code> function can also accept optional arguments to control the project name and
+location that gets created (helpful for opening up a sample in an already existing project).</p>
+<pre style="background: #f4f4f4;border: 1px solid #ddd;border-left: 3px solid #f36d33;color: #666;display: block;font-family: monospace;line-height: 1.6;margin-bottom: 1.6em;max-width: 100%;overflow: auto;padding: 1em 1.5em;page-break-inside: avoid;word-wrap: break-word;"><code class="language-python">import pyghidra
+
+with pyghidra.open_program(&quot;binary_file.exe&quot;, project_name=&quot;MyProject&quot;, project_location=r&quot;C:\projects&quot;) as flat_api:
+    ...
+</code></pre>
+<h3 id="pyghidrarun_script">pyghidra.run_script()</h3>
+<p><strong>NOTE:</strong> This function has been deprecated.</p>
+<p>PyGhidra can also be used to run an existing Ghidra Python script directly in your native CPython
+interpreter using the <code style="background: #f4f4f4;font-family: monospace;">run_script()</code> function. However, while you can technically run an existing
+Ghidra script unmodified, you may run into issues due to differences between Jython 2 and
+CPython 3/JPype. Therefore, some modification to the script may be needed.</p>
+<pre style="background: #f4f4f4;border: 1px solid #ddd;border-left: 3px solid #f36d33;color: #666;display: block;font-family: monospace;line-height: 1.6;margin-bottom: 1.6em;max-width: 100%;overflow: auto;padding: 1em 1.5em;page-break-inside: avoid;word-wrap: break-word;"><code class="language-python">def run_script(
+    binary_path: Optional[Union[str, Path]],
+    script_path: Union[str, Path],
+    project_location: Union[str, Path] = None,
+    project_name: str = None,
+    script_args: List[str] = None,
+    verbose=False,
+    analyze=True,
+    lang: str = None,
+    compiler: str = None,
+    loader: Union[str, JClass] = None,
+    program_name = None,
+    nested_project_location = True,
+    *,
+    install_dir: Path = None
+):
+    &quot;&quot;&quot;
+    Runs a given script on a given binary path.
+
+    :param binary_path: Path to binary file, may be None.
+    :param script_path: Path to script to run.
+    :param project_location: Location of Ghidra project to open/create.
+        (Defaults to same directory as binary file if None)
+    :param project_name: Name of Ghidra project to open/create.
+        (Defaults to name of binary file suffixed with &quot;_ghidra&quot; if None)
+    :param script_args: Command line arguments to pass to script.
+    :param verbose: Enable verbose output during Ghidra initialization.
+    :param analyze: Whether to run analysis, if a binary_path is provided, before running the script.
+    :param lang: The LanguageID to use for the program.
+        (Defaults to Ghidra's detected LanguageID)
+    :param compiler: The CompilerSpecID to use for the program. Requires a provided language.
+        (Defaults to the Language's default compiler)
+    :param loader: The `ghidra.app.util.opinion.Loader` class to use when importing the program.
+        This may be either a Java class or its path. (Defaults to None)
+    :param install_dir: The path to the Ghidra installation directory. This parameter is only
+        used if Ghidra has not been started yet.
+        (Defaults to the GHIDRA_INSTALL_DIR environment variable or &quot;lastrun&quot; file)
+    :param program_name: The name of the program to open in Ghidra.
+        (Defaults to None, which results in the name being derived from &quot;binary_path&quot;)
+    :param nested_project_location: If True, assumes &quot;project_location&quot; contains an extra nested 
+        directory named &quot;project_name&quot;, which contains the actual Ghidra project files/directories.
+        By default, PyGhidra creates Ghidra projects with this nested layout, but the standalone
+        Ghidra program does not.  Nested project locations are True by default to maintain backwards
+        compatibility with older versions of PyGhidra.
+    :raises ValueError: If the provided language, compiler or loader is invalid.
+    :raises TypeError: If the provided loader does not implement `ghidra.app.util.opinion.Loader`.
+    &quot;&quot;&quot;
+</code></pre>
+<h4 id="example-2">Example:</h4>
+<pre style="background: #f4f4f4;border: 1px solid #ddd;border-left: 3px solid #f36d33;color: #666;display: block;font-family: monospace;line-height: 1.6;margin-bottom: 1.6em;max-width: 100%;overflow: auto;padding: 1em 1.5em;page-break-inside: avoid;word-wrap: break-word;"><code class="language-python">import pyghidra
+
+pyghidra.run_script(r&quot;C:\input.exe&quot;, r&quot;C:\some_ghidra_script.py&quot;)
+</code></pre>
+<p>This can also be done on the command line using <code style="background: #f4f4f4;font-family: monospace;">pyghidra</code>.</p>
+<pre style="background: #f4f4f4;border: 1px solid #ddd;border-left: 3px solid #f36d33;color: #666;display: block;font-family: monospace;line-height: 1.6;margin-bottom: 1.6em;max-width: 100%;overflow: auto;padding: 1em 1.5em;page-break-inside: avoid;word-wrap: break-word;"><code class="language-console">&gt; pyghidra C:\input.exe C:\some_ghidra_script.py &lt;CLI ARGS PASSED TO SCRIPT&gt;
+</code></pre>
+<h3 id="pyghidralauncherpyghidralauncher">pyghidra.launcher.PyGhidraLauncher()</h3>
+<p>JVM configuration for the classpath and vmargs may be done through a <code style="background: #f4f4f4;font-family: monospace;">PyGhidraLauncher</code>.</p>
+<pre style="background: #f4f4f4;border: 1px solid #ddd;border-left: 3px solid #f36d33;color: #666;display: block;font-family: monospace;line-height: 1.6;margin-bottom: 1.6em;max-width: 100%;overflow: auto;padding: 1em 1.5em;page-break-inside: avoid;word-wrap: break-word;"><code class="language-python">class PyGhidraLauncher:
+    &quot;&quot;&quot;
+    Base pyghidra launcher
+    &quot;&quot;&quot;
+
+    def add_classpaths(self, *args):
+        &quot;&quot;&quot;
+        Add additional entries to the classpath when starting the JVM
+        &quot;&quot;&quot;
+        self.class_path += args
+
+    def add_vmargs(self, *args):
+        &quot;&quot;&quot;
+        Add additional vmargs for launching the JVM
+        &quot;&quot;&quot;
+        self.vm_args += args
+
+    def add_class_files(self, *args):
+        &quot;&quot;&quot;
+        Add additional entries to be added the classpath after Ghidra has been fully loaded.
+        This ensures that all of Ghidra is available so classes depending on it can be properly loaded.
+        &quot;&quot;&quot;
+        self.class_files += args
+
+    def start(self, **jpype_kwargs):
+        &quot;&quot;&quot;
+        Starts Jpype connection to Ghidra (if not already started).
+        &quot;&quot;&quot;
+</code></pre>
+<p>The following <code style="background: #f4f4f4;font-family: monospace;">PyGhidraLauncher</code>s are available:</p>
+<pre style="background: #f4f4f4;border: 1px solid #ddd;border-left: 3px solid #f36d33;color: #666;display: block;font-family: monospace;line-height: 1.6;margin-bottom: 1.6em;max-width: 100%;overflow: auto;padding: 1em 1.5em;page-break-inside: avoid;word-wrap: break-word;"><code class="language-python">class HeadlessPyGhidraLauncher(PyGhidraLauncher):
+    &quot;&quot;&quot;
+    Headless pyghidra launcher
+    &quot;&quot;&quot;
+</code></pre>
+<pre style="background: #f4f4f4;border: 1px solid #ddd;border-left: 3px solid #f36d33;color: #666;display: block;font-family: monospace;line-height: 1.6;margin-bottom: 1.6em;max-width: 100%;overflow: auto;padding: 1em 1.5em;page-break-inside: avoid;word-wrap: break-word;"><code class="language-python">class DeferredPyGhidraLauncher(PyGhidraLauncher):
+    &quot;&quot;&quot;
+    PyGhidraLauncher which allows full Ghidra initialization to be deferred.
+    initialize_ghidra must be called before all Ghidra classes are fully available.
+    &quot;&quot;&quot;
+</code></pre>
+<pre style="background: #f4f4f4;border: 1px solid #ddd;border-left: 3px solid #f36d33;color: #666;display: block;font-family: monospace;line-height: 1.6;margin-bottom: 1.6em;max-width: 100%;overflow: auto;padding: 1em 1.5em;page-break-inside: avoid;word-wrap: break-word;"><code class="language-python">class GuiPyGhidraLauncher(PyGhidraLauncher):
+    &quot;&quot;&quot;
+    GUI pyghidra launcher
+    &quot;&quot;&quot;
+</code></pre>
+<h4 id="example-3">Example:</h4>
+<pre style="background: #f4f4f4;border: 1px solid #ddd;border-left: 3px solid #f36d33;color: #666;display: block;font-family: monospace;line-height: 1.6;margin-bottom: 1.6em;max-width: 100%;overflow: auto;padding: 1em 1.5em;page-break-inside: avoid;word-wrap: break-word;"><code class="language-python">from pyghidra.launcher import HeadlessPyGhidraLauncher
+
+launcher = HeadlessPyGhidraLauncher()
+launcher.add_classpaths(&quot;log4j-core-2.17.1.jar&quot;, &quot;log4j-api-2.17.1.jar&quot;)
+launcher.add_vmargs(&quot;-Dlog4j2.formatMsgNoLookups=true&quot;)
+launcher.start()
+</code></pre>
+<h2 id="handling-package-name-conflicts" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Handling Package Name Conflicts</h2>
+<p>There may be some Python modules and Java packages with the same import path. When this occurs the
+Python module takes precedence. While JPype has its own mechanism for handling this situation,
+PyGhidra automatically makes the Java package accessible by allowing it to be imported with an
+underscore appended to the package name:</p>
+<pre style="background: #f4f4f4;border: 1px solid #ddd;border-left: 3px solid #f36d33;color: #666;display: block;font-family: monospace;line-height: 1.6;margin-bottom: 1.6em;max-width: 100%;overflow: auto;padding: 1em 1.5em;page-break-inside: avoid;word-wrap: break-word;"><code class="language-python">import pdb   # imports Python's pdb
+import pdb_  # imports Ghidra's pdb
+</code></pre>
+<h2 id="change-history" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Change History</h2>
+<p><strong>3.0.2</strong></p>
+<ul>
+<li>Fixed an issue that prevented <a href="#pyghidraanalysis_properties"><code style="background: #f4f4f4;font-family: monospace;">pyghidra.analysis_properties()</code></a>
+from having access to all of the analysis properties.</li>
+<li>Fixed issues related to the PyGhidra API inadvertently squashing exceptions.</li>
+<li>Calling <a href="#pyghidratask_monitor"><code style="background: #f4f4f4;font-family: monospace;">pyghidra.task_monitor()</code></a> with no <code style="background: #f4f4f4;font-family: monospace;">timeout</code> parameter will now
+return a <code style="background: #f4f4f4;font-family: monospace;">TaskMonitor.DUMMY</code> instead of a <code style="background: #f4f4f4;font-family: monospace;">PyGhidraTaskMonitor</code>.</li>
+</ul>
+<p><strong>3.0.1</strong></p>
+<ul>
+<li>Fixed <code style="background: #f4f4f4;font-family: monospace;">AttributeError: module 'pyghidra' has no attribute 'program_conext'</code> when performing a
+<code style="background: #f4f4f4;font-family: monospace;">from pyghidra import *</code>.</li>
+</ul>
+<p><strong>3.0.0:</strong></p>
+<ul>
+<li>Revised the PyGhidra API. See the <a href="#api">API section</a> for more details.</li>
+<li>PyGhidra 3.0.0 requires Ghidra 12.0 or later to run.</li>
+<li>If PyGhidra sees that the <code style="background: #f4f4f4;font-family: monospace;">pyghidra.sys.modules.restore</code> Java system property is set (typically
+via the <code style="background: #f4f4f4;font-family: monospace;">support/launch.properties</code> file), it will restore <code style="background: #f4f4f4;font-family: monospace;">sys.modules</code> to its prior state after
+a PyGhidra script is run so the next time the script is run, it freshly loads all of its imported
+modules again. This is experimental and should only be enabled if necessary.</li>
+<li>Changed JPype dependency to be fixed at version 1.5.2 to avoid
+<a href="https://github.com/jpype-project/jpype/issues/1316">a possible Windows crash on 1.6.0</a></li>
+</ul>
+<p><strong>2.2.1:</strong></p>
+<ul>
+<li>PyGhidra now launches with the current working directory removed from <code style="background: #f4f4f4;font-family: monospace;">sys.path</code> to prevent
+the potential for importing invalid modules from random <code style="background: #f4f4f4;font-family: monospace;">ghidra/</code> or <code style="background: #f4f4f4;font-family: monospace;">java/</code> directories that may
+exist in the user's current working directory.</li>
+</ul>
+<p><strong>2.2.0:</strong></p>
+<ul>
+<li><a href="#pyghidraopen_program"><code style="background: #f4f4f4;font-family: monospace;">pyghidra.open_program()</code></a> and
+<a href="#pyghidrarun_script"><code style="background: #f4f4f4;font-family: monospace;">pyghidra.run_script()</code></a> now accept a <code style="background: #f4f4f4;font-family: monospace;">nested_project_location</code> parameter
+which can be set to <code style="background: #f4f4f4;font-family: monospace;">False</code> to open existing Ghidra projects that were created with the
+Ghidra GUI.</li>
+<li>If a Ghidra installation directory is not specified by the <code style="background: #f4f4f4;font-family: monospace;">install_dir</code> parameter or
+<code style="background: #f4f4f4;font-family: monospace;">GHIDRA_INSTALL_DIR</code> environment variable, PyGhidra will look for a <code style="background: #f4f4f4;font-family: monospace;">lastrun</code> file in the
+Ghidra user settings parent directory, and use the installation directory it specifies.  The
+<code style="background: #f4f4f4;font-family: monospace;">lastrun</code> file is created by Ghidra 11.4 and later.</li>
+</ul>
+<p><strong>2.1.0:</strong></p>
+<ul>
+<li><a href="#pyghidraopen_program"><code style="background: #f4f4f4;font-family: monospace;">pyghidra.open_program()</code></a> now accepts a <code style="background: #f4f4f4;font-family: monospace;">program_name</code> parameter, which
+can be used to override the program name derived from the <code style="background: #f4f4f4;font-family: monospace;">binary_path</code> parameter.</li>
+<li><a href="#pyghidraopen_program"><code style="background: #f4f4f4;font-family: monospace;">pyghidra.open_program()</code></a> now properly throws an exception if the project
+exists and is locked.</li>
+</ul>
+<p><strong>2.0.1:</strong></p>
+<ul>
+<li>PyGhidra now respects the <code style="background: #f4f4f4;font-family: monospace;">application.settingsdir</code> property set in Ghidra's <code style="background: #f4f4f4;font-family: monospace;">launch.properties</code>
+file.</li>
+<li>Fixed an issue that prevented accessing Java getters/setters as properties on non-public classes.</li>
+<li>PyGhidra can now find modules that live in directories specified by Ghidra's <em>&quot;Bundle Manager&quot;</em>.</li>
+</ul>
+<p><strong>2.0.0:</strong></p>
+<ul>
+<li>Initial Release.</li>
+</ul>

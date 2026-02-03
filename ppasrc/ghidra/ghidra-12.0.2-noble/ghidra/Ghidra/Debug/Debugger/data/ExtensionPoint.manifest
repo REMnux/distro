@@ -1,0 +1,10 @@
+AutoMapSpec
+AutoReadMemorySpecFactory
+DebuggerMappingOpinion
+DebuggerModelFactory
+DebuggerPlatformOpinion
+DebuggerProgramLaunchOpinion
+DebuggerRegisterColumnFactory
+DisassemblyInject
+EmulatorFactory
+LocationTrackingSpecFactory

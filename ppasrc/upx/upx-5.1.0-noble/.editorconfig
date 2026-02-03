@@ -1,0 +1,22 @@
+# Copyright (C) Markus Franz Xaver Johannes Oberhumer
+# see https://editorconfig.org/
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_size = 4
+indent_style = space
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[{GNUmakefile*,MMakefile*,Makefile*,Makevars*,*.mk}]
+indent_size = 8
+indent_style = tab
+
+[{*.asm,*.S}]
+indent_size = 8
+
+[{*.yaml,*.yml}]
+indent_size = 2
