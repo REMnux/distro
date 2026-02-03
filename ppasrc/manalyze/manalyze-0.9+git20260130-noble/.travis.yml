@@ -1,0 +1,31 @@
+language: cpp
+sudo: false
+dist: bionic
+addons:
+  apt:
+    packages:
+    - libboost-regex-dev
+    - libboost-program-options-dev
+    - libboost-system-dev
+    - libboost-filesystem-dev
+    - libboost-test-dev
+    - libssl-dev
+compiler:
+  - gcc
+before_script:
+  - cmake . -DTests=ON -DCMAKE_BUILD_TYPE=Debug
+script:
+  - make
+  - bin/manalyze --version
+  - bin/manalyze --help
+  - bin/manalyze-tests
+  - bin/hash-library-test
+after_success:
+  - git clone https://github.com/rizinorg/rizin-testbins
+  - git clone https://github.com/radareorg/radare2-testbins
+  # Run Manalyze on problematic binaries
+  - travis_wait 30 bin/manalyze -r rizin-testbins/pe/ >/dev/null 2>&1
+  - travis_wait 30 bin/manalyze -r radare2-testbins/pe/ >/dev/null 2>&1
+  - bin/manalyze -r radare2-testbins/fuzzed/ -ojson >/dev/null 2>&1
+  - bin/manalyze -d all -p all --hashes --extract /tmp/ test/testfiles/manatest.exe test/testfiles/manatest2.exe >/dev/null
+  - bin/manalyze -d all -p all --hashes -o json test/testfiles/manatest3.exe >/dev/null

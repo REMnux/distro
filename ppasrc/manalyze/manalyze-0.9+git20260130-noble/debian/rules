@@ -1,0 +1,11 @@
+#!/usr/bin/make -f
+
+export DH_OPTIONS
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	dh_auto_configure -- -DCMAKE_BUILD_TYPE=Release -DGitHub=OFF
+
+override_dh_shlibdeps:

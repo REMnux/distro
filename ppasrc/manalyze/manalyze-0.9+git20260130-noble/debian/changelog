@@ -1,0 +1,5 @@
+manalyze (0.9+git20260130-noble) noble; urgency=medium
+
+  * Initial release. Vendored yara and hash-library for offline build.
+
+ -- REMnux Distribution <distro@remnux.org>  Sun, 02 Feb 2026 21:30:00 -0500

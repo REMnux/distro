@@ -1,0 +1,14 @@
+Source: manalyze
+Section: utils
+Priority: optional
+Maintainer: REMnux Distribution (https://REMnux.org) <distro@remnux.org>
+Build-Depends: debhelper (>= 10), cmake, g++, libssl-dev, libboost-system-dev
+Standards-Version: 4.1.2
+Homepage: https://github.com/JusticeRage/Manalyze
+
+Package: manalyze
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Perform static analysis of suspicious PE files
+ A static analyzer for PE executables with plugin-based analysis,
+ YARA signatures, and VirusTotal integration.
