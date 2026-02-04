@@ -189,9 +189,9 @@ check_os() {
     fi
 
     local version="${VERSION_ID:-}"
-    if [[ "$version" != "20.04" && "$version" != "24.04" ]]; then
+    if [[ "$version" != "24.04" ]]; then
         log_error "Unsupported Ubuntu version: ${version}"
-        log_error "Supported versions: 20.04 (Focal), 24.04 (Noble)"
+        log_error "Supported version: 24.04 (Noble)"
         exit 1
     fi
 
