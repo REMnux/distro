@@ -1311,7 +1311,16 @@ def print_report(root_causes: list[FailedState],
                 print(f"\n    {Colors.RED}Error (from log):{Colors.RESET}")
                 for line in error_text.split('\n'):
                     print(f"    {line}")
-            else:
+
+            # Show APT dependency info if available (supplements error message)
+            apt_deps = log_context.get("apt_dependency_info")
+            if apt_deps:
+                label = "Unmet dependencies:" if len(apt_deps) > 1 else "Unmet dependency:"
+                print(f"\n    {Colors.ORANGE}{label}{Colors.RESET}")
+                for dep_info in apt_deps:
+                    print(f"      {dep_info['package']} requires: {dep_info['depends_on']}")
+
+            if not error_text:
                 # Fallback to comment
                 print(f"\n    {Colors.RED}Error:{Colors.RESET}")
                 _print_wrapped_error(rc.comment)
@@ -1628,7 +1637,21 @@ class LogParser:
             "error_text": None,
             "traceback_info": None,
             "extracted_values": {},
+            "apt_dependency_info": None,
         }
+
+        # Extract APT dependency info from stdout (for package errors)
+        # Use findall to capture ALL unmet dependencies, not just the first
+        apt_depends_matches = re.findall(
+            r'^\s*(\S+)\s*:\s*Depends:\s*(.+?)\s+but it is not (?:installable|going to be installed)',
+            section,
+            re.MULTILINE
+        )
+        if apt_depends_matches:
+            result["apt_dependency_info"] = [
+                {"package": match[0], "depends_on": match[1]}
+                for match in apt_depends_matches
+            ]
 
         # Check for tracebacks and parse them
         traceback_match = re.search(
