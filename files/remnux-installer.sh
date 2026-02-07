@@ -210,6 +210,85 @@ validate_mode() {
     exit 1
 }
 
+check_clock() {
+    # Compare local time against a remote server's Date header.
+    # Uses github.com since CAST already requires GitHub connectivity.
+    local remote_date_header
+    remote_date_header=$(curl -sI --max-time 10 "https://github.com" 2>/dev/null \
+        | grep -i "^date:" | sed 's/^[^:]*:[[:space:]]*//; s/\r$//' || true)
+
+    if [[ -z "$remote_date_header" ]]; then
+        # No network or curl failed — skip silently.
+        # CAST will surface network errors later if connectivity is truly broken.
+        return 0
+    fi
+
+    local remote_epoch local_epoch skew
+    remote_epoch=$(LC_ALL=C date -d "$remote_date_header" +%s 2>/dev/null) || return 0
+    local_epoch=$(date +%s)
+    skew=$(( remote_epoch - local_epoch ))
+
+    # Determine direction, then take absolute value
+    local direction="ahead"
+    if [[ $skew -gt 0 ]]; then
+        direction="behind"
+    fi
+    if [[ $skew -lt 0 ]]; then
+        skew=$(( -skew ))
+    fi
+
+    if [[ $skew -gt 300 ]]; then
+        log_warn "System clock is ~$(( skew / 60 )) minutes ${direction} of actual time."
+        log_warn "This can cause package repository errors during installation."
+        log_info "Attempting to synchronize the clock..."
+
+        local has_timedatectl=false
+        if command -v timedatectl >/dev/null 2>&1; then
+            has_timedatectl=true
+            timedatectl set-ntp true 2>/dev/null || true
+            # Wait up to 15 seconds for NTP sync
+            local attempts=0
+            while [[ $attempts -lt 15 ]]; do
+                if timedatectl show --property=NTPSynchronized 2>/dev/null \
+                    | grep -q "yes"; then
+                    log_info "Clock synchronized successfully."
+                    return 0
+                fi
+                sleep 1
+                attempts=$(( attempts + 1 ))
+            done
+        fi
+
+        # timedatectl unavailable or NTP sync didn't complete — try setting
+        # directly from the server header as a fallback
+        local corrected_time
+        corrected_time=$(LC_ALL=C date -d "$remote_date_header" "+%Y-%m-%d %H:%M:%S" 2>/dev/null)
+        if [[ -n "$corrected_time" ]]; then
+            if [[ "$has_timedatectl" == true ]]; then
+                timedatectl set-ntp false 2>/dev/null || true
+                timedatectl set-time "$corrected_time" 2>/dev/null && \
+                    log_info "Clock set to ${corrected_time} (from remote server)." && \
+                    return 0
+            fi
+            # Last resort: direct date command
+            date -s "$corrected_time" >/dev/null 2>&1 && \
+                log_info "Clock set to ${corrected_time} (from remote server)." && \
+                return 0
+        fi
+
+        # Nothing worked — warn with actionable copy-paste command
+        log_warn "Could not synchronize the clock automatically."
+        log_warn "If the installation fails, manually set the time and retry:"
+        if [[ -n "$corrected_time" ]]; then
+            log_warn "  sudo date -s '${corrected_time}'"
+        else
+            log_warn "  sudo date -s 'YYYY-MM-DD HH:MM:SS'"
+        fi
+    else
+        log_detail "System clock verified (within tolerance)"
+    fi
+}
+
 #############################################################################
 # Cast management functions
 #############################################################################
@@ -456,6 +535,7 @@ cmd_install() {
     log_info "${SCRIPT_NAME} version ${SCRIPT_VERSION}"
     
     check_os
+    check_clock
     ensure_cast_installed
 
     local cast_path
