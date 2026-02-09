@@ -161,6 +161,8 @@ ERROR_CATEGORIES = {
             "InvalidVersion": "A package has a non-PEP-440 version string ('{bad_version}'). "
                              "Try: pip install --upgrade pip setuptools packaging",
             "ResolutionImpossible": "Dependency conflict - packages have incompatible version requirements.",
+            "ModuleNotFoundError": "A required build dependency ('{missing_module}') is missing. "
+                                   "Ensure the build environment has the necessary Python packages installed.",
         },
     },
     "git": {
@@ -1095,7 +1097,7 @@ class TracebackParser:
     # Pattern to match the final exception line in a traceback
     # Uses word boundary to correctly capture exception name after module path
     EXCEPTION_PATTERN = re.compile(
-        r"^(?:(?P<module>[\w._]+)\.)?\b(?P<exception>[A-Z]\w*(?:Error|Exception|Warning|Version|Failure|Impossible)):\s*(?P<message>.+)$",
+        r"^\s*(?:(?P<module>[\w._]+)\.)?\b(?P<exception>[A-Z]\w*(?:Error|Exception|Warning|Version|Failure|Impossible)):\s*(?P<message>.+)$",
         re.MULTILINE
     )
 
