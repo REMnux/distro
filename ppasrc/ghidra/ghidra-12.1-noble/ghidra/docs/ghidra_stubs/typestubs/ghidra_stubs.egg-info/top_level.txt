@@ -1,0 +1,13 @@
+db-stubs
+decompiler-stubs
+docking-stubs
+foundation-stubs
+generic-stubs
+ghidra-stubs
+gui-stubs
+help-stubs
+log-stubs
+resources-stubs
+util-stubs
+utilities-stubs
+utility-stubs
