@@ -1,0 +1,19 @@
+<h1 id="swiftdemangler" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">SwiftDemangler</h1>
+<p>This module provides support for demanling mangled <a href="https://www.swift.org">Swift</a> symbols. Supported
+mangled symbols begin with <code style="background: #f4f4f4;font-family: monospace;">$S</code>, <code style="background: #f4f4f4;font-family: monospace;">$s</code>, <code style="background: #f4f4f4;font-family: monospace;">_$S&quot;</code>, <code style="background: #f4f4f4;font-family: monospace;">_$s</code>, or <code style="background: #f4f4f4;font-family: monospace;">_T</code>.</p>
+<p>The demangler currently relies on making direct calls to the native Swift demangler tool, which
+comes <a href="https://www.swift.org/download/">bundled with Swift</a>. For example:</p>
+<pre style="background: #f4f4f4;border: 1px solid #ddd;border-left: 3px solid #f36d33;color: #666;display: block;font-family: monospace;line-height: 1.6;margin-bottom: 1.6em;max-width: 100%;overflow: auto;padding: 1em 1.5em;page-break-inside: avoid;word-wrap: break-word;"><code class="language-bash">% swift demangle --compact --expand _\$s7SwiftUI4ViewMp
+Demangling for _$s7SwiftUI4ViewMp
+kind=Global
+  kind=ProtocolDescriptor
+    kind=Type
+      kind=Protocol
+        kind=Module, text=&quot;SwiftUI&quot;
+        kind=Identifier, text=&quot;View&quot;
+protocol descriptor for SwiftUI.View
+</code></pre>
+<p>The resulting tree is parsed by the Ghidra Swift Demangler to form and apply a demangled symbol
+name.</p>
+<p>By default, the <code style="background: #f4f4f4;font-family: monospace;">Demangler Swift</code> Analyzer will search for the native Swift Demangler on the <code style="background: #f4f4f4;font-family: monospace;">PATH</code>.
+If it resides elsewhere, its path can be specified in the analyzer's options.</p>

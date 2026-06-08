@@ -1,0 +1,441 @@
+<h1 id="ghidradev-eclipse-plugin" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">GhidraDev Eclipse Plugin</h1>
+<p>GhidraDev provides support for developing and debugging Ghidra scripts and modules in Eclipse.</p>
+<p>The information provided in this document is effective as of GhidraDev 5.0.1 and is subject to
+change with future releases.</p>
+<h2 id="table-of-contents" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Table of Contents</h2>
+<ol>
+<li><a href="#change-history">Change History</a></li>
+<li><a href="#minimum-requirements">Minimum Requirements</a></li>
+<li><a href="#optional-requirements">Optional Requirements</a></li>
+<li><a href="#installing">Installing</a>
+<ul>
+<li><a href="#manual-installation-in-eclipse-offline">Manual Installation in Eclipse (offline)</a></li>
+<li><a href="#manual-installation-in-eclipse-online">Manual Installation in Eclipse (online)</a></li>
+<li><a href="#automatic-installation-through-ghidra">Automatic Installation through Ghidra</a></li>
+</ul>
+</li>
+<li><a href="#ghidradev-features">GhidraDev Features</a>
+<ul>
+<li><a href="#new-ghidra-script">New Ghidra Script</a></li>
+<li><a href="#new-ghidra-script-project">New Ghidra Script Project</a></li>
+<li><a href="#new-ghidra-module-project">New Ghidra Module Project</a></li>
+<li><a href="#import-ghidra-module-source">Import Ghidra Module Source</a></li>
+<li><a href="#export-ghidra-module-extension">Export Ghidra Module Extension</a></li>
+<li><a href="#preferences">Preferences</a></li>
+<li><a href="#link-ghidra">Link Ghidra</a></li>
+</ul>
+</li>
+<li><a href="#launching-and-debugging-ghidra">Launching and Debugging Ghidra</a></li>
+<li><a href="#pydev-support">PyDev Support</a>
+<ul>
+<li><a href="#installing-pydev">Installing PyDev</a></li>
+<li><a href="#configuring-pydev">Configuring PyDev</a></li>
+</ul>
+</li>
+<li><a href="#upgrading">Upgrading</a></li>
+<li><a href="#uninstalling">Uninstalling</a></li>
+<li><a href="#frequently-asked-questions">Frequently Asked Questions</a></li>
+<li><a href="#additional-resources">Additional Resources</a></li>
+<li><a href="#building">Building</a></li>
+</ol>
+<h2 id="change-history" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Change History</h2>
+<p><strong>5.0.1:</strong></p>
+<ul>
+<li>Fixed a bug that prevented Ghidra from discovering the Ghidra module project when launched with
+the PyGhidra run configuration.</li>
+</ul>
+<p><strong>5.0.0:</strong></p>
+<ul>
+<li>Added support for PyGhidra.</li>
+</ul>
+<p><strong>4.0.1:</strong></p>
+<ul>
+<li>New Ghidra module projects now contain a default <code style="background: #f4f4f4;font-family: monospace;">README.md</code> file.</li>
+<li>Fixed a bug that prevented an imported module source project from being discovered by Ghidra when
+launched with the project's run/debug configuration.</li>
+</ul>
+<p><strong>4.0.0:</strong></p>
+<ul>
+<li>GhidraDev has been upgraded to be compatible with Ghidra 11.2 and later. It is not backwards
+compatible with versions of Ghidra prior to 11.2. Older versions of GhidraDev will report an
+error when trying to link against Ghidra 11.2 or later.</li>
+<li>GhidraDev now requires Eclipse 2023-12 4.30 or later.</li>
+<li>GhidraDev now requires JDK 21.</li>
+<li>Fixed an issue that could result in a <code style="background: #f4f4f4;font-family: monospace;">GhidraHelpService</code> exception when launching
+Ghidra. GhidraDev now properly enforces that Ghidra is only launched with <code style="background: #f4f4f4;font-family: monospace;">Utility.jar</code> on the
+initial classpath.</li>
+</ul>
+<p><strong>3.1.0:</strong></p>
+<ul>
+<li>GhidraDev has been upgraded to be compatible with Ghidra 11.1 and later. Older versions of
+GhidraDev will report an error when trying to link against Ghidra 11.1 or later.</li>
+<li>GhidraDev now supports importing a Ghidra module source directory. This will work best with Ghidra
+module projects created from Ghidra 11.1 or later.</li>
+<li>GhidraDev will now fail to launch Ghidra if a top-level <code style="background: #f4f4f4;font-family: monospace;">build</code> directory is detected. Presence of
+this intermediate build artifact can cause Ghidra to have runtime/debugging issues.</li>
+</ul>
+<p><strong>3.0.2:</strong></p>
+<ul>
+<li>GhidraDev no longer throws an IOException when performing a <code style="background: #f4f4f4;font-family: monospace;">Link Ghidra</code> action on a Ghidra
+project whose original Ghidra installation moved.</li>
+<li>GhidraDev now prevents unsupported versions of PyDev from being used.</li>
+</ul>
+<p><strong>3.0.1:</strong></p>
+<ul>
+<li>Exporting a Ghidra Module Extension produces an intermediate <code style="background: #f4f4f4;font-family: monospace;">build</code> directory within the
+project. This <code style="background: #f4f4f4;font-family: monospace;">build</code> directory now gets automatically cleaned up to avoid Ghidra
+runtime/debugging issues.</li>
+<li>GhidraDev now prevents unsupported Ghidra source repositories from being added as a Ghidra
+installations.</li>
+</ul>
+<p><strong>3.0.0:</strong></p>
+<ul>
+<li>GhidraDev now requires Eclipse 2021-12 4.22 or later.</li>
+<li>GhidraDev now requires JDK 17.</li>
+<li>Fixed an issue that could cause old extensions to incorrectly remain on the Ghidra project
+classpath after performing a <code style="background: #f4f4f4;font-family: monospace;">Link Ghidra</code>.</li>
+</ul>
+<p><strong>2.1.5:</strong></p>
+<ul>
+<li>Eclipse Python breakpoints now work when Eclipse installs PyDev in .p2 bundle pool directory.</li>
+</ul>
+<p><strong>2.1.4:</strong></p>
+<ul>
+<li>Fixed exception that occurred when performing a <code style="background: #f4f4f4;font-family: monospace;">Link Ghidra</code> on projects  that use a Gradle
+classpath container.</li>
+</ul>
+<p><strong>2.1.3:</strong></p>
+<ul>
+<li>Fixed a bug that prevented Ghidra projects from recognizing extensions installed in the user's
+<code style="background: #f4f4f4;font-family: monospace;">~/.ghidra/.ghidra_&lt;version&gt;/Extensions</code> directory.</li>
+</ul>
+<p><strong>2.1.2:</strong></p>
+<ul>
+<li>Fixed exception that occurred when creating a new Ghidra scripting project if a <code style="background: #f4f4f4;font-family: monospace;">~/ghidra_scripts</code>
+directory does not exist.</li>
+</ul>
+<p><strong>2.1.1:</strong></p>
+<ul>
+<li>Python debugging now works when PyDev is installed via the Eclipse <code style="background: #f4f4f4;font-family: monospace;">dropins</code> directory.</li>
+<li>Fixed a bug in the check that prevents Ghidra projects from being created within the Ghidra
+installation directory.</li>
+</ul>
+<p><strong>2.1.0:</strong></p>
+<ul>
+<li>Added support for Ghidra 9.1.  GhidraDev 2.1.0 will be unable to create new Eclipse projects for
+versions of Ghidra earlier than 9.1.</li>
+<li>Prevented Ghidra projects from being created inside of a Ghidra installation directory.</li>
+<li>Added an <code style="background: #f4f4f4;font-family: monospace;">Environments</code> tab to the Ghidra run configuration for setting environment variables
+when launching Ghidra.</li>
+</ul>
+<p><strong>2.0.1:</strong></p>
+<ul>
+<li>Fixed exception that occurred when performing certain actions on a Ghidra project that was
+imported from a previously exported Archive File.</li>
+</ul>
+<p><strong>2.0.0:</strong></p>
+<ul>
+<li>Improved Ghidra module project starting templates for Analyzer and Plugin and added new templates
+for Loader, Exporter, and FileSystem.</li>
+<li>When creating a new Ghidra project, there is now an option to automatically create a Ghidra run
+configuration for the project with a customizable amount of maximum Java heap space.</li>
+<li>When creating a new Ghidra project, the project root directory now defaults to the workspace
+directory if a project root directory has never been set.</li>
+<li>When creating a new Ghidra project, the add button in the Python Support wizard page now
+automatically adds the Jython interpreter found in the Ghidra installation directory to PyDev if
+PyDev does have any Jython interpreters configured.</li>
+<li>A Ghidra project's dependencies that are also projects are now passed along to a launched Ghidra
+so Ghidra can discover those projects as potential modules.</li>
+<li>The GhidraDev popup menu is now visible from within the Project Explorer (it was previously only
+visible in the Package Explorer).</li>
+<li>A new page has been added to the Export Ghidra Module Extension wizard that allows the user to
+point to a specific Gradle installation.</li>
+</ul>
+<p><strong>1.0.2:</strong></p>
+<ul>
+<li>Fixed exception that occurred when performing a <code style="background: #f4f4f4;font-family: monospace;">Link Ghidra</code> on projects that specify other
+projects on their build paths.</li>
+</ul>
+<p><strong>1.0.1:</strong></p>
+<ul>
+<li>Initial Release.</li>
+</ul>
+<h2 id="minimum-requirements" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Minimum Requirements</h2>
+<ul>
+<li>Eclipse 2023-12 4.30 or later</li>
+<li>Ghidra 11.2 or later</li>
+</ul>
+<h2 id="optional-requirements" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Optional Requirements</h2>
+<ul>
+<li>PyDev 9.3.0 or later (<a href="#pydev-support">more info</a>)</li>
+<li>Gradle - required version(s) specified by linked Ghidra release
+(<a href="#export-ghidra-module-extension">more info</a>)</li>
+</ul>
+<h2 id="installing" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Installing</h2>
+<p>GhidraDev can be installed either manually into Eclipse or automatically by Ghidra, depending on
+your uses cases. The following sections outline the different procedures.</p>
+<h3 id="manual-installation-in-eclipse-offline">Manual Installation in Eclipse (offline)</h3>
+<p>GhidraDev can be installed into an existing installation of Eclipse the same way most Eclipse
+plugins are installed. From Eclipse:</p>
+<ol>
+<li>Click <code style="background: #f4f4f4;font-family: monospace;">Help -&gt; Install New Software...</code></li>
+<li>Click <code style="background: #f4f4f4;font-family: monospace;">Add...</code></li>
+<li>Click <code style="background: #f4f4f4;font-family: monospace;">Archive...</code></li>
+<li>Select GhidraDev zip file from <code style="background: #f4f4f4;font-family: monospace;">&lt;GhidraInstallDir&gt;/Extensions/Eclipse/GhidraDev/</code></li>
+<li>Click <code style="background: #f4f4f4;font-family: monospace;">OK</code> (name field can be blank)</li>
+<li>Check <code style="background: #f4f4f4;font-family: monospace;">Ghidra</code> category (or <code style="background: #f4f4f4;font-family: monospace;">GhidraDev</code> entry)</li>
+<li>Click <code style="background: #f4f4f4;font-family: monospace;">Next</code></li>
+<li>Click <code style="background: #f4f4f4;font-family: monospace;">Next</code></li>
+<li>Accept the terms of the license agreement</li>
+<li>Click <code style="background: #f4f4f4;font-family: monospace;">Finish</code></li>
+<li>Check <code style="background: #f4f4f4;font-family: monospace;">Unsigned</code> table entry</li>
+<li>Click <code style="background: #f4f4f4;font-family: monospace;">Trust Selected</code></li>
+<li>Click <code style="background: #f4f4f4;font-family: monospace;">Restart Now</code></li>
+</ol>
+<h3 id="manual-installation-in-eclipse-online">Manual Installation in Eclipse (online)</h3>
+<p>If you have an Internet connection, the latest GhidraDev can be installed by adding the official
+<a href="https://github.com/NationalSecurityAgency/ghidra-data/raw/main/Eclipse/GhidraDev/latest">update site</a>
+to an existing installation of Eclipse. This has the benefit of early access to new GhidraDev
+versions before the next version of Ghidra is released, and automatic updates (if you have updates
+enabled in Eclipse). From Eclipse:</p>
+<ol>
+<li>Click <code style="background: #f4f4f4;font-family: monospace;">Help -&gt; Install New Software...</code></li>
+<li>Work with: <code style="background: #f4f4f4;font-family: monospace;">https://github.com/NationalSecurityAgency/ghidra-data/raw/main/Eclipse/GhidraDev/latest</code></li>
+<li>Press <code style="background: #f4f4f4;font-family: monospace;">Enter</code></li>
+<li>Check <code style="background: #f4f4f4;font-family: monospace;">Ghidra</code> category (or <code style="background: #f4f4f4;font-family: monospace;">GhidraDev</code> entry)</li>
+<li>Click <code style="background: #f4f4f4;font-family: monospace;">Next</code></li>
+<li>Click <code style="background: #f4f4f4;font-family: monospace;">Next</code></li>
+<li>Accept the terms of the license agreement</li>
+<li>Click <code style="background: #f4f4f4;font-family: monospace;">Finish</code></li>
+<li>Check <code style="background: #f4f4f4;font-family: monospace;">Unsigned</code> table entry</li>
+<li>Click <code style="background: #f4f4f4;font-family: monospace;">Trust Selected</code></li>
+<li>Click <code style="background: #f4f4f4;font-family: monospace;">Restart Now</code></li>
+</ol>
+<h3 id="automatic-installation-through-ghidra">Automatic Installation through Ghidra</h3>
+<p>Ghidra has the ability to launch an externally linked Eclipse when certain actions are performed,
+such as choosing to edit a Ghidra script by clicking the Eclipse icon in the Ghidra Script Manager.
+Ghidra requires knowledge of where Eclipse is installed before it can launch it, and will prompt the
+user to enter this information if it has not been defined.  Before Ghidra attempts to launch
+Eclipse, it will attempt to install GhidraDev into Eclipse's <code style="background: #f4f4f4;font-family: monospace;">dropins</code> directory if GhidraDev
+is not already installed.</p>
+<h2 id="ghidradev-features" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">GhidraDev Features</h2>
+<p>GhidraDev provides a variety of features for creating and interacting with Ghidra-related
+projects in Eclipse.  GhidraDev supports creating both Ghidra script and Ghidra module projects.
+Ghidra scripts are typically designed as a single Java source file that is compiled by Ghidra at
+runtime and run through Ghidra's Script Manager or passed to the Headless Analyzer on the command
+line for execution.  Ghidra modules are intended to represent larger, more complex features such as
+Analyzers or Plugins.  When Ghidra modules are ready for production, they can be exported and
+installed into Ghidra as an &quot;extension&quot;.</p>
+<h4 id="new-ghidra-script">New Ghidra Script</h4>
+<p>Opens a wizard that creates a new Ghidra script with the provided metadata in the specified
+location.  Ghidra scripts can be created in both Ghidra script and Ghidra module projects.</p>
+<h4 id="new-ghidra-script-project">New Ghidra Script Project</h4>
+<p>Opens a wizard that creates a new Ghidra scripting project that is linked
+against a specified Ghidra installation.  The project can be set up to develop scripts in both the
+user's home <code style="background: #f4f4f4;font-family: monospace;">ghidra_scripts</code> directory, as well as any scripts found in the Ghidra installation.</p>
+<h4 id="new-ghidra-module-project">New Ghidra Module Project</h4>
+<p>Opens a wizard that creates a new Ghidra module project that is linked against a specified Ghidra
+installation.  The project can be initialized with optional template source files that provide a
+good starting point for implementing advanced Ghidra features such as Analyzers, Plugins, Loaders,
+etc.</p>
+<h4 id="import-ghidra-module-source">Import Ghidra Module Source</h4>
+<p>Opens a wizard that imports a Ghidra module source directory as a new Ghidra module project.</p>
+<h4 id="export-ghidra-module-extension">Export Ghidra Module Extension</h4>
+<p>Opens a wizard that exports a Ghidra module project as a Ghidra extension to the project's <code style="background: #f4f4f4;font-family: monospace;">dist</code>
+folder. The exported extension archive file can be distributed to other users and imported via
+Ghidra's front-end GUI. The export process requires Gradle, which is configured in the wizard. Note
+that the Gradle version to use is specified in the linked Ghidra release's
+<code style="background: #f4f4f4;font-family: monospace;">&lt;GhidraInstallDir&gt;/Ghidra/application.properties</code> file.</p>
+<h4 id="link-ghidra">Link Ghidra</h4>
+<p>Links a Ghidra installation to an existing Java project, which enables Ghidra script/module
+development for the project. If a Ghidra installation is already linked to the project when this
+operation is performed, the project will be relinked to the specified Ghidra installation, which can
+be used to build the project for a different version of Ghidra, discover new Ghidra extensions that
+were later added to a Ghidra installation, or repair a corrupted project.</p>
+<h4 id="preferences">Preferences</h4>
+<ul>
+<li><strong>Ghidra Installations:</strong> Add or remove Ghidra installations. Certain features such as creating
+Ghidra script/module projects require linking against a valid installation of Ghidra.</li>
+<li><strong>Script Editor:</strong> The port used by Ghidra to open a script in Eclipse. Must match the
+corresponding port in Ghidra's <code style="background: #f4f4f4;font-family: monospace;">Eclipse Integration</code> tool options. Disable this preference to
+prevent GhidraDev from listening on a port for this feature.</li>
+<li><strong>Symbol Lookup:</strong> The project name and port used by Ghidra to perform symbol lookup in
+Eclipse. Must match the corresponding port in Ghidra's <code style="background: #f4f4f4;font-family: monospace;">Eclipse Integration</code> tool options. Disable
+this preference to prevent GhidraDev from listening on a port for this feature. Symbol lookup
+requires the Eclipse CDT plugin to be installed
+(see <a href="#optional-requirements">optional requirements</a> for supported versions).</li>
+</ul>
+<p>Most GhidraDev features can also be accessed by right-clicking on appropriate project elements in
+Eclipse's Project/Package Explorer. For example, the <a href="#link-ghidra">Link Ghidra</a> feature can be
+accessed by right-clicking on an existing Java project, and then clicking
+<code style="background: #f4f4f4;font-family: monospace;">Ghidra -&gt; Link Ghidra...</code>.</p>
+<h2 id="launching-and-debugging-ghidra" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Launching and Debugging Ghidra</h2>
+<p>GhidraDev introduces two new run configurations to Eclipse which are capable of launching the
+installation of Ghidra that an Eclipse Ghidra project is linked to:</p>
+<ul>
+<li><strong>Ghidra:</strong> Launches the Ghidra GUI.</li>
+<li><strong>Ghidra Headless:</strong> Launches Ghidra in headless mode. By default, this run configuration will not
+have any program arguments associated with it, which are required to tell headless Ghidra what
+project to open, what scripts to run, etc.  Newly created <code style="background: #f4f4f4;font-family: monospace;">Ghidra Headless</code> run configurations
+will have to be modified with the desired headless program arguments. For more information on
+headless command line arguments, see <code style="background: #f4f4f4;font-family: monospace;">&lt;GhidraInstallDir&gt;/support/analyzeHeadlessREADME.html</code>.</li>
+</ul>
+<p>There are two ways to create Ghidra run configurations:</p>
+<ol>
+<li>Click <code style="background: #f4f4f4;font-family: monospace;">Run -&gt; Run Configurations...</code></li>
+<li>Right-click on <code style="background: #f4f4f4;font-family: monospace;">Ghidra</code> (or <code style="background: #f4f4f4;font-family: monospace;">Ghidra Headless</code>), and click <code style="background: #f4f4f4;font-family: monospace;">New</code></li>
+<li>In the <code style="background: #f4f4f4;font-family: monospace;">Main</code> tab, click <code style="background: #f4f4f4;font-family: monospace;">Browse...</code> and select the Ghidra project to launch</li>
+<li>Optionally rename the new run configuration by editing the <code style="background: #f4f4f4;font-family: monospace;">Name</code> field at the top</li>
+</ol>
+<p>Alternatively, you can right-click on any Ghidra project in the Eclipse package explorer, and then
+click <code style="background: #f4f4f4;font-family: monospace;">Run As -&gt; Ghidra</code>.</p>
+<p>To debug Ghidra, click <code style="background: #f4f4f4;font-family: monospace;">Debug As -&gt; Ghidra</code>. GhidraDev will automatically switch Eclipse to the
+debug perspective.</p>
+<p><strong>NOTE:</strong> Ghidra can only be launched/debugged from an existing Eclipse Ghidra project. Launching
+Ghidra from Eclipse independent of a project is not supported.</p>
+<h2 id="pydev-support" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">PyDev Support</h2>
+<p>GhidraDev is able to integrate with PyDev to conveniently configure Python support into Ghidra
+script and module projects. GhidraDev supports both Jython and PyGhidra Python implementations.</p>
+<p><strong>NOTE:</strong> PyDev discontinued Jython 2 support in version 10.0.0. If you want to use GhidraDev with
+Jython, you must use <strong>PyDev 9.3.0</strong>.  The latest vesions of PyDev support PyGhidra.</p>
+<h3 id="installing-pydev">Installing PyDev</h3>
+<p>From Eclipse:</p>
+<ol>
+<li>Download PyDev (see <a href="#optional-requirements">optional requirements</a> for supported versions)</li>
+<li>Unzip PyDev</li>
+<li>Click <code style="background: #f4f4f4;font-family: monospace;">Help -&gt; Install New Software...</code></li>
+<li>Click <code style="background: #f4f4f4;font-family: monospace;">Add...</code></li>
+<li>Click <code style="background: #f4f4f4;font-family: monospace;">Local...</code></li>
+<li>Select unzipped PyDev directory</li>
+<li>Click <code style="background: #f4f4f4;font-family: monospace;">OK</code> (name field can be blank)</li>
+<li>Uncheck <code style="background: #f4f4f4;font-family: monospace;">Group items by category</code> (if applicable)</li>
+<li>Check <code style="background: #f4f4f4;font-family: monospace;">PyDev for Eclipse</code></li>
+<li>Click <code style="background: #f4f4f4;font-family: monospace;">Next</code></li>
+<li>Click <code style="background: #f4f4f4;font-family: monospace;">Next</code></li>
+<li>Accept the terms of the license agreement</li>
+<li>Click <code style="background: #f4f4f4;font-family: monospace;">Finish</code></li>
+<li>Click <code style="background: #f4f4f4;font-family: monospace;">Restart Now</code></li>
+</ol>
+<h3 id="configuring-pydev">Configuring PyDev</h3>
+<p>GhidraDev can add Python support to a Ghidra project when:</p>
+<ul>
+<li>Creating a new Ghidra module project</li>
+<li>Creating a new Ghidra script project</li>
+<li>Linking a Ghidra installation to an existing Java project</li>
+</ul>
+<p>In order for GhidraDev to add in Python support, PyDev must have a PyGhidra or Jython interpreter
+configured. GhidraDev will present a list of detected PyGhidra/Jython interpreters that it found in
+PyDev's preferences. If no interpreters were found, one can be added from GhidraDev by clicking
+the <code style="background: #f4f4f4;font-family: monospace;">+</code> icons.</p>
+<p>When the Jython <code style="background: #f4f4f4;font-family: monospace;">+</code> icon is clicked, GhidraDev will attempt to find the Jython interpreter bundled
+with the selected Ghidra installation and automatically configure PyDev to use it.  If for some
+reason GhidraDev was unable to find a Jython interpreter in the Ghidra installation, one will have
+to be added manually in the PyDev preferences.</p>
+<p>When the PyGhidra <code style="background: #f4f4f4;font-family: monospace;">+</code> icon is clicked, GhidraDev will attempt to find the PyGhidra interpreter
+that was last used to launch PyGhidra.  If it cannot find it, you will have to launch PyGhidra
+and try again.</p>
+<h2 id="upgrading" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Upgrading</h2>
+<p>GhidraDev is upgraded differently depending on how it was installed.  If GhidraDev was
+<a href="#manual-installation-in-eclipse">manually installed in Eclipse</a>, it can be upgraded the same was it
+was installed.</p>
+<p>If GhidraDev was <a href="#automatic-installation-through-ghidra">automatically installed through Ghidra</a>,
+it can be upgraded by simply removing the GhidraDev file from Eclipse's <code style="background: #f4f4f4;font-family: monospace;">dropins</code> directory before
+following one of the two techniques described in the <a href="#installing">Installing</a> section.</p>
+<h2 id="uninstalling" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Uninstalling</h2>
+<p>GhidraDev is uninstalled differently depending on how it was installed. If GhidraDev was
+<a href="#manual-installation-in-eclipse">manually installed in Eclipse</a>, it can be uninstalled as follows
+from Eclipse:</p>
+<ol>
+<li>Click <code style="background: #f4f4f4;font-family: monospace;">Help -&gt; About Eclipse</code>
+<ul>
+<li>For macOS: <code style="background: #f4f4f4;font-family: monospace;">Eclipse -&gt; About Eclipse</code></li>
+</ul>
+</li>
+<li>Click <code style="background: #f4f4f4;font-family: monospace;">Installation Details</code></li>
+<li>Select <code style="background: #f4f4f4;font-family: monospace;">GhidraDev</code></li>
+<li>Click <code style="background: #f4f4f4;font-family: monospace;">Uninstall...</code></li>
+<li>Select <code style="background: #f4f4f4;font-family: monospace;">GhidraDev</code></li>
+<li>Click <code style="background: #f4f4f4;font-family: monospace;">Finish</code></li>
+<li>Click <code style="background: #f4f4f4;font-family: monospace;">Restart Now</code></li>
+</ol>
+<p>If GhidraDev was <a href="#automatic-installation-through-ghidra">automatically installed through Ghidra</a>,
+it can be uninstalled by simply removing the GhidraDev file from Eclipse's <code style="background: #f4f4f4;font-family: monospace;">dropins</code> directory and
+restarting Eclipse.  The <code style="background: #f4f4f4;font-family: monospace;">dropins</code> directory can be found at the top level of Eclipse's
+installation directory.</p>
+<h2 id="frequently-asked-questions" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Frequently Asked Questions</h2>
+<ul>
+<li><strong>I've created a Ghidra script project. Where should I create my new scripts?</strong>
+<ul>
+<li>The best place to create your scripts in is your home <code style="background: #f4f4f4;font-family: monospace;">~/ghidra_scripts</code> directory because
+Ghidra will automatically find them there without any additional configuration. By default,
+your Ghidra script project will have a folder named <code style="background: #f4f4f4;font-family: monospace;">Home scripts</code> which is linked to your
+home <code style="background: #f4f4f4;font-family: monospace;">~/ghidra_scripts</code> directory. Either right-click on this folder in Eclipse and do
+<code style="background: #f4f4f4;font-family: monospace;">GhidraDev -&gt; New -&gt; GhidraScript...</code> or from the menu bar do <code style="background: #f4f4f4;font-family: monospace;">GhidraDev -&gt; New -&gt;  GhidraScript...</code> and populate the <code style="background: #f4f4f4;font-family: monospace;">Script folder</code> box with your project's <code style="background: #f4f4f4;font-family: monospace;">Home scripts</code>
+folder.</li>
+</ul>
+</li>
+<li><strong>How do I launch Ghidra in headless mode from Eclipse?</strong>
+<ul>
+<li>GhidraDev provides custom run configurations to launch Ghidra installations both in GUI mode
+and headlessly.  See the <a href="#launching-and-debugging-ghidra">Launching</a> section for information
+on how to launch Ghidra from Eclipse.</li>
+</ul>
+</li>
+<li><strong>Why doesn't my Ghidra module project know about the Ghidra extension I installed into my Ghidra
+installation?</strong>
+<ul>
+<li>You most likely installed the Ghidra extension after the Ghidra installation was linked
+to your Ghidra module project, which automatically happens when the project is created.
+Simply <a href="#link-ghidra">relink</a> your Ghidra installation to the project, and your project will
+pick up any newly discovered Ghidra extensions.</li>
+</ul>
+</li>
+</ul>
+<h2 id="additional-resources" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Additional Resources</h2>
+<p>For more information on the GhidraDev plugin and developing for Ghidra in an Eclipse environment,
+please see the <strong>Ghidra Scripting slide deck</strong>
+at <code style="background: #f4f4f4;font-family: monospace;">&lt;GhidraInstallDir&gt;/docs/GhidraClass/Intermediate/Scripting.html</code>.</p>
+<h2 id="building" style="border-bottom: solid 1px; border-bottom-color: #cccccc; padding-bottom: 8px;">Building</h2>
+<p>GhidraDev is currently built from Eclipse and distributed with Ghidra manually. Ideally we will use
+Gradle one day, but we aren't there yet. We do rely on Gradle to generate the Eclipse project and
+build GhidraDev's dependencies though.</p>
+<p><strong>NOTE:</strong> Only &quot;Eclipse for RCP and RAP Developers&quot; has the ability to do the below instructions.
+The following instructions assume that you are using this version of Eclipse.</p>
+<h4 id="importing-ghidradev-eclipse-projects-they-are-deactivated-by-default">Importing GhidraDev Eclipse projects (they are deactivated by default):</h4>
+<ol>
+<li>Run <code style="background: #f4f4f4;font-family: monospace;">gradle prepGhidraDev eclipse -PeclipsePDE</code></li>
+<li>From Eclipse, <code style="background: #f4f4f4;font-family: monospace;">File -&gt; Import -&gt; General -&gt; Existing Projects into Workspace</code></li>
+<li>From the ghidra repo, import <code style="background: #f4f4f4;font-family: monospace;">Eclipse GhidraDevFeature</code> and <code style="background: #f4f4f4;font-family: monospace;">Eclipse GhidraDevPlugin</code></li>
+</ol>
+<h4 id="changing-version-number-ghidradev-is-versioned-independently-of-ghidra">Changing version number (GhidraDev is versioned independently of Ghidra):</h4>
+<ol>
+<li>Open <code style="background: #f4f4f4;font-family: monospace;">plugin.xml</code> in the GhidraDevPlugin project</li>
+<li>In the <code style="background: #f4f4f4;font-family: monospace;">Overview</code> tab, update the <code style="background: #f4f4f4;font-family: monospace;">Version</code> field to <code style="background: #f4f4f4;font-family: monospace;">x.y.z.qualifier</code> and save</li>
+<li>Open <code style="background: #f4f4f4;font-family: monospace;">feature.xml</code>in the <code style="background: #f4f4f4;font-family: monospace;">GhidraDevFeature</code> project</li>
+<li>In the <code style="background: #f4f4f4;font-family: monospace;">Overview</code> tab, update the <code style="background: #f4f4f4;font-family: monospace;">Version</code> field to <code style="background: #f4f4f4;font-family: monospace;">x.y.z.qualifier</code> and save</li>
+<li>Open <code style="background: #f4f4f4;font-family: monospace;">category.xml</code> in the <code style="background: #f4f4f4;font-family: monospace;">GhidraDevFeature</code> project</li>
+<li>Highlight <code style="background: #f4f4f4;font-family: monospace;">ghidra.ghidradev (x.y.z.qualifier)</code>, and click <code style="background: #f4f4f4;font-family: monospace;">Remove</code></li>
+<li>Highlight <code style="background: #f4f4f4;font-family: monospace;">ghidra.ghidradev</code> and click <code style="background: #f4f4f4;font-family: monospace;">Add Feature</code></li>
+<li>Select <code style="background: #f4f4f4;font-family: monospace;">ghidra.ghidradev (x.y.z.qualifer)</code>, click <code style="background: #f4f4f4;font-family: monospace;">OK</code>, and save</li>
+<li>Update the <a href="#change-history">Change History</a> section if necessary</li>
+</ol>
+<h4 id="building-from-eclipse">Building from Eclipse:</h4>
+<ol>
+<li>Do a <code style="background: #f4f4f4;font-family: monospace;">gradle prepDev</code> to ensure GhidraDev's dependencies are up-to-date</li>
+<li><code style="background: #f4f4f4;font-family: monospace;">File -&gt; Export -&gt; Plug-in Development -&gt; Deployable features</code></li>
+<li>Check <code style="background: #f4f4f4;font-family: monospace;">ghidra.ghidradev (x.y.z.qualifier)</code></li>
+<li>Select <code style="background: #f4f4f4;font-family: monospace;">Archive file</code> and choose a directory to save it to. Name it <code style="background: #f4f4f4;font-family: monospace;">GhidraDev-x.y.z.zip</code>.</li>
+<li>In the <code style="background: #f4f4f4;font-family: monospace;">Options</code> tab make sure things look like this:
+<ul>
+<li>Export source: UNCHECKED</li>
+<li>Package as individual JAR archives: CHECKED</li>
+<li>Generate p2 repository: CHECKED</li>
+<li>Categorize repository: CHECKED + Browse to category.xml file in the GhidraDevFeature project</li>
+<li>Qualifier replacement: CHECKED + clear field so default is used</li>
+<li>Save as Ant script: UNCHECKED</li>
+<li>Allow for binary cycles in target platform: CHECKED</li>
+<li>Use class files compiled in the workspace: UNCHECKED</li>
+</ul>
+</li>
+<li>Finish</li>
+</ol>
