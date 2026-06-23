@@ -1,9 +1,9 @@
 #!/bin/bash
-
 #
 # Determine the IP address of the default network interface.
 # If an IPv4 IP address is available, use that one; otherwise,
-# use the IPv6 address.
+# use the IPv6 address. With -a (or --all), list the addresses
+# of all interfaces.
 #
 # Public Domain
 #
@@ -15,13 +15,21 @@ function myip4 {
 function myip6 {
   ip -6 addr | grep inet6 | awk -F '[ \t]+|/' '{print $3}' | grep -v "^::1"
 }
+# Show all global IPv4/IPv6 addresses, labeled by interface
+function myip_all {
+  ip -o addr show scope global | awk '{print $2": "$4}' | cut -d/ -f1
+}
 
-ipv4=`myip4`
-ipv6=`myip6`
-if [ ${#ipv4} -gt 0 ]; then
-	echo $ipv4
+if [ "$1" = "-a" ] || [ "$1" = "--all" ]; then
+  myip_all
 else
-	if [ ${#ipv6} -gt 0 ]; then
-		echo $ipv6
-	fi
+  ipv4=`myip4`
+  ipv6=`myip6`
+  if [ ${#ipv4} -gt 0 ]; then
+    echo $ipv4
+  else
+    if [ ${#ipv6} -gt 0 ]; then
+      echo $ipv6
+    fi
+  fi
 fi
