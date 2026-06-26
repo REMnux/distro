@@ -18,12 +18,12 @@ set -euo pipefail
 
 SCRIPT_NAME="remnux"
 SCRIPT_VERSION="1.0.0"
-CAST_VERSION="v1.0.4"
+CAST_VERSION="v1.0.20"
 # IMPORTANT: When updating CAST_VERSION, also update CAST_DEB_SHA256_* checksums below
 
-# Expected SHA256 checksums (from checksums.txt for v1.0.4)
-CAST_DEB_SHA256_AMD64="d8322b1fb05a352794cded7de934af682eaea2c5e1e42ca2ff5eb0f503136219"
-CAST_DEB_SHA256_ARM64="68d17c7242835984bcdc3be48b8cbc3a6f03839abbcede0d29b99ec61511e8fb"
+# Expected SHA256 checksums (from checksums.txt for v1.0.20)
+CAST_DEB_SHA256_AMD64="e434ac88956e3b6b56d7673e9920e945894876436ef78bdd0bb3cdfe72cf811d"
+CAST_DEB_SHA256_ARM64="fdf02f3603fa429b7a114c80e96c0bef37e051d7bcaf1e585154f6e09a9be343"
 
 # GitHub base URL for Cast releases
 CAST_GITHUB_BASE_URL="https://github.com/ekristen/cast/releases/download"
