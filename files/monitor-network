@@ -1,0 +1,41 @@
+#!/bin/bash
+
+#
+# Monitor network traffic on the first active network interface using tshark.
+# By default, print a live, cleaned-up summary of the traffic to the screen.
+# If a filename is supplied as the first argument, also save the full capture
+# to that file in pcapng format. If the file already exists, exit without
+# overwriting it.
+#
+# By Lenny Zeltser
+#
+# Public Domain
+#
+
+INTERFACE=`mynic`
+
+if [ -z "$INTERFACE" ]; then
+  echo "Could not determine an active network interface to monitor."
+  exit 1
+fi
+
+if [ "$1" = "" ]; then
+  echo "Monitoring traffic on $INTERFACE and printing to the screen. Press Ctrl-C to stop."
+  tshark -i "$INTERFACE" -f 'ip' -l \
+    -z 'proto,colinfo,http.user_agent,http.user_agent' \
+    -z 'proto,colinfo,http.x_forwarded_for,http.x_forwarded_for' \
+    -z 'proto,colinfo,http.unknown_header matches "^[Xx]-",http.unknown_header' \
+    | sed -u -E 's/[[:space:]]+(Seq|Ack|Win|Len|MSS|WS|TSval|TSecr|SLE|SRE)=[0-9]+//g; s/[[:space:]]+SACK_PERM//g'
+else
+  FILENAME="$1"
+  if [ -e "$FILENAME" ]; then
+    echo "The file \"$FILENAME\" already exists. Exiting so it is not overwritten."
+    exit 1
+  fi
+  echo "Monitoring traffic on $INTERFACE and saving to \"$FILENAME\". Press Ctrl-C to stop."
+  tshark -i "$INTERFACE" -f 'ip' -w "$FILENAME" -P -l \
+    -z 'proto,colinfo,http.user_agent,http.user_agent' \
+    -z 'proto,colinfo,http.x_forwarded_for,http.x_forwarded_for' \
+    -z 'proto,colinfo,http.unknown_header matches "^[Xx]-",http.unknown_header' \
+    | sed -u -E 's/[[:space:]]+(Seq|Ack|Win|Len|MSS|WS|TSval|TSecr|SLE|SRE)=[0-9]+//g; s/[[:space:]]+SACK_PERM//g'
+fi
