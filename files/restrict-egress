@@ -1,0 +1,790 @@
+#!/usr/bin/python3
+# Name: restrict-egress
+# Description: Restrict the host's outbound network access to an allowlist of domains and CIDRs, using an nftables default-deny egress policy that survives reboots and re-resolves load-balanced endpoints.
+# Website: https://github.com/REMnux/distro
+# Author: Lenny Zeltser: https://zeltser.com
+# License: MIT
+#
+# REMnux ships with no outbound restrictions; this tool is opt-in. Typical use:
+# put allowed destinations in /etc/restrict-egress.conf, run `restrict-egress on`.
+# Run `restrict-egress off` before `apt` or `remnux install`, then `on` again.
+#
+# Scope and accepted trade-offs (threat model: contain a non-root process or a
+# steered AI agent that reads untrusted data; NOT a boundary against root-level
+# malware):
+#   - Enforcement is IP+port, not hostname: another service behind an allowed
+#     CDN/load-balancer IP and port remains reachable.
+#   - `dns = open` (the default) leaves port 53 usable as a small exfil channel;
+#     it is required to resolve allowlisted names. Use `dns = closed` with a
+#     CIDR-only allowlist for tighter isolation.
+#   - Only the host network namespace is covered. Traffic from containers or
+#     routed guests traverses the forward path and is not restricted.
+#   - Outbound connections established before `on` keep working (conntrack
+#     direction is unreliable for flows it picks up mid-stream); enable the
+#     lockdown before running untrusted code.
+#   - In-guest rules hold only while untrusted code cannot run as root.
+#   - Live-snapshot restores may carry stale state until the next refresh tick;
+#     take baseline snapshots with the VM powered off.
+
+import argparse
+import fcntl
+import hashlib
+import ipaddress
+import json
+import os
+import re
+import shutil
+import socket
+import stat
+import subprocess
+import sys
+import syslog
+import tempfile
+
+VERSION = "0.9.1"
+
+INSTALL_PATH = "/usr/local/bin/restrict-egress"
+DEFAULT_CONF = "/etc/restrict-egress.conf"
+LOCK_PATH = "/run/restrict-egress.lock"
+STATE_DIR = "/var/lib/restrict-egress"
+STATE_PATH = STATE_DIR + "/state.json"
+TABLE = "inet restrict_egress"
+SET_NAME = "allow"
+
+UNIT_BOOT = "/etc/systemd/system/restrict-egress.service"
+UNIT_REFRESH = "/etc/systemd/system/restrict-egress-refresh.service"
+UNIT_TIMER = "/etc/systemd/system/restrict-egress-refresh.timer"
+DISPATCHER_DIR = "/etc/networkd-dispatcher/routable.d"
+DISPATCHER_HOOK = DISPATCHER_DIR + "/50-restrict-egress"
+
+# Subprocesses never inherit the caller's PATH: this tool runs as root.
+SAFE_ENV = {"PATH": "/usr/sbin:/usr/bin:/sbin:/bin", "LC_ALL": "C"}
+
+DEFAULT_PORT = 443
+DEFAULT_REFRESH_S = 180        # 3min rotation backstop
+DEFAULT_TIMEOUT_S = 1800       # 30m element lifetime
+REFRESH_MIN_S = 60
+TIMEOUT_MIN_S = 300
+TIMEOUT_MAX_S = 86400
+
+DOMAIN_RE = re.compile(
+    r"^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z][a-z0-9-]{0,61}[a-z0-9]$",
+    re.IGNORECASE,
+)
+DURATION_RE = re.compile(r"^([0-9]{1,6})\s*(s|sec|m|min|h|hr)?$", re.IGNORECASE)
+# Config paths land inside systemd ExecStart= lines and a shell hook; reject
+# anything that would need quoting rather than trying to quote it everywhere.
+UNSAFE_PATH_RE = re.compile(r"[\s%\"'`$;&<>|\\]")
+
+
+class ConfigError(Exception):
+    pass
+
+
+def log(msg, error=False):
+    syslog.syslog(syslog.LOG_ERR if error else syslog.LOG_INFO, msg)
+    if "INVOCATION_ID" in os.environ:
+        return  # systemd-invoked: journal already gets the syslog line
+    print(("error: " if error else "") + msg, file=sys.stderr if error else sys.stdout)
+
+
+def run(cmd, input_text=None, check=True):
+    return subprocess.run(
+        cmd, input=input_text, capture_output=True, text=True, env=SAFE_ENV, check=check
+    )
+
+
+# ---------------------------------------------------------------- config ----
+
+def parse_duration(text, key):
+    m = DURATION_RE.match(text.strip())
+    if not m:
+        raise ConfigError(f"{key}: cannot parse duration '{text}' (use e.g. 90s, 3min, 1h)")
+    n, unit = int(m.group(1)), (m.group(2) or "s").lower()
+    return n * {"s": 1, "sec": 1, "m": 60, "min": 60, "h": 3600, "hr": 3600}[unit]
+
+
+class Config:
+    def __init__(self):
+        self.domains = []      # (name, port)
+        self.cidrs = []        # (ipaddress.IPv4Network, port)
+        self.dns_open = None   # None = unspecified; resolved by policy checks
+        self.refresh_s = DEFAULT_REFRESH_S
+        self.timeout_s = DEFAULT_TIMEOUT_S
+
+    @property
+    def entries(self):
+        return len(self.domains) + len(self.cidrs)
+
+
+def parse_config(text):
+    cfg = Config()
+    errors = []
+    for lineno, raw in enumerate(text.splitlines(), 1):
+        line = raw.split("#", 1)[0].strip()
+        if not line:
+            continue
+        if "=" in line:
+            key, _, value = line.partition("=")
+            key, value = key.strip().lower(), value.strip()
+            try:
+                if key == "dns":
+                    if value.lower() not in ("open", "closed"):
+                        raise ConfigError("dns must be 'open' or 'closed'")
+                    cfg.dns_open = value.lower() == "open"
+                elif key == "refresh":
+                    cfg.refresh_s = parse_duration(value, "refresh")
+                elif key == "timeout":
+                    cfg.timeout_s = parse_duration(value, "timeout")
+                else:
+                    raise ConfigError(f"unknown option '{key}'")
+            except ConfigError as e:
+                errors.append(f"line {lineno}: {e}")
+            continue
+        entry, port = line, DEFAULT_PORT
+        if ":" in line:
+            entry, _, port_text = line.rpartition(":")
+            if not (port_text.isascii() and port_text.isdigit() and 1 <= int(port_text) <= 65535):
+                errors.append(f"line {lineno}: bad port '{port_text}'")
+                continue
+            port = int(port_text)
+        try:
+            net = ipaddress.ip_network(entry, strict=False)
+            if net.version != 4:
+                errors.append(f"line {lineno}: only IPv4 CIDRs are supported")
+            else:
+                cfg.cidrs.append((net, port))
+            continue
+        except ValueError:
+            pass
+        if DOMAIN_RE.match(entry):
+            cfg.domains.append((entry.lower(), port))
+        else:
+            errors.append(f"line {lineno}: '{entry}' is neither a domain, IP, nor CIDR")
+    if cfg.refresh_s < REFRESH_MIN_S:
+        errors.append(f"refresh must be at least {REFRESH_MIN_S}s")
+    if not TIMEOUT_MIN_S <= cfg.timeout_s <= TIMEOUT_MAX_S:
+        errors.append(f"timeout must be between {TIMEOUT_MIN_S}s and {TIMEOUT_MAX_S}s")
+    if cfg.refresh_s > cfg.timeout_s // 3:
+        errors.append("refresh must be no more than a third of timeout, or elements expire between refreshes")
+    if errors:
+        raise ConfigError("; ".join(errors))
+    return cfg
+
+
+def check_policy(cfg, no_allowlist):
+    """Cross-field rules ratified in the design. Mutates cfg.dns_open to its default."""
+    if no_allowlist and cfg.entries:
+        raise ConfigError("--no-allowlist given but the config has allowlist entries; pick one")
+    if not no_allowlist and not cfg.entries:
+        raise ConfigError(
+            "no allowlist entries in the config; add destinations, or use "
+            "'on --no-allowlist' for a deliberate egress kill switch"
+        )
+    if cfg.dns_open is None:
+        # Kill switch resolves nothing, so DNS defaults closed there; open otherwise.
+        cfg.dns_open = not no_allowlist
+    if not cfg.dns_open and cfg.domains:
+        raise ConfigError(
+            "dns = closed cannot resolve domain entries; use a CIDR-only allowlist "
+            "with closed DNS, or set dns = open"
+        )
+    if no_allowlist and cfg.dns_open:
+        log("warning: dns = open leaves port 53 fully usable; this kill switch is not airtight", error=True)
+
+
+def read_config_bytes(path, privileged=True):
+    """One open, no symlink following, ownership enforced on privileged runs;
+    the same bytes feed both the parser and the recorded hash (no TOCTOU)."""
+    if not privileged:
+        with open(path, "rb") as f:
+            return f.read()
+    fd = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
+    with os.fdopen(fd, "rb") as f:
+        st = os.fstat(f.fileno())
+        if not stat.S_ISREG(st.st_mode) or st.st_uid != 0 or st.st_mode & 0o022:
+            raise ConfigError(
+                f"{path} must be a regular file owned by root and not group/world-writable "
+                f"(a config writable by others is allowlist injection); "
+                f"fix: chown root:root {path} && chmod 644 {path}"
+            )
+        return f.read()
+
+
+def load_config(path, no_allowlist, privileged=True):
+    data = read_config_bytes(path, privileged)
+    try:
+        cfg = parse_config(data.decode("utf-8"))
+    except UnicodeDecodeError:
+        raise ConfigError(f"{path} is not valid UTF-8 text")
+    check_policy(cfg, no_allowlist)
+    return cfg, hashlib.sha256(data).hexdigest()
+
+
+# ------------------------------------------------------------- discovery ----
+
+def detect_uplinks():
+    """All interfaces carrying an IPv4 or IPv6 default route; every one gets
+    locked, so a second uplink is never a bypass."""
+    devs = set()
+    for family in ("-4", "-6"):
+        try:
+            out = run(["ip", "-j", family, "route", "show", "default"]).stdout
+            devs.update(r["dev"] for r in json.loads(out) if "dev" in r)
+        except (subprocess.CalledProcessError, FileNotFoundError, json.JSONDecodeError, KeyError):
+            pass
+    return sorted(devs)
+
+
+def resolve_domains(domains):
+    """(name, port) pairs -> set of (ip, port); resolution follows nsswitch."""
+    elements, failed = set(), []
+    for name, port in domains:
+        try:
+            for info in socket.getaddrinfo(name, port, socket.AF_INET, socket.SOCK_STREAM):
+                elements.add((info[4][0], port))
+        except OSError:
+            failed.append(name)
+    return elements, failed
+
+
+# ---------------------------------------------------------------- ruleset ----
+
+def generate_ruleset(cfg, uplinks, elements):
+    lines = [
+        f"destroy table {TABLE}",
+        f"table {TABLE} {{",
+        f"    set {SET_NAME} {{",
+        "        type ipv4_addr . inet_service",
+        "        flags timeout",
+        f"        timeout {cfg.timeout_s}s",
+    ]
+    if elements:
+        rendered = ", ".join(f"{ip} . {port}" for ip, port in sorted(elements))
+        lines.append(f"        elements = {{ {rendered} }}")
+    lines += [
+        "    }",
+        "    chain output {",
+        "        type filter hook output priority 0; policy drop;",
+        '        oif "lo" accept',
+        # Plain established/related, deliberately: restricting this to
+        # 'ct direction reply' freezes flows that predate the ruleset, because
+        # conntrack picks such flows up mid-stream and calls whichever packet
+        # it sees first "original" -- for a live inbound SSH session that can
+        # be the host's own outbound data packet (verified 2026-07-21). The
+        # cost: outbound connections opened before 'on' keep working, so
+        # enable the lockdown before running untrusted code.
+        "        ct state established,related accept",
+    ]
+    if uplinks:
+        rendered = ", ".join(f'"{u}"' for u in uplinks)
+        lines.append(f"        oifname != {{ {rendered} }} accept")
+    else:
+        lines.append("        # no default route detected: fail closed, all interfaces restricted")
+    lines.append("        udp sport 68 udp dport 67 accept")
+    if cfg.dns_open:
+        lines.append("        udp dport 53 accept")
+        lines.append("        tcp dport 53 accept")
+    for net, port in cfg.cidrs:
+        lines.append(f"        ip daddr {net} tcp dport {port} accept")
+    lines += [
+        f"        ip daddr . tcp dport @{SET_NAME} accept",
+        "    }",
+        "}",
+    ]
+    return "\n".join(lines) + "\n"
+
+
+def nft_apply(ruleset):
+    """Validate, then swap in one netlink transaction: no accept window, and a
+    bad generated ruleset never destroys the running one."""
+    with tempfile.NamedTemporaryFile("w", suffix=".nft", delete=False) as f:
+        f.write(ruleset)
+        path = f.name
+    try:
+        run(["nft", "-c", "-f", path])
+        run(["nft", "-f", path])
+    finally:
+        os.unlink(path)
+
+
+def table_exists():
+    return run(["nft", "list", "table"] + TABLE.split(), check=False).returncode == 0
+
+
+def chain_enforcing():
+    out = run(["nft", "list", "chain"] + TABLE.split() + ["output"], check=False).stdout
+    return "policy drop" in out
+
+
+# ------------------------------------------------------------------ state ----
+
+def read_state():
+    try:
+        with open(STATE_PATH) as f:
+            data = json.load(f)
+        if (isinstance(data, dict) and data.get("owner") == "restrict-egress"
+                and isinstance(data.get("config_path"), str)
+                and isinstance(data.get("uplinks"), list)):
+            return data
+    except (OSError, json.JSONDecodeError):
+        pass
+    return None  # malformed state is treated as absent (fail toward reload)
+
+
+def write_state(conf_path, conf_sha, no_allowlist, uplinks, refresh_s):
+    os.makedirs(STATE_DIR, mode=0o755, exist_ok=True)
+    data = {
+        "owner": "restrict-egress",
+        "version": VERSION,
+        "config_path": conf_path,
+        "config_sha256": conf_sha,
+        "no_allowlist": no_allowlist,
+        "uplinks": uplinks,
+        "refresh_s": refresh_s,
+    }
+    fd, tmp = tempfile.mkstemp(dir=STATE_DIR)
+    with os.fdopen(fd, "w") as f:
+        json.dump(data, f)
+    os.replace(tmp, STATE_PATH)
+
+
+class Lock:
+    def __enter__(self):
+        self.f = open(LOCK_PATH, "w")
+        fcntl.flock(self.f, fcntl.LOCK_EX)
+        return self
+
+    def __exit__(self, *exc):
+        fcntl.flock(self.f, fcntl.LOCK_UN)
+        self.f.close()
+
+
+# ------------------------------------------------------------- artifacts ----
+
+def unit_boot(conf_path):
+    return f"""[Unit]
+Description=restrict-egress: load default-deny egress ruleset before networking
+Documentation=file://{INSTALL_PATH}
+DefaultDependencies=no
+After=local-fs.target
+Before=network-pre.target shutdown.target
+Wants=network-pre.target
+Conflicts=shutdown.target
+
+[Service]
+Type=oneshot
+TimeoutStartSec=45s
+ExecStart={INSTALL_PATH} --config {conf_path} refresh --reload
+RemainAfterExit=yes
+
+[Install]
+WantedBy=sysinit.target
+"""
+
+
+def unit_refresh(conf_path):
+    return f"""[Unit]
+Description=restrict-egress: refresh the egress allowlist set
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+TimeoutStartSec=60s
+ExecStart={INSTALL_PATH} --config {conf_path} refresh
+"""
+
+
+def unit_timer(refresh_s):
+    return f"""[Unit]
+Description=restrict-egress: periodic allowlist refresh (rotation backstop)
+
+[Timer]
+OnBootSec=90s
+OnUnitActiveSec={refresh_s}s
+Unit=restrict-egress-refresh.service
+
+[Install]
+WantedBy=timers.target
+"""
+
+
+def dispatcher_hook(conf_path):
+    return f"""#!/bin/sh
+# networkd-dispatcher hook: re-detect uplinks and reload on interface-up.
+[ -x {INSTALL_PATH} ] || exit 0
+exec {INSTALL_PATH} --config {conf_path} refresh --reload
+"""
+
+
+def write_file(path, content, mode):
+    d = os.path.dirname(path)
+    os.makedirs(d, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=d)
+    with os.fdopen(fd, "w") as f:
+        f.write(content)
+    os.chmod(tmp, mode)
+    os.replace(tmp, path)
+
+
+def self_install():
+    """Root-run units execute INSTALL_PATH: content AND ownership/mode are
+    enforced every time, not only when the copy is missing."""
+    src = os.path.realpath(sys.argv[0])
+    with open(src, "rb") as f:
+        content = f.read()
+    current = None
+    try:
+        with open(INSTALL_PATH, "rb") as f:
+            current = f.read()
+    except OSError:
+        pass
+    if current != content:
+        d = os.path.dirname(INSTALL_PATH)
+        fd, tmp = tempfile.mkstemp(dir=d)
+        with os.fdopen(fd, "wb") as f:
+            f.write(content)
+        os.chmod(tmp, 0o755)
+        os.replace(tmp, INSTALL_PATH)
+        if src != os.path.realpath(INSTALL_PATH):
+            log(f"installed to {INSTALL_PATH} (boot units reference this path)")
+    os.chown(INSTALL_PATH, 0, 0)
+    os.chmod(INSTALL_PATH, 0o755)
+
+
+# ----------------------------------------------------------------- guards ----
+
+def require_root():
+    if os.geteuid() != 0:
+        sys.exit("error: this command must run as root")
+
+
+def require_environment():
+    if not os.path.isdir("/run/systemd/system"):
+        sys.exit("error: systemd is not running (containers are not supported; "
+                 "run this on a full REMnux VM or host)")
+    if shutil.which("nft", path=SAFE_ENV["PATH"]) is None:
+        sys.exit("error: nft not found; install the nftables package")
+
+
+# ----------------------------------------------------------------- reload ----
+
+def do_reload(conf_path, no_allowlist):
+    """Regenerate and apply the full ruleset from the current config.
+    Caller holds the lock. Fail-safe: a broken config never widens the
+    boundary; with no table (or stale uplinks) it produces a fail-closed
+    baseline rather than leaving a gap."""
+    uplinks = detect_uplinks()
+    prior = read_state()
+    try:
+        cfg, conf_sha = load_config(conf_path, no_allowlist)
+    except (ConfigError, OSError) as e:
+        stale = bool(prior) and prior.get("uplinks") != uplinks
+        if table_exists() and chain_enforcing() and not stale:
+            log(f"config unusable ({e}); keeping the existing ruleset", error=True)
+            return False
+        log(f"config unusable ({e}); loading fail-closed baseline", error=True)
+        baseline = Config()
+        baseline.dns_open = False
+        nft_apply(generate_ruleset(baseline, uplinks, set()))
+        return False
+    if not table_exists():
+        # Deny is in place while resolution runs; a slow resolver never
+        # leaves the boot path unprotected.
+        nft_apply(generate_ruleset(cfg, uplinks, set()))
+    elements, failed = resolve_domains(cfg.domains)
+    if failed:
+        log(f"could not resolve: {', '.join(failed)} (will retry on next refresh)", error=True)
+    nft_apply(generate_ruleset(cfg, uplinks, elements))
+    write_state(conf_path, conf_sha, no_allowlist, uplinks, cfg.refresh_s)
+    if os.path.exists(UNIT_TIMER) and (not prior or prior.get("refresh_s") != cfg.refresh_s):
+        write_file(UNIT_TIMER, unit_timer(cfg.refresh_s), 0o644)
+        run(["systemctl", "daemon-reload"], check=False)
+        run(["systemctl", "restart", "restrict-egress-refresh.timer"], check=False)
+    log(f"ruleset loaded: uplinks={','.join(uplinks) or 'NONE(fail-closed)'} "
+        f"allowed={len(elements)} resolved + {len(cfg.cidrs)} static, "
+        f"dns={'open' if cfg.dns_open else 'closed'}")
+    return True
+
+
+def cmd_refresh(args):
+    require_root()
+    require_environment()
+    with Lock():
+        state = read_state()
+        no_allowlist = bool(state and state.get("no_allowlist"))
+        conf_path = args.config
+        if args.reload:
+            ok = do_reload(conf_path, no_allowlist)
+            sys.exit(0 if ok else 1)
+        # Self-heal: anything structural drifted -> full reload.
+        drift = None
+        if state is None:
+            drift = "no recorded state"
+        elif not table_exists():
+            drift = "table missing"
+        elif not chain_enforcing():
+            drift = "output chain missing or not default-deny"
+        elif detect_uplinks() != state.get("uplinks"):
+            drift = "default-route interfaces changed"
+        else:
+            try:
+                if hashlib.sha256(read_config_bytes(conf_path)).hexdigest() != state.get("config_sha256"):
+                    drift = "config changed"
+            except (ConfigError, OSError):
+                drift = "config unreadable or unsafe"
+        if drift:
+            log(f"refresh: {drift}; reloading ruleset")
+            sys.exit(0 if do_reload(conf_path, no_allowlist) else 1)
+        try:
+            cfg, _ = load_config(conf_path, no_allowlist)
+        except (ConfigError, OSError) as e:
+            log(f"refresh: config unusable ({e}); keeping current state", error=True)
+            sys.exit(1)
+        elements, failed = resolve_domains(cfg.domains)
+        if failed:
+            log(f"could not resolve: {', '.join(failed)}", error=True)
+        if elements:
+            # destroy+add in one batch guarantees the timeout is renewed;
+            # a plain re-add of a live element is not specified to renew it.
+            batch = []
+            for ip, port in sorted(elements):
+                batch.append(f"destroy element {TABLE} {SET_NAME} {{ {ip} . {port} }}")
+                batch.append(f"add element {TABLE} {SET_NAME} {{ {ip} . {port} }}")
+            run(["nft", "-f", "-"], input_text="\n".join(batch) + "\n")
+            log(f"refreshed {len(elements)} allowlist elements")
+
+
+# --------------------------------------------------------------- on / off ----
+
+def enabled_units():
+    return ["restrict-egress.service", "restrict-egress-refresh.timer"]
+
+
+def teardown(quiet=False):
+    for unit in enabled_units() + ["restrict-egress-refresh.service"]:
+        run(["systemctl", "disable", "--now", unit], check=False)
+    for path in (UNIT_BOOT, UNIT_REFRESH, UNIT_TIMER, DISPATCHER_HOOK, STATE_PATH):
+        try:
+            os.unlink(path)
+        except OSError:
+            pass
+    try:
+        os.rmdir(STATE_DIR)
+    except OSError:
+        pass
+    run(["systemctl", "daemon-reload"], check=False)
+    run(["nft", "delete", "table"] + TABLE.split(), check=False)
+    if not quiet:
+        log("egress restrictions removed; outbound access is unrestricted")
+
+
+def cmd_on(args):
+    if args.dry_run:
+        return dry_run(args)
+    require_root()
+    require_environment()
+    conf_path = os.path.abspath(args.config)
+    if UNSAFE_PATH_RE.search(conf_path):
+        sys.exit("error: config path contains characters unsafe for systemd units "
+                 "(whitespace, quotes, %, or shell metacharacters); use a plainer path")
+    try:
+        cfg, _ = load_config(conf_path, args.no_allowlist)
+    except (ConfigError, OSError) as e:
+        sys.exit(f"error: {e}")
+    with Lock():
+        was_active = table_exists()
+        try:
+            self_install()
+            write_file(UNIT_BOOT, unit_boot(conf_path), 0o644)
+            write_file(UNIT_REFRESH, unit_refresh(conf_path), 0o644)
+            write_file(UNIT_TIMER, unit_timer(cfg.refresh_s), 0o644)
+            if os.path.isdir(os.path.dirname(DISPATCHER_DIR)):
+                write_file(DISPATCHER_HOOK, dispatcher_hook(conf_path), 0o755)
+            else:
+                log("warning: networkd-dispatcher not present; relying on boot unit and timer", error=True)
+            run(["systemctl", "daemon-reload"])
+            run(["systemctl", "enable"] + enabled_units())
+            run(["systemctl", "start", "restrict-egress-refresh.timer"])
+            if not do_reload(conf_path, args.no_allowlist):
+                raise RuntimeError("initial ruleset load failed; see log")
+        except (subprocess.CalledProcessError, RuntimeError, OSError) as e:
+            detail = getattr(e, "stderr", "") or str(e)
+            if was_active:
+                # Never convert a failed re-run into unrestricted egress.
+                sys.exit(f"error: re-enable failed ({detail.strip()}); the previously "
+                         "active lockdown was left in place — check 'restrict-egress status'")
+            teardown(quiet=True)
+            sys.exit(f"error: enable failed, everything rolled back: {detail.strip()}")
+    # Outside the lock: the unit's own refresh --reload takes the same flock.
+    started = run(["systemctl", "start", "restrict-egress.service"], check=False)
+    if started.returncode != 0:
+        log("warning: boot service failed to start; check 'systemctl status "
+            "restrict-egress' before relying on reboot persistence", error=True)
+    log("egress lockdown active and persistent; verify with: restrict-egress status")
+
+
+def cmd_off(args):
+    require_root()
+    require_environment()
+    with Lock():
+        teardown()
+        leftovers = []
+        if table_exists():
+            leftovers.append("nft table still loaded")
+        leftovers += [p for p in (UNIT_BOOT, UNIT_REFRESH, UNIT_TIMER, DISPATCHER_HOOK)
+                      if os.path.exists(p)]
+        if leftovers:
+            sys.exit("error: removal incomplete: " + "; ".join(str(x) for x in leftovers))
+
+
+# ------------------------------------------------------------------ status ----
+
+def cmd_status(args):
+    if shutil.which("systemctl", path=SAFE_ENV["PATH"]) is None:
+        print("restrict-egress: status unavailable (no systemd on this system)")
+        sys.exit(3)
+    checks = []
+
+    def unit_ok(unit, verb="is-enabled"):
+        return run(["systemctl", verb, unit], check=False).stdout.strip()
+
+    installed = all(os.path.exists(p) for p in (UNIT_BOOT, UNIT_TIMER))
+    checks.append(("persistence units installed", installed, ""))
+    checks.append(("boot unit enabled", unit_ok("restrict-egress.service") == "enabled", ""))
+    checks.append(("boot unit healthy", unit_ok("restrict-egress.service", "is-active") != "failed",
+                   "see systemctl status restrict-egress"))
+    checks.append(("refresh timer active", unit_ok("restrict-egress-refresh.timer", "is-active") == "active", ""))
+    if os.path.isdir(os.path.dirname(DISPATCHER_DIR)):
+        checks.append(("network-up hook installed", os.path.exists(DISPATCHER_HOOK), ""))
+    if os.geteuid() != 0:
+        for name, ok, _ in checks:
+            print(f"  [{'ok' if ok else '--'}] {name}")
+        print("(run as root for ruleset, allowlist set, and drift detail)")
+        sys.exit(0 if installed else 3)
+
+    state = read_state()
+    live = table_exists() and chain_enforcing()
+    checks.append(("nftables ruleset loaded and enforcing", live, ""))
+    uplinks = detect_uplinks()
+    checks.append((f"uplinks match ruleset ({','.join(uplinks) or 'none'})",
+                   bool(state) and state.get("uplinks") == uplinks, "will self-heal on next refresh"))
+    conf_path = state.get("config_path") if state else args.config
+    conf_ok, domains_expected = False, True
+    try:
+        data = read_config_bytes(conf_path)
+        conf_ok = bool(state) and hashlib.sha256(data).hexdigest() == state.get("config_sha256")
+        domains_expected = bool(parse_config(data.decode("utf-8")).domains)
+    except (ConfigError, OSError, UnicodeDecodeError):
+        pass
+    checks.append(("applied ruleset matches config file", conf_ok, "rerun 'on' or wait for refresh"))
+    if domains_expected:
+        set_text = run(["nft", "list", "set"] + TABLE.split() + [SET_NAME], check=False).stdout
+        checks.append(("allowlist set populated", "elements" in set_text, "check DNS and the journal"))
+    else:
+        set_text = ""
+
+    all_ok = all(ok for _, ok, _ in checks)
+    if not installed and not live:
+        verdict, code = "inactive", 3
+    elif all_ok:
+        verdict, code = "active", 0
+    else:
+        verdict, code = "degraded", 1
+    print(f"restrict-egress: {verdict}")
+    for name, ok, hint in checks:
+        print(f"  [{'ok' if ok else '--'}] {name}" + ("" if ok or not hint else f"  ({hint})"))
+    if live and "elements" in set_text:
+        print("currently allowed (resolved):")
+        for line in set_text.splitlines():
+            if " . " in line and "type" not in line:
+                print("   " + line.strip())
+    journal = run(["journalctl", "-t", "restrict-egress", "-n", "3", "--no-pager", "-q"], check=False).stdout
+    if journal:
+        print("recent log:")
+        for line in journal.strip().splitlines():
+            print("   " + line)
+    sys.exit(code)
+
+
+# ----------------------------------------------------------------- dry run ----
+
+def dry_run(args):
+    skipped = ["root check", "nft validation", "system mutation"]
+    try:
+        cfg, _ = load_config(args.config, args.no_allowlist, privileged=False)
+    except (ConfigError, OSError) as e:
+        sys.exit(f"error: {e}")
+    uplinks = detect_uplinks()
+    if not uplinks:
+        uplinks = ["<uplink>"]
+        skipped.append("uplink detection (placeholder shown)")
+    elements, failed = resolve_domains(cfg.domains)
+    if failed:
+        print(f"# unresolved (would retry): {', '.join(failed)}")
+    print(f"# dry run; skipped: {', '.join(skipped)}")
+    print(f"# refresh every {cfg.refresh_s}s, element timeout {cfg.timeout_s}s")
+    sys.stdout.write(generate_ruleset(cfg, uplinks, elements))
+
+
+# ------------------------------------------------------------------- main ----
+
+def refresh_entry(args):
+    """Timer/hook entry: an active custom --config or kill-switch mode is
+    recorded in state and must survive invocations that omit the flags."""
+    state = read_state()
+    if args.config == DEFAULT_CONF and state and state.get("config_path"):
+        args.config = state["config_path"]
+    args.no_allowlist = bool(state and state.get("no_allowlist"))
+    if args.dry_run:
+        dry_run(args)
+    else:
+        cmd_refresh(args)
+
+
+def main():
+    syslog.openlog("restrict-egress", facility=syslog.LOG_DAEMON)
+    parser = argparse.ArgumentParser(
+        prog="restrict-egress",
+        description="Restrict outbound access to an allowlist of domains and CIDRs "
+                    "(nftables default-deny egress). REMnux ships unrestricted; this tool is opt-in.",
+        epilog="The lockdown blocks apt and remnux install by design: run "
+               "'restrict-egress off' before updating, 'on' after. "
+               f"Config: {DEFAULT_CONF} (one domain[:port], IP, or CIDR[:port] per line; "
+               "options: dns = open|closed, refresh = 3min, timeout = 30m).",
+    )
+    parser.add_argument("--version", action="version", version=f"%(prog)s {VERSION}")
+    parser.add_argument("--config", default=DEFAULT_CONF, help=f"config path (default {DEFAULT_CONF})")
+    sub = parser.add_subparsers(dest="command")
+
+    p_on = sub.add_parser("on", help="enable the egress lockdown, persistently")
+    p_on.add_argument("--no-allowlist", action="store_true",
+                      help="deliberate kill switch: allow nothing outbound (DNS defaults closed)")
+    p_on.add_argument("--dry-run", action="store_true", help="print the generated ruleset; change nothing")
+    p_on.set_defaults(func=cmd_on)
+
+    p_off = sub.add_parser("off", help="remove the lockdown and restore outbound access")
+    p_off.set_defaults(func=cmd_off, no_allowlist=False)
+
+    p_status = sub.add_parser("status", help="report active / degraded / inactive with checks")
+    p_status.set_defaults(func=cmd_status)
+
+    p_refresh = sub.add_parser("refresh", help="re-resolve domains and renew the allow set (timer entry point)")
+    p_refresh.add_argument("--reload", action="store_true",
+                           help="re-detect uplinks and regenerate the full ruleset (boot/hook entry point)")
+    p_refresh.add_argument("--dry-run", action="store_true", help="print the generated ruleset; change nothing")
+    p_refresh.set_defaults(func=refresh_entry, no_allowlist=False)
+
+    args = parser.parse_args()
+    if args.command is None:
+        parser.print_help()
+        print("\nCurrent status:")
+        args.no_allowlist = False
+        cmd_status(args)
+        return
+    args.func(args)
+
+
+if __name__ == "__main__":
+    main()
