@@ -9,6 +9,12 @@
 # put allowed destinations in /etc/restrict-egress.conf, run `restrict-egress on`.
 # Run `restrict-egress off` before `apt` or `remnux install`, then `on` again.
 #
+# On a VM or host, `on` installs a persistent, self-refreshing systemd lockdown.
+# In a container there is no systemd: use `restrict-egress apply` for a one-shot
+# lockdown of the container's own network namespace (a static IP/CIDR allowlist,
+# no refresh). Run the container with --cap-add=NET_ADMIN, apply before untrusted
+# code runs, and prefer a non-root workload. `off` and `status` work in both.
+#
 # Scope and accepted trade-offs (threat model: contain a non-root process or a
 # steered AI agent that reads untrusted data; NOT a boundary against root-level
 # malware):
@@ -42,7 +48,7 @@ import syslog
 import tempfile
 import time
 
-VERSION = "0.9.2"
+VERSION = "0.9.3"
 
 INSTALL_PATH = "/usr/local/bin/restrict-egress"
 DEFAULT_CONF = "/etc/restrict-egress.conf"
@@ -260,7 +266,7 @@ def resolve_domains(domains):
 
 # ---------------------------------------------------------------- ruleset ----
 
-def generate_ruleset(cfg, uplinks, elements):
+def generate_ruleset(cfg, uplinks, elements, restrict_all=False):
     lines = [
         f"destroy table {TABLE}",
         f"table {TABLE} {{",
@@ -286,7 +292,13 @@ def generate_ruleset(cfg, uplinks, elements):
         # enable the lockdown before running untrusted code.
         "        ct state established,related accept",
     ]
-    if uplinks:
+    if restrict_all:
+        # Container mode: restrict egress on EVERY interface. There is no
+        # management NIC to preserve and no refresh to re-detect a moved route,
+        # so an uplink-scoped rule (below) would fail open if the default route
+        # later shifts to a new interface. Deny all, track no uplinks.
+        lines.append("        # container mode: all interfaces restricted, no uplink scoping")
+    elif uplinks:
         rendered = ", ".join(f'"{u}"' for u in uplinks)
         lines.append(f"        oifname != {{ {rendered} }} accept")
     else:
@@ -401,7 +413,7 @@ def _sanitize_cidrs(value):
         if isinstance(item, (list, tuple)) and len(item) == 2:
             try:
                 out.append([str(item[0]), int(item[1])])
-            except (TypeError, ValueError):
+            except (TypeError, ValueError, OverflowError):
                 continue
     return out
 
@@ -603,12 +615,34 @@ def require_root():
         sys.exit("error: this command must run as root")
 
 
-def require_environment():
-    if not os.path.isdir("/run/systemd/system"):
-        sys.exit("error: systemd is not running (containers are not supported; "
-                 "run this on a full REMnux VM or host)")
+def systemd_running():
+    return os.path.isdir("/run/systemd/system")
+
+
+def require_nft():
     if shutil.which("nft", path=SAFE_ENV["PATH"]) is None:
         sys.exit("error: nft not found; install the nftables package")
+
+
+def require_nft_operable():
+    """nft present AND usable in this namespace. Root is not sufficient: a
+    container needs CAP_NET_ADMIN. Probe explicitly so container commands fail
+    loudly instead of silently mis-reporting (a failed nft query must never be
+    read as 'no table')."""
+    require_nft()
+    if run(["nft", "list", "tables"], check=False).returncode != 0:
+        sys.exit("error: nft cannot access the ruleset; a container needs "
+                 "--cap-add=NET_ADMIN (and an nft-capable host kernel)")
+
+
+def require_environment():
+    """The persistent path (on/refresh) needs systemd; without it, point the
+    user at the container one-shot instead of failing blankly."""
+    if not systemd_running():
+        sys.exit("error: systemd is not running; for a container use "
+                 "'restrict-egress apply' (one-shot, no persistence; run the "
+                 "container with --cap-add=NET_ADMIN)")
+    require_nft()
 
 
 # ----------------------------------------------------------------- reload ----
@@ -729,8 +763,13 @@ def enabled_units():
 
 
 def teardown(quiet=False):
-    for unit in enabled_units() + ["restrict-egress-refresh.service"]:
-        run(["systemctl", "disable", "--now", unit], check=False)
+    # Systemd cleanup only where systemd runs; in a container there are no units.
+    # Guarded on systemd_running() (not systemctl presence) so a systemd host with
+    # systemctl somehow missing keeps its prior behavior rather than silently
+    # leaving units active -- only a genuine no-systemd container skips this.
+    if systemd_running():
+        for unit in enabled_units() + ["restrict-egress-refresh.service"]:
+            run(["systemctl", "disable", "--now", unit], check=False)
     for path in (UNIT_BOOT, UNIT_REFRESH, UNIT_TIMER, DISPATCHER_HOOK, STATE_PATH):
         try:
             os.unlink(path)
@@ -740,7 +779,8 @@ def teardown(quiet=False):
         os.rmdir(STATE_DIR)
     except OSError:
         pass
-    run(["systemctl", "daemon-reload"], check=False)
+    if systemd_running():
+        run(["systemctl", "daemon-reload"], check=False)
     run(["nft", "delete", "table"] + TABLE.split(), check=False)
     if not quiet:
         log("egress restrictions removed; outbound access is unrestricted")
@@ -793,7 +833,7 @@ def cmd_on(args):
 
 def cmd_off(args):
     require_root()
-    require_environment()
+    require_nft_operable()
     with Lock():
         teardown()
         leftovers = []
@@ -803,6 +843,62 @@ def cmd_off(args):
                       if os.path.exists(p)]
         if leftovers:
             sys.exit("error: removal incomplete: " + "; ".join(str(x) for x in leftovers))
+
+
+# --------------------------------------------------------------- container ----
+
+def cmd_apply(args):
+    """Container one-shot: apply the ruleset in the current network namespace
+    with no systemd persistence and no refresh. Intended for restricting a
+    container's own egress (e.g. around the REMnux MCP server) with a static
+    IP/CIDR allowlist. Needs NET_ADMIN. The VM path (on/off/refresh) is
+    unaffected; this is a separate, additive entry point."""
+    if args.dry_run:
+        return dry_run(args, container=True)
+    require_root()
+    # A systemd-managed lockdown shares this table AND state; if 'apply' replaced
+    # them, the boot unit and timer would adopt apply's config and keep
+    # refreshing/restoring it -- neither "one-shot" nor "no persistence". Refuse.
+    if os.path.exists(UNIT_BOOT) or os.path.exists(UNIT_TIMER):
+        sys.exit("error: a persistent lockdown is installed (via 'on'); run "
+                 "'restrict-egress off' first. On a VM or host, use 'on', not 'apply'.")
+    require_nft_operable()
+    conf_path = os.path.abspath(args.config)
+    try:
+        cfg, conf_sha = load_config(conf_path, args.no_allowlist)
+    except (ConfigError, OSError) as e:
+        sys.exit(f"error: {e}")
+    with Lock():
+        # Container mode restricts every interface (restrict_all): no refresh runs
+        # to re-detect a moved default route, so uplink-scoped rules could fail
+        # open. uplinks recorded for status only, not for enforcement.
+        uplinks = detect_uplinks()
+        elements, failed, provenance = resolve_domains(cfg.domains)
+        if failed:
+            log(f"could not resolve: {', '.join(failed)}", error=True)
+        try:
+            nft_apply(generate_ruleset(cfg, uplinks, elements, restrict_all=True))
+        except subprocess.CalledProcessError as e:
+            detail = (getattr(e, "stderr", "") or str(e)).strip()
+            sys.exit(f"error: could not load ruleset ({detail}); a container needs "
+                     "--cap-add=NET_ADMIN and an nft-capable host kernel")
+        # The ruleset is committed and enforcing at this point. A failed state
+        # write (e.g. read-only /var/lib) must NOT abort with the firewall up:
+        # warn and continue, degrading status to unlabeled IPs.
+        try:
+            write_state(conf_path, conf_sha, args.no_allowlist, uplinks, cfg.refresh_s,
+                        resolved_records(provenance, cfg.timeout_s, time.time()), cidr_records(cfg))
+        except OSError as e:
+            log(f"warning: ruleset applied but state not written ({e}); status will "
+                "show live IPs without domain labels", error=True)
+    if cfg.domains:
+        log(f"warning: 'apply' does not refresh; domain entries stop working once "
+            f"their {cfg.timeout_s}s timeout lapses (fails closed). Use IP/CIDR "
+            f"entries in a container, or re-run 'apply' to re-resolve.", error=True)
+    log(f"egress ruleset applied in this namespace (container mode, all interfaces "
+        f"restricted, no persistence); allowed={len(elements)} resolved + "
+        f"{len(cfg.cidrs)} static. Enable before untrusted code runs; "
+        f"remove with 'restrict-egress off'.")
 
 
 # ------------------------------------------------------------------ status ----
@@ -836,8 +932,32 @@ def print_allowed(live, live_elems, state):
         print(f"   {ip}:{port}  (provenance unavailable)")
 
 
+def status_container(brief):
+    """Status without systemd: there are no units or timer to check, so report
+    only what is enforced in this namespace. nft listing needs root, so a
+    non-root caller cannot determine active/inactive -- say so rather than
+    reporting a false 'inactive'."""
+    if os.geteuid() != 0:
+        print("restrict-egress: run as root to query enforcement in container mode")
+        sys.exit(4)
+    require_nft_operable()
+    live = table_exists() and chain_enforcing()
+    verdict, code = ("active", 0) if live else ("inactive", 3)
+    if brief:
+        print(f"restrict-egress: {verdict} (container mode)")
+        sys.exit(code)
+    print(f"restrict-egress: {verdict} (container mode, no systemd persistence)")
+    print(f"  [{'ok' if live else '--'}] nftables ruleset loaded and enforcing")
+    state = read_state()
+    live_elems = live_set_elements() if live else set()
+    print_allowed(live, live_elems, state)
+    sys.exit(code)
+
+
 def cmd_status(args):
     brief = getattr(args, "brief", False)
+    if not systemd_running():
+        return status_container(brief)
     if shutil.which("systemctl", path=SAFE_ENV["PATH"]) is None:
         print("restrict-egress: status unavailable (no systemd on this system)")
         sys.exit(3)
@@ -908,22 +1028,27 @@ def cmd_status(args):
 
 # ----------------------------------------------------------------- dry run ----
 
-def dry_run(args):
+def dry_run(args, container=False):
     skipped = ["root check", "nft validation", "system mutation"]
     try:
         cfg, _ = load_config(args.config, args.no_allowlist, privileged=False)
     except (ConfigError, OSError) as e:
         sys.exit(f"error: {e}")
     uplinks = detect_uplinks()
-    if not uplinks:
+    if not container and not uplinks:
         uplinks = ["<uplink>"]
         skipped.append("uplink detection (placeholder shown)")
     elements, failed, _ = resolve_domains(cfg.domains)
     if failed:
-        print(f"# unresolved (would retry): {', '.join(failed)}")
+        retry = "dropped; apply does not retry" if container else "would retry"
+        print(f"# unresolved ({retry}): {', '.join(failed)}")
     print(f"# dry run; skipped: {', '.join(skipped)}")
-    print(f"# refresh every {cfg.refresh_s}s, element timeout {cfg.timeout_s}s")
-    sys.stdout.write(generate_ruleset(cfg, uplinks, elements))
+    if container:
+        print(f"# container one-shot: all interfaces restricted, no refresh; "
+              f"resolved-domain elements would expire after {cfg.timeout_s}s")
+    else:
+        print(f"# refresh every {cfg.refresh_s}s, element timeout {cfg.timeout_s}s")
+    sys.stdout.write(generate_ruleset(cfg, uplinks, elements, restrict_all=container))
 
 
 # ------------------------------------------------------------------- main ----
@@ -950,7 +1075,9 @@ def main():
         epilog="The lockdown blocks apt and remnux install by design: run "
                "'restrict-egress off' before updating, 'on' after. "
                f"Config: {DEFAULT_CONF} (one domain[:port], IP, or CIDR[:port] per line; "
-               "options: dns = open|closed, refresh = 3min, timeout = 30m).",
+               "options: dns = open|closed, refresh = 3min, timeout = 30m). "
+               "In a container (no systemd), use 'apply' instead of 'on' and run "
+               "the container with --cap-add=NET_ADMIN.",
     )
     parser.add_argument("--version", action="version", version=f"%(prog)s {VERSION}")
     parser.add_argument("--config", default=DEFAULT_CONF, help=f"config path (default {DEFAULT_CONF})")
@@ -964,6 +1091,13 @@ def main():
 
     p_off = sub.add_parser("off", help="remove the lockdown and restore outbound access")
     p_off.set_defaults(func=cmd_off, no_allowlist=False)
+
+    p_apply = sub.add_parser("apply", help="container one-shot: apply the ruleset without "
+                                           "systemd persistence or refresh (needs --cap-add=NET_ADMIN)")
+    p_apply.add_argument("--no-allowlist", action="store_true",
+                         help="deliberate kill switch: allow nothing outbound (DNS defaults closed)")
+    p_apply.add_argument("--dry-run", action="store_true", help="print the generated ruleset; change nothing")
+    p_apply.set_defaults(func=cmd_apply)
 
     p_status = sub.add_parser("status", help="report active / degraded / inactive with checks")
     p_status.set_defaults(func=cmd_status)
