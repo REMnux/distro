@@ -12,4 +12,4 @@ if [ ! -f /opt/portex/PortexAnalyzer.jar ]; then
   exit 2
 fi
 
-java -jar /opt/portex/PortexAnalyzer.jar ${*}
+java -Dlog4j2.statusLoggerLevel=OFF -jar /opt/portex/PortexAnalyzer.jar ${*}

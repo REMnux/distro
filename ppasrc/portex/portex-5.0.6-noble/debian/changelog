@@ -1,3 +1,12 @@
+portex (5.0.6-noble1) noble; urgency=medium
+
+  * Suppress the cosmetic log4j2 StatusLogger ERROR line that the bundled
+    PortexAnalyzer.jar prints to stdout on every run (upstream fat jar ships
+    log4j-api without log4j-core), by adding -Dlog4j2.statusLoggerLevel=OFF
+    to the java invocation in the portex wrapper script.
+
+ -- REMnux Distribution <distro@remnux.org>  Sat, 01 Aug 2026 13:45:14 -0400
+
 portex (5.0.6-noble) noble; urgency=medium
 
   * Updated to latest upstream version.
