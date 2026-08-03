@@ -1,0 +1,9 @@
+resources/Authenticode_PE.docx
+resources/pe102.png
+resources/pecoff.pdf
+test/testfiles/manatest.exe
+test/testfiles/manatest2.exe
+test/testfiles/manatest2_src/Resource.rc
+test/testfiles/manatest2_src/icon1.ico
+test/testfiles/manatest2_src/resource.h
+test/testfiles/manatest3.exe

@@ -1,0 +1,84 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.dll
+*.out
+*.app
+bin/manalyze
+bin/manalyze-tests
+bin/hash-library-test
+
+# Compiled Yara rules + ClamAV rules and databases
+*.yarac
+bin/yara_rules/clamav.*
+bin/yara_rules/daily.tar
+bin/yara_rules/*.cvd
+bin/yara_rules/*.ndb
+bin/yara_rules/*.ldb
+
+# Compiled Python scripts
+bin/yara_rules/*.pyc
+
+# CMake artifacts
+CMakeFiles
+CMakeCache.txt
+*.cmake
+Makefile
+*.cbp
+install_manifest.txt
+
+# Linux compilation artifacts
+
+# VS Files
+*.vcxproj*
+*.pdb
+*.sln
+*.sdf
+*.opensdf
+*.suo
+*.ilk
+*.opendb
+*.db
+*.TMP
+Win32
+Release
+Debug
+.vs
+.vscode
+
+# Intellij IDEA project files
+.idea
+
+# External projects
+external/yara
+external/hash-library
+
+# Sphinx build files
+docs/_*
+docs/.*
+docs/html
+
+# Malwares and documentation
+resources/*
+
+# Signing script
+bin/sign_all.bat

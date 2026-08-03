@@ -1,0 +1,22 @@
+#!/usr/bin/make -f
+
+export DH_OPTIONS
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	dh_auto_configure -- -DCMAKE_BUILD_TYPE=Release -DGitHub=OFF
+
+# Upstream 1.0.0 replaced the plain install(FILES) of manalyze.conf with an
+# install(CODE) block that prepends $ENV{DESTDIR} to a path it then passes to
+# file(INSTALL), which applies DESTDIR itself. The config file therefore lands
+# under a second copy of the staging path instead of /etc/manalyze, and the
+# stray directory ends up in the binary package. Place the file correctly and
+# drop anything outside etc/ and usr/.
+override_dh_auto_install:
+	dh_auto_install
+	install -D -m 644 bin/manalyze.conf debian/manalyze/etc/manalyze/manalyze.conf
+	find debian/manalyze -mindepth 1 -maxdepth 1 -type d \
+		! -name etc ! -name usr ! -name DEBIAN -exec rm -rf {} +
+

@@ -1,0 +1,264 @@
+name: Release Builds
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing GitHub Release tag to upload assets to
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows x64
+            runner: windows-2022
+            platform: windows
+            archive_ext: zip
+          - name: Linux x64
+            runner: ubuntu-latest
+            platform: linux
+            archive_ext: tar.gz
+          - name: macOS x64
+            runner: macos-latest
+            platform: macos
+            archive_ext: tar.gz
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Resolve release tag
+        id: release
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          DISPATCH_TAG: ${{ inputs.release_tag }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          if [ "$EVENT_NAME" = "release" ]; then
+            tag="$RELEASE_TAG"
+          else
+            tag="$DISPATCH_TAG"
+          fi
+
+          if [ -z "$tag" ]; then
+            echo "release tag is required" >&2
+            exit 1
+          fi
+
+          gh release view "$tag" --json tagName --jq .tagName >/dev/null
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Install Linux dependencies
+        if: matrix.platform == 'linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            git \
+            libboost-dev \
+            libboost-system-dev \
+            libssl-dev
+
+      - name: Install macOS dependencies
+        if: matrix.platform == 'macos'
+        shell: bash
+        env:
+          HOMEBREW_NO_REQUIRE_TAP_TRUST: 1
+        run: |
+          set -euo pipefail
+          brew install boost cmake openssl@3
+
+      - name: Install Windows Boost
+        if: matrix.platform == 'windows'
+        uses: MarkusJx/install-boost@v2
+        id: install-boost
+        with:
+          boost_version: 1.84.0
+          platform_version: 2022
+          toolset: msvc
+          arch: x86
+
+      - name: Configure Windows Boost environment
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          "BOOST_ROOT=${{ steps.install-boost.outputs.BOOST_ROOT }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "BOOST_INCLUDEDIR=${{ steps.install-boost.outputs.BOOST_ROOT }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "BOOST_LIBRARYDIR=${{ steps.install-boost.outputs.BOOST_ROOT }}\lib64-msvc-14.3" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Configure Unix build
+        if: matrix.platform != 'windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          extra_args=()
+          if [ "${{ matrix.platform }}" = "macos" ]; then
+            boost_prefix="$(brew --prefix boost)"
+            openssl_prefix="$(brew --prefix openssl@3)"
+            extra_args+=("-DOPENSSL_ROOT_DIR=$openssl_prefix")
+            extra_args+=("-DBoost_ROOT=$boost_prefix")
+            extra_args+=("-DBOOST_ROOT=$boost_prefix")
+            extra_args+=("-DCMAKE_PREFIX_PATH=$boost_prefix;$openssl_prefix")
+          fi
+
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DTests=OFF \
+            -DGitHub=ON \
+            -DMANALYZE_BUILD_VIRUSTOTAL=ON \
+            "${extra_args[@]}"
+
+      - name: Configure Windows build
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          cmake -S . -B build `
+            -G "Visual Studio 17 2022" `
+            -A x64 `
+            -DTests=OFF `
+            -DGitHub=ON `
+            -DMANALYZE_BUILD_VIRUSTOTAL=ON `
+            -DBOOST_ROOT="$env:BOOST_ROOT" `
+            -DBOOST_INCLUDEDIR="$env:BOOST_INCLUDEDIR" `
+            -DBOOST_LIBRARYDIR="$env:BOOST_LIBRARYDIR"
+
+      - name: Build Unix release
+        if: matrix.platform != 'windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake --build build --config Release --parallel 2
+
+      - name: Build Windows release
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          cmake --build build --config Release --parallel 2
+
+      - name: Smoke test Unix build
+        if: matrix.platform != 'windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./build/bin/manalyze --version
+          ./build/bin/manalyze --help
+
+      - name: Smoke test Windows build
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          .\build\bin\manalyze.exe --version
+          .\build\bin\manalyze.exe --help
+
+      - name: Stage Unix package
+        if: matrix.platform != 'windows'
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          set -euo pipefail
+          package_name="manalyze-${RELEASE_TAG}-${{ matrix.platform }}-x64"
+          package_dir="dist/$package_name"
+          package_bin="$package_dir"
+          mkdir -p "$package_bin"
+
+          cp build/bin/manalyze "$package_bin/"
+          find build/bin -maxdepth 1 -type f \( -name '*.so' -o -name '*.dylib' \) -exec cp {} "$package_bin/" \;
+          cp bin/manalyze.conf "$package_bin/"
+          cp -R bin/yara_rules "$package_bin/"
+
+          test -x "$package_bin/manalyze"
+          find "$package_bin" -maxdepth 1 -type f \( -name '*.so' -o -name '*.dylib' \) | grep .
+          find "$package_bin" -maxdepth 1 -type f | grep 'plugin_virustotal'
+          test -f "$package_bin/manalyze.conf"
+          test -d "$package_bin/yara_rules"
+
+          echo "package_name=$package_name" >> "$GITHUB_ENV"
+          echo "package_dir=$package_dir" >> "$GITHUB_ENV"
+
+      - name: Stage Windows package
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $packageName = "manalyze-$env:RELEASE_TAG-windows-x64"
+          $packageDir = "dist/$packageName"
+          $packageBin = $packageDir
+          New-Item -ItemType Directory -Force -Path $packageBin | Out-Null
+
+          Copy-Item "build/bin/manalyze.exe" $packageBin
+          Get-ChildItem "build/bin" -File -Filter "*.dll" | Copy-Item -Destination $packageBin
+          Copy-Item "bin/manalyze.conf" $packageBin
+          Copy-Item "bin/yara_rules" $packageBin -Recurse
+
+          if (-not (Test-Path "$packageBin/manalyze.exe")) { throw "manalyze.exe is missing from package directory" }
+          if (-not (Get-ChildItem $packageBin -File -Filter "*.dll")) { throw "No DLL files were copied into package directory" }
+          if (-not (Get-ChildItem $packageBin -File | Where-Object { $_.Name -like "*plugin_virustotal*" })) { throw "VirusTotal plugin is missing from package directory" }
+          if (-not (Test-Path "$packageBin/manalyze.conf")) { throw "manalyze.conf is missing from package directory" }
+          if (-not (Test-Path "$packageBin/yara_rules")) { throw "yara_rules directory is missing from package directory" }
+
+          "package_name=$packageName" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "package_dir=$packageDir" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Create Unix archive
+        if: matrix.platform != 'windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar -czf "dist/${package_name}.tar.gz" -C dist "$package_name"
+          tar -tzf "dist/${package_name}.tar.gz" | grep "${package_name}/manalyze$"
+          tar -tzf "dist/${package_name}.tar.gz" | grep "${package_name}/manalyze.conf$"
+          tar -tzf "dist/${package_name}.tar.gz" | grep "${package_name}/yara_rules/"
+          tar -tzf "dist/${package_name}.tar.gz" | grep "${package_name}/.*plugin_virustotal"
+
+      - name: Create Windows archive
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "dist/$env:package_name" -DestinationPath "dist/$env:package_name.zip" -Force
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $entries = [System.IO.Compression.ZipFile]::OpenRead("dist/$env:package_name.zip").Entries.FullName
+          if (-not ($entries -contains "$env:package_name/manalyze.exe")) { throw "manalyze.exe missing from zip package directory" }
+          if (-not ($entries | Where-Object { $_ -like "$env:package_name/*.dll" })) { throw "DLL files missing from zip package directory" }
+          if (-not ($entries | Where-Object { $_ -like "$env:package_name/*plugin_virustotal*" })) { throw "VirusTotal plugin missing from zip package directory" }
+          if (-not ($entries -contains "$env:package_name/manalyze.conf")) { throw "manalyze.conf missing from zip package directory" }
+          if (-not ($entries | Where-Object { $_ -like "$env:package_name/yara_rules/*" })) { throw "yara_rules missing from zip package directory" }
+
+      - name: Upload Unix release asset
+        if: matrix.platform != 'windows'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          set -euo pipefail
+          gh release upload "$RELEASE_TAG" "dist/${package_name}.tar.gz" --clobber
+
+      - name: Upload Windows release asset
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          gh release upload "$env:RELEASE_TAG" "dist/$env:package_name.zip" --clobber

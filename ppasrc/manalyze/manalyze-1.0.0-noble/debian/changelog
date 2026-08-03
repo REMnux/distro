@@ -1,0 +1,18 @@
+manalyze (1.0.0-noble) noble; urgency=medium
+
+  * New upstream release 1.0.0.
+  * Install manalyze.conf to /etc/manalyze in debian/rules. Upstream's new
+    install(CODE) block prepends $DESTDIR to a path passed to file(INSTALL),
+    which applies $DESTDIR itself, so the config file landed under a duplicated
+    staging path and the binary package shipped a stray directory.
+  * Let dh_shlibdeps run. The empty override left ${shlibs:Depends} unfilled,
+    so the package declared no runtime dependencies at all; it now depends on
+    libc6, libgcc-s1, libssl3t64 and libstdc++6.
+
+ -- REMnux Distribution <distro@remnux.org>  Sun, 02 Aug 2026 19:55:00 -0400
+
+manalyze (0.9+git20260130-noble) noble; urgency=medium
+
+  * Initial release. Vendored yara and hash-library for offline build.
+
+ -- REMnux Distribution <distro@remnux.org>  Sun, 02 Feb 2026 21:30:00 -0500
