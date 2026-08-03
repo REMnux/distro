@@ -8,6 +8,9 @@ manalyze (1.0.0-noble) noble; urgency=medium
   * Let dh_shlibdeps run. The empty override left ${shlibs:Depends} unfilled,
     so the package declared no runtime dependencies at all; it now depends on
     libc6, libgcc-s1, libssl3t64 and libstdc++6.
+  * Add a patch setting MANALYZE_VERSION to 1.0.0. Upstream tagged v1.0.0 but
+    left the version header at 0.9, so the binary reported the wrong release
+    in --version output and report headers.
 
  -- REMnux Distribution <distro@remnux.org>  Sun, 02 Aug 2026 19:55:00 -0400
 
