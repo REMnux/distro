@@ -11,5 +11,5 @@ if [ ! -f /opt/ilspycmd-files/ilspycmd.dll ]; then
   exit 2
 fi
 
-dotnet /opt/ilspycmd-files/ilspycmd.dll ${*}
+dotnet /opt/ilspycmd-files/ilspycmd.dll --disable-updatecheck "$@"
 

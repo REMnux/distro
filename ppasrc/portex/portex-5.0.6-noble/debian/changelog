@@ -1,3 +1,10 @@
+portex (5.0.6-noble2) noble; urgency=medium
+
+  * Quoted the argument expansion in the portex wrapper so that file paths
+    containing spaces are passed through to PortexAnalyzer intact.
+
+ -- REMnux Distribution <distro@remnux.org>  Sat, 08 Aug 2026 09:15:57 -0400
+
 portex (5.0.6-noble1) noble; urgency=medium
 
   * Suppress the cosmetic log4j2 StatusLogger ERROR line that the bundled

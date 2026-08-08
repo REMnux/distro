@@ -1,3 +1,12 @@
+ilspycmd (9.1.0-noble3) noble; urgency=medium
+
+  * Disabled the automatic update check, which made the tool hang after
+    decompiling on systems with restricted network egress.
+  * Quoted the argument expansion in the wrapper so that file paths
+    containing spaces are passed through intact.
+
+ -- REMnux Distribution <distro@remnux.org>  Sat, 08 Aug 2026 09:10:36 -0400
+
 ilspycmd (9.1.0-noble2) noble; urgency=medium
 
   * Addressed an issue with an unnecessary symlink.
