@@ -1,3 +1,10 @@
+scdbg (20191016-noble1) noble; urgency=medium
+
+  * Quoted the argument expansion in the scdbg and scdbgc wrappers so that file paths
+    containing spaces are passed through intact.
+
+ -- REMnux Distribution <distro@remnux.org>  Sat, 08 Aug 2026 11:47:30 -0400
+
 scdbg (20191016-noble) noble; urgency=medium
 
   * Updated for noble. 

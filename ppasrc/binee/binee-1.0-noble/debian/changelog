@@ -1,3 +1,10 @@
+binee (1.0-3-noble1) noble; urgency=medium
+
+  * Quoted the argument expansion in the binee wrapper so that file paths
+    containing spaces are passed through intact.
+
+ -- REMnux Distribution <distro@remnux.org>  Sat, 08 Aug 2026 11:47:30 -0400
+
 binee (1.0-3-noble) noble; urgency=medium
 
   * Updated for Noble. 

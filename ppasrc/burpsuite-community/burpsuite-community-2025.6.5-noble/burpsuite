@@ -12,5 +12,5 @@ if [ ! -f /opt/burpsuite-community/burpsuite-community.jar ]; then
   exit 2
 fi
 
-java -jar /opt/burpsuite-community/burpsuite-community.jar ${*}
+java -jar /opt/burpsuite-community/burpsuite-community.jar "$@"
 

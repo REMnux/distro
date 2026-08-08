@@ -1,2 +1,2 @@
 #!/bin/bash
-wine /opt/scdbg/gui_launcher.exe ${*}
+wine /opt/scdbg/gui_launcher.exe "$@"

@@ -12,5 +12,5 @@ if [ ! -f /opt/jd-gui-files/jd-gui.jar ]; then
   exit 2
 fi
 
-java -jar /opt/jd-gui-files/jd-gui.jar ${*}
+java -jar /opt/jd-gui-files/jd-gui.jar "$@"
 

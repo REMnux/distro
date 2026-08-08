@@ -1,3 +1,17 @@
+burpsuite-community (2025.6.5-noble2) noble; urgency=medium
+
+  * Rebuilt to include burpsuite-community.jar, which was absent from the
+    2025.6.5-noble1 source package and failed that build.
+
+ -- REMnux Distribution <distro@remnux.org>  Sat, 08 Aug 2026 12:23:07 -0400
+
+burpsuite-community (2025.6.5-noble1) noble; urgency=medium
+
+  * Quoted the argument expansion in the burpsuite wrapper so that file paths
+    containing spaces are passed through intact.
+
+ -- REMnux Distribution <distro@remnux.org>  Sat, 08 Aug 2026 11:47:30 -0400
+
 burpsuite-community (2025.6.5) noble; urgency=medium
 
   * Updated to latest upstream version and for Noble.

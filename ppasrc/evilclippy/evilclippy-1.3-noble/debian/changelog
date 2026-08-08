@@ -1,3 +1,10 @@
+evilclippy (1.3-noble1) noble; urgency=medium
+
+  * Quoted the argument expansion in the evilclippy wrapper so that file paths
+    containing spaces are passed through intact.
+
+ -- REMnux Distribution <distro@remnux.org>  Sat, 08 Aug 2026 11:47:30 -0400
+
 evilclippy (1.3-noble) noble; urgency=medium
 
   * Adjusted for Noble compatibility. 

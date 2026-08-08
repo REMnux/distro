@@ -1,2 +1,2 @@
 #!/bin/bash
-mono /opt/evilclippy-files/EvilClippy.exe ${*}
+mono /opt/evilclippy-files/EvilClippy.exe "$@"

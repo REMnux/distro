@@ -12,4 +12,4 @@ if [ ! -f /opt/baksmali/baksmali-2.4.0.jar ]; then
   exit 2
 fi
 
-java -jar /opt/baksmali/baksmali-2.4.0.jar ${*}
+java -jar /opt/baksmali/baksmali-2.4.0.jar "$@"
