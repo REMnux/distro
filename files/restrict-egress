@@ -15,6 +15,20 @@
 # no refresh). Run the container with --cap-add=NET_ADMIN, apply before untrusted
 # code runs, and prefer a non-root workload. `off` and `status` work in both.
 #
+# How domain entries are enforced (resolver = auto, the default):
+#   - Where dnsmasq and systemd-resolved are present, `on` couples DNS to the
+#     allowlist: a local dnsmasq (127.0.0.1:5354) inserts every A record it
+#     answers for an allowlisted name into the nft set BEFORE the answer leaves,
+#     and systemd-resolved routes only the allowlisted names to it (with the
+#     uplink's DHCP servers as fallback, so a dead dnsmasq degrades to the
+#     sampling mode below, never to an outage). Deterministic: a client can never
+#     hold an IP the kernel will drop. /etc/resolv.conf itself is never edited.
+#   - Everywhere else (containers, no resolved, `resolver = sampling`) the tool
+#     samples: it resolves each name at boot, on network-up, and every refresh,
+#     and keeps each answer for `timeout`. Sampling misses when a load balancer
+#     hands the client an IP the tool has not drawn yet; it stays on in the
+#     coupled mode as the backstop (boot-time population, element renewal).
+#
 # Scope and accepted trade-offs (threat model: contain a non-root process or a
 # steered AI agent that reads untrusted data; NOT a boundary against root-level
 # malware):
@@ -23,6 +37,15 @@
 #   - `dns = open` (the default) leaves port 53 usable as a small exfil channel;
 #     it is required to resolve allowlisted names. Use `dns = closed` with a
 #     CIDR-only allowlist for tighter isolation.
+#   - A client that bypasses the system resolver (hardcoded server, DoH) is not
+#     coupled; it falls back to whatever the sampling backstop has drawn.
+#   - In the coupled mode a domain entry covers the name AND its subdomains
+#     (dnsmasq nftset and resolved routing domains both match by suffix);
+#     the sampling mode matches the exact name only. List only domains whose
+#     subdomains you are willing to reach.
+#   - The coupled dnsmasq answers with filter-AAAA, and resolved may also send
+#     it lookups for unrelated names, so IPv6 answers can be suppressed while
+#     the lockdown is on; the lockdown drops IPv6 egress on the uplink anyway.
 #   - Only the host network namespace is covered. Traffic from containers or
 #     routed guests traverses the forward path and is not restricted.
 #   - Outbound connections established before `on` keep working (conntrack
@@ -48,7 +71,7 @@ import syslog
 import tempfile
 import time
 
-VERSION = "0.9.3"
+VERSION = "0.10.0"
 
 INSTALL_PATH = "/usr/local/bin/restrict-egress"
 DEFAULT_CONF = "/etc/restrict-egress.conf"
@@ -57,12 +80,22 @@ STATE_DIR = "/var/lib/restrict-egress"
 STATE_PATH = STATE_DIR + "/state.json"
 TABLE = "inet restrict_egress"
 SET_NAME = "allow"
+DNS_SET_PREFIX = "dns_"      # per-port sets filled by the coupled resolver: dns_443
 
 UNIT_BOOT = "/etc/systemd/system/restrict-egress.service"
 UNIT_REFRESH = "/etc/systemd/system/restrict-egress-refresh.service"
 UNIT_TIMER = "/etc/systemd/system/restrict-egress-refresh.timer"
+UNIT_DNS = "/etc/systemd/system/restrict-egress-dns.service"
 DISPATCHER_DIR = "/etc/networkd-dispatcher/routable.d"
 DISPATCHER_HOOK = DISPATCHER_DIR + "/50-restrict-egress"
+
+# Coupled-resolver artifacts (written by `on`/reload, removed by `off`).
+RESOLVER_DIR = "/etc/restrict-egress"
+DNSMASQ_CONF = RESOLVER_DIR + "/dnsmasq.conf"
+UPSTREAM_FILE = RESOLVER_DIR + "/upstream.conf"      # dnsmasq servers-file
+RESOLVED_DROPIN = "/etc/systemd/resolved.conf.d/restrict-egress.conf"
+LOCAL_DNS_ADDR = "127.0.0.1"
+LOCAL_DNS_PORT = 5354          # off 53, so fakedns/INetSim/resolved keep their binds
 
 # Subprocesses never inherit the caller's PATH: this tool runs as root.
 SAFE_ENV = {"PATH": "/usr/sbin:/usr/bin:/sbin:/bin", "LC_ALL": "C"}
@@ -118,10 +151,16 @@ class Config:
         self.dns_open = None   # None = unspecified; resolved by policy checks
         self.refresh_s = DEFAULT_REFRESH_S
         self.timeout_s = DEFAULT_TIMEOUT_S
+        self.resolver = "auto"     # auto | local | sampling
+        self.upstream = []         # explicit upstream servers for the local resolver
 
     @property
     def entries(self):
         return len(self.domains) + len(self.cidrs)
+
+    @property
+    def domain_ports(self):
+        return sorted({port for _, port in self.domains})
 
 
 def parse_config(text):
@@ -143,6 +182,25 @@ def parse_config(text):
                     cfg.refresh_s = parse_duration(value, "refresh")
                 elif key == "timeout":
                     cfg.timeout_s = parse_duration(value, "timeout")
+                elif key == "resolver":
+                    if value.lower() not in ("auto", "local", "sampling"):
+                        raise ConfigError("resolver must be 'auto', 'local', or 'sampling'")
+                    cfg.resolver = value.lower()
+                elif key == "upstream":
+                    servers = []
+                    for item in value.split():
+                        try:
+                            addr = ipaddress.ip_address(item)
+                        except ValueError:
+                            raise ConfigError(f"upstream: '{item}' is not an IP address")
+                        if addr.version != 4:
+                            raise ConfigError("upstream: only IPv4 servers are supported")
+                        if addr.is_loopback:
+                            raise ConfigError("upstream: a loopback server would loop back into the local resolver")
+                        servers.append(str(addr))
+                    if not servers:
+                        raise ConfigError("upstream: give at least one IPv4 server")
+                    cfg.upstream = servers
                 else:
                     raise ConfigError(f"unknown option '{key}'")
             except ConfigError as e:
@@ -198,6 +256,322 @@ def check_policy(cfg, no_allowlist):
         )
     if no_allowlist and cfg.dns_open:
         log("warning: dns = open leaves port 53 fully usable; this kill switch is not airtight", error=True)
+    if cfg.resolver == "local" and not cfg.domains:
+        raise ConfigError("resolver = local needs at least one domain entry; there is nothing to couple")
+
+
+# ------------------------------------------------------ coupled resolver ----
+
+def resolver_prereqs():
+    """Why the coupled resolver cannot run here, or None when it can. Needs
+    dnsmasq (nftset-capable; every Debian/Ubuntu build since 2.87), systemctl,
+    and an active systemd-resolved to route the allowlisted names."""
+    if not systemd_running():
+        return "no systemd (container or one-shot use)"
+    if shutil.which("dnsmasq", path=SAFE_ENV["PATH"]) is None:
+        return "dnsmasq not installed"
+    if shutil.which("resolvectl", path=SAFE_ENV["PATH"]) is None:
+        return "resolvectl not found"
+    # Enabled counts, not only active: the boot unit runs before resolved has
+    # started, and a mode that flipped to sampling at every boot would tear the
+    # resolver artifacts down and rebuild them minutes later on network-up.
+    enabled = run(["systemctl", "is-enabled", "systemd-resolved"], check=False).stdout.strip()
+    active = run(["systemctl", "is-active", "systemd-resolved"], check=False).stdout.strip()
+    if enabled not in ("enabled", "static", "indirect", "alias", "enabled-runtime") and active != "active":
+        return "systemd-resolved is not enabled or active"
+    return None
+
+
+def resolvectl(*args):
+    """resolvectl stdout, or '' when the binary is missing or the call fails,
+    so a host that lost systemd-resolved after enabling the coupled mode
+    degrades to 'not routed' instead of a traceback."""
+    try:
+        return run(["resolvectl"] + list(args), check=False).stdout
+    except (FileNotFoundError, OSError):
+        return ""
+
+
+def resolved_global_current():
+    """The server resolved is using for the global scope right now, or None
+    when it has not picked one yet (fresh start: the first listed is next)."""
+    in_global = False
+    for line in resolvectl("status").splitlines():
+        if line.startswith("Global"):
+            in_global = True
+            continue
+        if line.startswith("Link "):
+            in_global = False
+        if in_global and "Current DNS Server:" in line:
+            return line.split(":", 1)[1].strip()
+    return None
+
+
+def resolver_mode(cfg, container=False):
+    """'local' (coupled) or 'sampling'. auto picks local wherever it can run;
+    an explicit local that cannot run is a config error, never a silent
+    downgrade."""
+    if container or not cfg.domains or cfg.resolver == "sampling":
+        return "sampling"
+    why = resolver_prereqs()
+    if why is None:
+        return "local"
+    if cfg.resolver == "local":
+        raise ConfigError(f"resolver = local is not possible here ({why}); use resolver = auto or sampling")
+    return "sampling"
+
+
+def discover_upstreams(cfg, uplinks):
+    """Servers the local dnsmasq forwards to: the config's `upstream` list, else
+    the uplinks' DNS servers as systemd-resolved knows them (DHCP), else every
+    non-loopback server in resolved's compiled resolv.conf. Loopback is always
+    dropped: forwarding to resolved would loop straight back to dnsmasq."""
+    if cfg.upstream:
+        return list(cfg.upstream)
+    found = []
+
+    def keep(text):
+        # resolved renders servers as IP, IP:PORT, IP%IFACE, or IP#SNI; keep an
+        # IPv4 with an optional port (dnsmasq syntax is IP#PORT, see upstream_conf).
+        text = text.split("%")[0].split("#")[0]
+        host, port = text, None
+        if text.count(":") == 1:
+            host, _, port_text = text.partition(":")
+            port = port_text if port_text.isdigit() and 1 <= int(port_text) <= 65535 else None
+            if port is None:
+                return
+        try:
+            addr = ipaddress.ip_address(host)
+        except ValueError:
+            return
+        entry = str(addr) + (f":{port}" if port else "")
+        if addr.version == 4 and not addr.is_loopback and entry not in found:
+            found.append(entry)
+
+    for link in uplinks:
+        out = resolvectl("dns", link)
+        # "Link 3 (ens34): 192.168.50.2 10.0.0.1"
+        _, _, servers = out.partition(":")
+        for tok in servers.split():
+            keep(tok)
+    if not found:
+        try:
+            with open("/run/systemd/resolve/resolv.conf") as f:
+                for line in f:
+                    parts = line.split()
+                    if len(parts) >= 2 and parts[0] == "nameserver":
+                        keep(parts[1])
+        except OSError:
+            pass
+    return found
+
+
+def dnsmasq_conf(cfg):
+    """One nftset line per port: dnsmasq inserts plain addresses, so each port
+    gets its own ipv4_addr set (dns_443, ...) and a matching accept rule.
+    cache-size=0: every answer comes from upstream and every answer inserts,
+    so a cached record can never outlive its set element. filter-AAAA: the sets
+    are IPv4-only, so an AAAA would only give clients an unroutable address to
+    fail on (and a misleading 'network unreachable' error). Caveat, verified:
+    for a CNAME'd name resolved receives the bare CNAME from dnsmasq and chases
+    the target through the uplink's own DNS, so the AAAA still reaches the
+    client; harmless where there is no IPv6 route (IPv4 is tried first)."""
+    by_port = {}
+    for name, port in cfg.domains:
+        by_port.setdefault(port, []).append(name)
+    lines = [
+        "# generated by restrict-egress; edits are overwritten on reload, removed by 'off'",
+        f"port={LOCAL_DNS_PORT}",
+        f"listen-address={LOCAL_DNS_ADDR}",
+        "bind-interfaces",
+        "no-resolv",
+        f"servers-file={UPSTREAM_FILE}",
+        "cache-size=0",
+        "no-negcache",
+        "filter-AAAA",
+        "domain-needed",
+        "bogus-priv",
+    ]
+    for port in sorted(by_port):
+        names = "/".join(sorted(set(by_port[port])))
+        lines.append(f"nftset=/{names}/4#{TABLE.replace(' ', '#')}#{DNS_SET_PREFIX}{port}")
+    return "\n".join(lines) + "\n"
+
+
+def upstream_conf(servers):
+    # resolved spells a port as IP:PORT, dnsmasq as IP#PORT.
+    return "".join(f"server={s.replace(':', '#')}\n" for s in servers) or "# no upstream servers found\n"
+
+
+def resolved_dropin(cfg, servers):
+    """Route only the allowlisted names to dnsmasq; list the upstreams after it
+    so resolved fails over when dnsmasq is down (verified: 0.01 s failover on
+    a refused connection, 10 s failure with no second server)."""
+    dns = " ".join([f"{LOCAL_DNS_ADDR}:{LOCAL_DNS_PORT}"] + list(servers))
+    domains = " ".join(f"~{name}" for name in sorted({n for n, _ in cfg.domains}))
+    return ("# generated by restrict-egress; removed by 'restrict-egress off'\n"
+            "[Resolve]\n"
+            f"DNS={dns}\n"
+            f"Domains={domains}\n")
+
+
+def unit_dns():
+    return f"""[Unit]
+Description=restrict-egress: local resolver that couples DNS answers to the allow set
+Documentation=file://{INSTALL_PATH}
+After=restrict-egress.service network.target
+Wants=restrict-egress.service
+
+[Service]
+ExecStart=/usr/sbin/dnsmasq --keep-in-foreground --conf-file={DNSMASQ_CONF} --pid-file=/run/restrict-egress-dns.pid
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=1s
+
+[Install]
+WantedBy=multi-user.target
+"""
+
+
+def _read_or_none(path):
+    try:
+        with open(path) as f:
+            return f.read()
+    except OSError:
+        return None
+
+
+def systemctl_async(*args):
+    """Job-queueing systemctl call. Every start/restart/reload issued from inside
+    do_reload runs --no-block: the boot unit's ExecStart is do_reload, and the
+    dns unit is ordered After= that boot unit, so a blocking restart from there
+    would wait on a job that waits on the caller (deadlock until timeout)."""
+    return run(["systemctl", "--no-block"] + list(args), check=False)
+
+
+def resolved_restart():
+    """Restart resolved without blocking (see systemctl_async). When it was
+    running, wait briefly for it to come back so a lookup issued right after
+    (the same reload resolves the allowlist) does not fail on the gap."""
+    was_active = run(["systemctl", "is-active", "systemd-resolved"], check=False).stdout.strip() == "active"
+    systemctl_async("restart", "systemd-resolved")
+    if was_active:
+        for _ in range(12):
+            time.sleep(0.25)
+            if run(["systemctl", "is-active", "systemd-resolved"], check=False).stdout.strip() == "active":
+                time.sleep(0.25)  # stub listener settles just after the unit reports active
+                break
+
+
+def apply_local_resolver(cfg, uplinks, first_enable=False):
+    """Write/refresh the coupled-resolver artifacts idempotently. Returns the
+    upstream list in use. Only a changed drop-in restarts resolved; only a
+    changed dnsmasq config restarts dnsmasq; a changed upstream file is a HUP."""
+    servers = discover_upstreams(cfg, uplinks)
+    os.makedirs(RESOLVER_DIR, mode=0o755, exist_ok=True)
+    conf_text = dnsmasq_conf(cfg)
+    conf_changed = _read_or_none(DNSMASQ_CONF) != conf_text
+    if conf_changed:
+        write_file(DNSMASQ_CONF, conf_text, 0o644)
+    up_text = upstream_conf(servers)
+    up_changed = _read_or_none(UPSTREAM_FILE) != up_text
+    if up_changed:
+        write_file(UPSTREAM_FILE, up_text, 0o644)
+    unit_text = unit_dns()
+    unit_changed = _read_or_none(UNIT_DNS) != unit_text
+    if unit_changed:
+        write_file(UNIT_DNS, unit_text, 0o644)
+        run(["systemctl", "daemon-reload"], check=False)
+    if first_enable or unit_changed:
+        run(["systemctl", "enable", "restrict-egress-dns.service"], check=False)
+    def dns_active():
+        return run(["systemctl", "is-active", "restrict-egress-dns.service"], check=False).stdout.strip() == "active"
+
+    if conf_changed or unit_changed or not dns_active():
+        systemctl_async("restart", "restrict-egress-dns.service")
+        # Give the queued (re)start a moment; at boot the unit is ordered after
+        # the caller and will not come up inside this wait, which is fine: the
+        # network-up hook and the timer re-run this and heal then.
+        for _ in range(8):
+            if dns_active():
+                break
+            time.sleep(0.25)
+    elif up_changed:
+        systemctl_async("reload", "restrict-egress-dns.service")
+    dropin_text = resolved_dropin(cfg, servers)
+    if _read_or_none(RESOLVED_DROPIN) != dropin_text:
+        write_file(RESOLVED_DROPIN, dropin_text, 0o644)
+        resolved_restart()
+    elif dns_active():
+        heal_resolved_current()
+    return servers
+
+
+def heal_resolved_current():
+    """resolved switches to the next server when dnsmasq fails and STAYS there
+    (it never walks back on its own), which would leave lookups uncoupled after
+    a dnsmasq restart or an early-boot lookup. A restart resets it to the first
+    server. Call only when dnsmasq is up, so this cannot loop. Returns True
+    when a restart was issued."""
+    current = resolved_global_current()
+    if current and current != f"{LOCAL_DNS_ADDR}:{LOCAL_DNS_PORT}":
+        log(f"resolved had moved to {current}; restarting it to re-couple lookups")
+        resolved_restart()
+        return True
+    return False
+
+
+def remove_local_resolver():
+    """Undo apply_local_resolver. Safe to call when nothing was installed."""
+    had_dropin = os.path.exists(RESOLVED_DROPIN)
+    if systemd_running():
+        run(["systemctl", "disable", "restrict-egress-dns.service"], check=False)
+        systemctl_async("stop", "restrict-egress-dns.service")
+    for path in (UNIT_DNS, DNSMASQ_CONF, UPSTREAM_FILE, RESOLVED_DROPIN):
+        try:
+            os.unlink(path)
+        except OSError:
+            pass
+    for d in (RESOLVER_DIR, os.path.dirname(RESOLVED_DROPIN)):
+        try:
+            os.rmdir(d)
+        except OSError:
+            pass
+    if systemd_running():
+        run(["systemctl", "daemon-reload"], check=False)
+        if had_dropin:
+            run(["systemctl", "restart", "systemd-resolved"], check=False)
+
+
+def resolved_routes_locally():
+    """True when systemd-resolved's global scope lists the local dnsmasq."""
+    for line in resolvectl("dns").splitlines():
+        if line.startswith("Global:") and f"{LOCAL_DNS_ADDR}:{LOCAL_DNS_PORT}" in line:
+            return True
+    return False
+
+
+def wait_local_resolver(seconds=8):
+    """After an interactive `on`, give the queued dns-unit start and the
+    resolved restart a moment so an immediate `status` reports the truth
+    rather than 'activating'; then make sure resolved is actually using
+    dnsmasq (a lookup that raced the dnsmasq start would have moved it)."""
+    healed = False
+    for _ in range(seconds * 4):
+        if (run(["systemctl", "is-active", "restrict-egress-dns.service"], check=False).stdout.strip() == "active"
+                and resolved_routes_locally()):
+            if not healed and heal_resolved_current():
+                healed = True
+                continue
+            current = resolved_global_current()
+            if current is None or current == f"{LOCAL_DNS_ADDR}:{LOCAL_DNS_PORT}":
+                return True
+        time.sleep(0.25)
+    return False
+
+
+def local_resolver_installed():
+    return os.path.exists(UNIT_DNS) or os.path.exists(RESOLVED_DROPIN)
 
 
 def read_config_bytes(path, privileged=True):
@@ -266,7 +640,7 @@ def resolve_domains(domains):
 
 # ---------------------------------------------------------------- ruleset ----
 
-def generate_ruleset(cfg, uplinks, elements, restrict_all=False):
+def generate_ruleset(cfg, uplinks, elements, restrict_all=False, dns_ports=()):
     lines = [
         f"destroy table {TABLE}",
         f"table {TABLE} {{",
@@ -278,8 +652,19 @@ def generate_ruleset(cfg, uplinks, elements, restrict_all=False):
     if elements:
         rendered = ", ".join(f"{ip} . {port}" for ip, port in sorted(elements))
         lines.append(f"        elements = {{ {rendered} }}")
+    lines.append("    }")
+    for port in dns_ports:
+        # Filled by the coupled resolver (dnsmasq nftset), never by this tool;
+        # the set-level timeout applies to what dnsmasq inserts, and each
+        # answered lookup renews it.
+        lines += [
+            f"    set {DNS_SET_PREFIX}{port} {{",
+            "        type ipv4_addr",
+            "        flags timeout",
+            f"        timeout {cfg.timeout_s}s",
+            "    }",
+        ]
     lines += [
-        "    }",
         "    chain output {",
         "        type filter hook output priority 0; policy drop;",
         '        oif "lo" accept',
@@ -309,8 +694,10 @@ def generate_ruleset(cfg, uplinks, elements, restrict_all=False):
         lines.append("        tcp dport 53 accept")
     for net, port in cfg.cidrs:
         lines.append(f"        ip daddr {net} tcp dport {port} accept")
+    lines.append(f"        ip daddr . tcp dport @{SET_NAME} accept")
+    for port in dns_ports:
+        lines.append(f"        ip daddr @{DNS_SET_PREFIX}{port} tcp dport {port} accept")
     lines += [
-        f"        ip daddr . tcp dport @{SET_NAME} accept",
         "    }",
         "}",
     ]
@@ -366,6 +753,44 @@ def live_set_elements():
                 except (TypeError, ValueError):
                     pass
     return tuples
+
+
+def _live_dns_sets():
+    """{port: [ip, ...]} for every dns_<port> set in the live table; empty when
+    the table or the sets are absent."""
+    out = run(["nft", "-j", "list", "table"] + TABLE.split(), check=False)
+    sets = {}
+    if out.returncode != 0:
+        return sets
+    try:
+        data = json.loads(out.stdout)
+    except (json.JSONDecodeError, ValueError):
+        return sets
+    if not isinstance(data, dict):
+        return sets
+    for obj in data.get("nftables", []):
+        s = obj.get("set") if isinstance(obj, dict) else None
+        if not isinstance(s, dict) or not str(s.get("name", "")).startswith(DNS_SET_PREFIX):
+            continue
+        try:
+            port = int(s["name"][len(DNS_SET_PREFIX):])
+        except ValueError:
+            continue
+        ips = sets.setdefault(port, [])
+        for el in s.get("elem", []):
+            val = el["elem"].get("val") if isinstance(el, dict) and "elem" in el else el
+            if isinstance(val, str) and _valid_ip(val):
+                ips.append(val)
+    return sets
+
+
+def live_dns_set_ports():
+    return sorted(_live_dns_sets())
+
+
+def live_dns_elements():
+    """(ip, port) tuples learned by the coupled resolver."""
+    return {(ip, port) for port, ips in _live_dns_sets().items() for ip in ips}
 
 
 # ------------------------------------------------------------------ state ----
@@ -448,7 +873,8 @@ def read_state():
     return None  # malformed state is treated as absent (fail toward reload)
 
 
-def write_state(conf_path, conf_sha, no_allowlist, uplinks, refresh_s, resolved, cidrs):
+def write_state(conf_path, conf_sha, no_allowlist, uplinks, refresh_s, resolved, cidrs,
+                resolver="sampling", upstreams=()):
     os.makedirs(STATE_DIR, mode=0o755, exist_ok=True)
     data = {
         "owner": "restrict-egress",
@@ -460,6 +886,8 @@ def write_state(conf_path, conf_sha, no_allowlist, uplinks, refresh_s, resolved,
         "refresh_s": refresh_s,
         "resolved": resolved,
         "cidrs": cidrs,
+        "resolver": resolver if resolver in ("local", "sampling") else "sampling",
+        "upstreams": [s for s in upstreams if _valid_ip(s)],
     }
     fd, tmp = tempfile.mkstemp(dir=STATE_DIR)
     with os.fdopen(fd, "w") as f:
@@ -656,6 +1084,7 @@ def do_reload(conf_path, no_allowlist):
     prior = read_state()
     try:
         cfg, conf_sha = load_config(conf_path, no_allowlist)
+        mode = resolver_mode(cfg)   # explicit local without prerequisites is a config error
     except (ConfigError, OSError) as e:
         # Missing/untrusted state counts as stale: without it we cannot confirm
         # the running table was built for the current uplinks, and keeping a
@@ -675,25 +1104,35 @@ def do_reload(conf_path, no_allowlist):
         write_state(conf_path, "", no_allowlist, uplinks,
                     (prior or {}).get("refresh_s") or DEFAULT_REFRESH_S, [], [])
         return False
+    dns_ports = cfg.domain_ports if mode == "local" else []
     if not table_exists():
         # Deny is in place while resolution runs; a slow resolver never
         # leaves the boot path unprotected.
-        nft_apply(generate_ruleset(cfg, uplinks, set()))
+        nft_apply(generate_ruleset(cfg, uplinks, set(), dns_ports=dns_ports))
     elements, failed, provenance = resolve_domains(cfg.domains)
     if failed:
         log(f"could not resolve: {', '.join(failed)} (will retry on next refresh)", error=True)
-    nft_apply(generate_ruleset(cfg, uplinks, elements))
+    nft_apply(generate_ruleset(cfg, uplinks, elements, dns_ports=dns_ports))
+    # The table (and the coupled sets) exist before the resolver is (re)started,
+    # so dnsmasq never answers into a missing set.
+    upstreams = []
+    if mode == "local":
+        upstreams = apply_local_resolver(cfg, uplinks, first_enable=not local_resolver_installed())
+    elif local_resolver_installed():
+        remove_local_resolver()
     # Full reload replaces the whole table, so provenance is replaced, not
     # merged: only what we just resolved is live.
     write_state(conf_path, conf_sha, no_allowlist, uplinks, cfg.refresh_s,
-                resolved_records(provenance, cfg.timeout_s, time.time()), cidr_records(cfg))
+                resolved_records(provenance, cfg.timeout_s, time.time()), cidr_records(cfg),
+                resolver=mode, upstreams=upstreams)
     if os.path.exists(UNIT_TIMER) and (not prior or prior.get("refresh_s") != cfg.refresh_s):
         write_file(UNIT_TIMER, unit_timer(cfg.refresh_s), 0o644)
         run(["systemctl", "daemon-reload"], check=False)
         run(["systemctl", "restart", "restrict-egress-refresh.timer"], check=False)
     log(f"ruleset loaded: uplinks={','.join(uplinks) or 'NONE(fail-closed)'} "
         f"allowed={len(elements)} resolved + {len(cfg.cidrs)} static, "
-        f"dns={'open' if cfg.dns_open else 'closed'}")
+        f"dns={'open' if cfg.dns_open else 'closed'}, resolver={mode}"
+        + (f" (upstream {', '.join(upstreams) or 'none found'})" if mode == "local" else ""))
     return True
 
 
@@ -722,6 +1161,10 @@ def cmd_refresh(args):
             # a CIDR-only config resolves no elements, so cmd_refresh's write is
             # skipped); force one full reload after an upgrade to repopulate.
             drift = "tool version changed"
+        elif state.get("resolver") == "local" and not (
+                os.path.exists(RESOLVED_DROPIN) and os.path.exists(DNSMASQ_CONF)
+                and live_dns_set_ports()):
+            drift = "coupled-resolver artifacts missing"
         else:
             try:
                 if hashlib.sha256(read_config_bytes(conf_path)).hexdigest() != state.get("config_sha256"):
@@ -736,6 +1179,20 @@ def cmd_refresh(args):
         except (ConfigError, OSError) as e:
             log(f"refresh: config unusable ({e}); keeping current state", error=True)
             sys.exit(1)
+        mode = state.get("resolver", "sampling")
+        upstreams = state.get("upstreams", [])
+        try:
+            wanted_mode = resolver_mode(cfg)
+        except ConfigError as e:
+            log(f"refresh: {e}; keeping current state", error=True)
+            sys.exit(1)
+        if wanted_mode != mode or (mode == "local" and set(cfg.domain_ports) - set(live_dns_set_ports())):
+            log("refresh: resolver mode or coupled sets out of step with the config; reloading ruleset")
+            sys.exit(0 if do_reload(conf_path, no_allowlist) else 1)
+        if mode == "local":
+            # DHCP may have handed out new DNS servers; keep dnsmasq's upstream
+            # file and resolved's fallback list current (no-op when unchanged).
+            upstreams = apply_local_resolver(cfg, state.get("uplinks", []))
         elements, failed, provenance = resolve_domains(cfg.domains)
         if failed:
             log(f"could not resolve: {', '.join(failed)}", error=True)
@@ -752,7 +1209,8 @@ def cmd_refresh(args):
             merged = merge_resolved((state or {}).get("resolved", []),
                                     provenance, cfg.timeout_s, time.time())
             write_state(conf_path, conf_sha, no_allowlist,
-                        (state or {}).get("uplinks", []), cfg.refresh_s, merged, cidr_records(cfg))
+                        (state or {}).get("uplinks", []), cfg.refresh_s, merged, cidr_records(cfg),
+                        resolver=mode, upstreams=upstreams)
             log(f"refreshed {len(elements)} allowlist elements")
 
 
@@ -770,6 +1228,9 @@ def teardown(quiet=False):
     if systemd_running():
         for unit in enabled_units() + ["restrict-egress-refresh.service"]:
             run(["systemctl", "disable", "--now", unit], check=False)
+    # Resolver first, while systemd is still consulted: the drop-in must go
+    # before resolved is restarted back to its plain configuration.
+    remove_local_resolver()
     for path in (UNIT_BOOT, UNIT_REFRESH, UNIT_TIMER, DISPATCHER_HOOK, STATE_PATH):
         try:
             os.unlink(path)
@@ -797,8 +1258,12 @@ def cmd_on(args):
                  "(whitespace, quotes, %, or shell metacharacters); use a plainer path")
     try:
         cfg, _ = load_config(conf_path, args.no_allowlist)
+        mode = resolver_mode(cfg)
     except (ConfigError, OSError) as e:
         sys.exit(f"error: {e}")
+    if cfg.domains and mode == "sampling" and cfg.resolver == "auto":
+        log(f"note: coupled resolver unavailable ({resolver_prereqs()}); domain entries "
+            "use periodic sampling, which can miss rotating load-balancer IPs", error=True)
     with Lock():
         was_active = table_exists()
         try:
@@ -828,6 +1293,10 @@ def cmd_on(args):
     if started.returncode != 0:
         log("warning: boot service failed to start; check 'systemctl status "
             "restrict-egress' before relying on reboot persistence", error=True)
+    if mode == "local" and not wait_local_resolver():
+        log("warning: coupled resolver (restrict-egress-dns) is not active yet; check "
+            "'systemctl status restrict-egress-dns'. Until it runs, domain entries use "
+            "sampling only", error=True)
     log("egress lockdown active and persistent; verify with: restrict-egress status")
 
 
@@ -839,7 +1308,8 @@ def cmd_off(args):
         leftovers = []
         if table_exists():
             leftovers.append("nft table still loaded")
-        leftovers += [p for p in (UNIT_BOOT, UNIT_REFRESH, UNIT_TIMER, DISPATCHER_HOOK)
+        leftovers += [p for p in (UNIT_BOOT, UNIT_REFRESH, UNIT_TIMER, DISPATCHER_HOOK,
+                                  UNIT_DNS, DNSMASQ_CONF, UPSTREAM_FILE, RESOLVED_DROPIN)
                       if os.path.exists(p)]
         if leftovers:
             sys.exit("error: removal incomplete: " + "; ".join(str(x) for x in leftovers))
@@ -1002,6 +1472,21 @@ def cmd_status(args):
     live_elems = live_set_elements() if live else set()
     if domains_expected:
         checks.append(("allowlist set populated", bool(live_elems), "check DNS and the journal"))
+    resolver = (state or {}).get("resolver", "sampling")
+    dns_elems = set()
+    if resolver == "local":
+        dns_elems = live_dns_elements() if live else set()
+        dns_active = unit_ok("restrict-egress-dns.service", "is-active") == "active"
+        checks.append(("coupled resolver running (dnsmasq)", dns_active,
+                       "see systemctl status restrict-egress-dns"))
+        routed = os.path.exists(RESOLVED_DROPIN) and resolved_routes_locally()
+        current = resolved_global_current()
+        coupled_now = routed and (current is None or current == f"{LOCAL_DNS_ADDR}:{LOCAL_DNS_PORT}")
+        checks.append(("resolved routes allowlisted names to it", coupled_now,
+                       f"resolved is using {current}; the next refresh re-couples it" if routed and not coupled_now
+                       else "drop-in missing or resolved not reloaded; wait for refresh"))
+        checks.append(("coupled allow sets present", bool(live_dns_set_ports()) if live else False,
+                       "will self-heal on next refresh"))
 
     all_ok = all(ok for _, ok, _ in checks)
     if not installed and not live:
@@ -1017,13 +1502,148 @@ def cmd_status(args):
     print(f"restrict-egress: {verdict}")
     for name, ok, hint in checks:
         print(f"  [{'ok' if ok else '--'}] {name}" + ("" if ok or not hint else f"  ({hint})"))
+    if state and (state.get("resolved") or state.get("cidrs") or resolver == "local"):
+        if resolver == "local":
+            ups = ", ".join(state.get("upstreams") or []) or "none found"
+            print(f"resolver: coupled (dnsmasq on {LOCAL_DNS_ADDR}:{LOCAL_DNS_PORT}, upstream {ups}); "
+                  "sampling refresh as backstop")
+        else:
+            print("resolver: sampling (periodic re-resolution only)")
     print_allowed(live, live_elems, state)
+    if dns_elems:
+        print("learned from lookups (coupled resolver):")
+        for ip, port in sorted(dns_elems, key=lambda t: (t[1], ipaddress.ip_address(t[0]))):
+            print(f"   {ip}:{port}")
     journal = run(["journalctl", "-t", "restrict-egress", "-n", "3", "--no-pager", "-q"], check=False).stdout
     if journal:
         print("recent log:")
         for line in journal.strip().splitlines():
             print("   " + line)
     sys.exit(code)
+
+
+# -------------------------------------------------------------- diagnose ----
+
+def _connect_probe(ip, port, timeout=5.0):
+    """One TCP connect through the live ruleset. Returns (verdict, seconds):
+    'connected', 'dropped' (SYN timed out: the lockdown or the far end ate it),
+    'refused', 'unreachable' (no route), or 'error: ...'."""
+    t0 = time.monotonic()
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(timeout)
+    try:
+        s.connect((ip, port))
+        return "connected", time.monotonic() - t0
+    except socket.timeout:
+        return "dropped", time.monotonic() - t0
+    except ConnectionRefusedError:
+        return "refused", time.monotonic() - t0
+    except OSError as e:
+        if e.errno in (101, 113):  # ENETUNREACH, EHOSTUNREACH
+            return "unreachable", time.monotonic() - t0
+        return f"error: {e.strerror or e}", time.monotonic() - t0
+    finally:
+        s.close()
+
+
+def cmd_diagnose(args):
+    """Answer 'why can't X reach Y through the lockdown?' in one run: how the
+    system resolver answers for each allowlisted name right now, whether each
+    answer is in the live allow sets, what a real connect does, and the state
+    of the coupled resolver. Reads DNS the way a client would (getaddrinfo),
+    unlike status, which deliberately reads no DNS."""
+    require_root()
+    require_nft_operable()
+    state = read_state()
+    conf_path = (state or {}).get("config_path") or args.config
+    print(f"restrict-egress {VERSION} diagnose")
+    live = table_exists() and chain_enforcing()
+    mode = (state or {}).get("resolver", "sampling") if state else "n/a"
+    print(f"  lockdown: {'enforcing' if live else 'NOT enforcing (nothing is filtered; connect results below are the bare network)'}; "
+          f"resolver mode: {mode}; uplinks: {','.join(detect_uplinks()) or 'none'}")
+    routes = run(["ip", "-4", "route", "show", "default"], check=False).stdout.strip().splitlines()
+    print(f"  IPv4 default route: {routes[0] if routes else 'NONE (the VM has no route out; fix networking first)'}")
+    if mode == "local":
+        dns_active = run(["systemctl", "is-active", "restrict-egress-dns.service"], check=False).stdout.strip()
+        glob = next((l for l in resolvectl("dns").splitlines()
+                     if l.startswith("Global:")), "Global: (none)")
+        print(f"  coupled resolver: dnsmasq unit {dns_active}; upstream file: "
+              f"{(_read_or_none(UPSTREAM_FILE) or '').strip().replace(chr(10), ' ') or 'missing'}")
+        current = resolved_global_current()
+        print(f"  resolved routing: {glob.strip()}; current server: {current or 'none yet'}"
+              + ("" if f"{LOCAL_DNS_ADDR}:{LOCAL_DNS_PORT}" in glob else "  <-- dnsmasq NOT in the global scope")
+              + ("" if not current or current == f"{LOCAL_DNS_ADDR}:{LOCAL_DNS_PORT}"
+                 else "  <-- lookups are bypassing dnsmasq right now (a refresh re-couples)"))
+    cfg_domains = []
+    try:
+        cfg, _ = load_config(conf_path, bool(state and state.get("no_allowlist")))
+        cfg_domains = list(cfg.domains)
+        targets = list(cfg.domains)
+    except (ConfigError, OSError) as e:
+        print(f"  config: unusable ({e})")
+        targets = []
+    for spec in args.target or []:
+        name, _, port_text = spec.partition(":")
+        if port_text and not (port_text.isdigit() and 1 <= int(port_text) <= 65535):
+            sys.exit(f"error: bad port in '{spec}' (use NAME or NAME:PORT)")
+        if not DOMAIN_RE.match(name):
+            sys.exit(f"error: '{name}' is not a domain name")
+        targets.append((name.lower(), int(port_text) if port_text else DEFAULT_PORT))
+    if not targets:
+        print("  nothing to probe: no domain entries in the config and no target given")
+        sys.exit(2)
+    live_elems = (live_set_elements() | live_dns_elements()) if live else set()
+    problems = 0
+    for name, port in targets:
+        print(f"\n  {name}:{port}")
+        t0 = time.monotonic()
+        try:
+            infos = socket.getaddrinfo(name, port, socket.AF_INET, socket.SOCK_STREAM)
+            ips = sorted({i[4][0] for i in infos})
+        except OSError as e:
+            print(f"    resolve: FAILED ({e}); nothing to connect to. Check the resolver lines above.")
+            problems += 1
+            continue
+        took = time.monotonic() - t0
+        try:
+            has_aaaa = bool(socket.getaddrinfo(name, port, socket.AF_INET6, socket.SOCK_STREAM))
+        except OSError:
+            has_aaaa = False
+        print(f"    resolve: {', '.join(ips)} in {took:.2f}s"
+              + ("  (also has AAAA: clients may try IPv6 first)" if has_aaaa else ""))
+        for ip in ips:
+            member = (ip, port) in live_elems
+            verdict, secs = _connect_probe(ip, port)
+            flag = "ok" if verdict == "connected" else "!!"
+            print(f"    [{flag}] {ip}:{port}  in allow sets: {'yes' if member else 'NO'}; connect: {verdict} ({secs:.1f}s)")
+            if verdict == "connected":
+                continue
+            problems += 1
+            if verdict == "dropped" and not member and live:
+                configured = any(name == d or name.endswith("." + d) for d, _ in cfg_domains)
+                if not configured:
+                    print("         -> the lockdown dropped it, as configured: this name is not in the allowlist.")
+                else:
+                    print("         -> the lockdown dropped it: this IP is not in the allow sets. "
+                          + ("The coupled resolver should have inserted it; check its unit and the resolved routing above."
+                             if mode == "local" else
+                             "Sampling mode had not drawn this IP yet; run 'restrict-egress refresh' or enable the coupled resolver."))
+            elif verdict == "dropped":
+                print("         -> allowed by the lockdown but no answer: the far end or the network path, not this tool.")
+            elif verdict == "unreachable":
+                print("         -> no route to it: the VM's network is down (see the default route line above).")
+            elif verdict == "refused":
+                print("         -> the far end refused; not a lockdown symptom.")
+    print()
+    for tag, unit in (("restrict-egress", None), ("restrict-egress-dns", "restrict-egress-dns")):
+        cmd = ["journalctl", "-n", "4", "--no-pager", "-q"] + (["-u", unit] if unit else ["-t", tag])
+        out = run(cmd, check=False).stdout.strip()
+        if out:
+            print(f"  recent {tag} log:")
+            for line in out.splitlines():
+                print("    " + line[:150])
+    print(f"\n  result: {'no problems found' if not problems else f'{problems} problem(s) above'}")
+    sys.exit(0 if not problems else 1)
 
 
 # ----------------------------------------------------------------- dry run ----
@@ -1043,12 +1663,27 @@ def dry_run(args, container=False):
         retry = "dropped; apply does not retry" if container else "would retry"
         print(f"# unresolved ({retry}): {', '.join(failed)}")
     print(f"# dry run; skipped: {', '.join(skipped)}")
+    dns_ports = []
     if container:
         print(f"# container one-shot: all interfaces restricted, no refresh; "
               f"resolved-domain elements would expire after {cfg.timeout_s}s")
     else:
         print(f"# refresh every {cfg.refresh_s}s, element timeout {cfg.timeout_s}s")
-    sys.stdout.write(generate_ruleset(cfg, uplinks, elements, restrict_all=container))
+        try:
+            mode = resolver_mode(cfg)
+        except ConfigError as e:
+            sys.exit(f"error: {e}")
+        if mode == "local":
+            dns_ports = cfg.domain_ports
+            print(f"# resolver: coupled (dnsmasq on {LOCAL_DNS_ADDR}:{LOCAL_DNS_PORT}; "
+                  f"upstream {', '.join(discover_upstreams(cfg, uplinks)) or 'none found'})")
+        else:
+            why = resolver_prereqs() if cfg.resolver == "auto" and cfg.domains else cfg.resolver
+            print(f"# resolver: sampling ({why})")
+    sys.stdout.write(generate_ruleset(cfg, uplinks, elements, restrict_all=container, dns_ports=dns_ports))
+    if dns_ports:
+        sys.stdout.write("\n# " + DNSMASQ_CONF + "\n" + dnsmasq_conf(cfg))
+        sys.stdout.write("\n# " + RESOLVED_DROPIN + "\n" + resolved_dropin(cfg, discover_upstreams(cfg, uplinks)))
 
 
 # ------------------------------------------------------------------- main ----
@@ -1075,7 +1710,11 @@ def main():
         epilog="The lockdown blocks apt and remnux install by design: run "
                "'restrict-egress off' before updating, 'on' after. "
                f"Config: {DEFAULT_CONF} (one domain[:port], IP, or CIDR[:port] per line; "
-               "options: dns = open|closed, refresh = 3min, timeout = 30m). "
+               "options: dns = open|closed, refresh = 3min, timeout = 30m, "
+               "resolver = auto|local|sampling, upstream = <ip> [<ip>...]). "
+               "With resolver = auto (default), domain entries are coupled to DNS wherever "
+               "dnsmasq and systemd-resolved exist: a local dnsmasq inserts each answered "
+               "IP into the allow set before the client sees it. "
                "In a container (no systemd), use 'apply' instead of 'on' and run "
                "the container with --cap-add=NET_ADMIN.",
     )
@@ -1101,6 +1740,11 @@ def main():
 
     p_status = sub.add_parser("status", help="report active / degraded / inactive with checks")
     p_status.set_defaults(func=cmd_status)
+
+    p_diag = sub.add_parser("diagnose", help="probe each allowlisted name (or NAME[:PORT] given): "
+                                             "resolve, check set membership, try a real connect, explain")
+    p_diag.add_argument("target", nargs="*", help="extra name[:port] to probe besides the config's domains")
+    p_diag.set_defaults(func=cmd_diagnose, no_allowlist=False)
 
     p_refresh = sub.add_parser("refresh", help="re-resolve domains and renew the allow set (timer entry point)")
     p_refresh.add_argument("--reload", action="store_true",
