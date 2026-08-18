@@ -1592,7 +1592,6 @@ def cmd_diagnose(args):
     if not targets:
         print("  nothing to probe: no domain entries in the config and no target given")
         sys.exit(2)
-    live_elems = (live_set_elements() | live_dns_elements()) if live else set()
     problems = 0
     for name, port in targets:
         print(f"\n  {name}:{port}")
@@ -1611,6 +1610,10 @@ def cmd_diagnose(args):
             has_aaaa = False
         print(f"    resolve: {', '.join(ips)} in {took:.2f}s"
               + ("  (also has AAAA: clients may try IPv6 first)" if has_aaaa else ""))
+        # Read the sets after resolving, not before: in coupled mode dnsmasq
+        # inserts each answer as it hands it out, so a snapshot taken earlier
+        # misses the very IP we just asked for and reports it as not allowed.
+        live_elems = (live_set_elements() | live_dns_elements()) if live else set()
         for ip in ips:
             member = (ip, port) in live_elems
             verdict, secs = _connect_probe(ip, port)
