@@ -71,7 +71,7 @@ import syslog
 import tempfile
 import time
 
-VERSION = "0.10.0"
+VERSION = "0.10.1"
 
 INSTALL_PATH = "/usr/local/bin/restrict-egress"
 DEFAULT_CONF = "/etc/restrict-egress.conf"
