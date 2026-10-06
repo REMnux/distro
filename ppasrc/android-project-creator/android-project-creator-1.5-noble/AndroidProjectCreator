@@ -7,8 +7,8 @@ if [ ! `which java` ]; then
   exit 1
 fi
 
-if [ ! -f /opt/AndroidProjectCreator-1.5.2-stable-jar-with-dependencies.jar ]; then
-  echo "Cannot locate the ndroidProjectCreator jar file. Exiting."
+if [ ! -f /opt/AndroidProjectCreator/AndroidProjectCreator-1.5.2-stable-jar-with-dependencies.jar ]; then
+  echo "Cannot locate the AndroidProjectCreator jar file. Exiting."
   exit 2
 fi
 

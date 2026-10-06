@@ -7,6 +7,6 @@ Standards-Version: 4.1.2
 Homepage: https://bitbucket.org/JesusFreke/smali/src/master/
 
 Package: baksmali
-Architecture: any
+Architecture: all
 Depends: ${shlibs:Depends}, ${misc:Depends}, default-jre
 Description: Disassembler for the dex format used by Dalvik, Android's Java VM implementation.

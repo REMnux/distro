@@ -1,3 +1,9 @@
+libemu (1.0.5-noble1) noble; urgency=medium
+
+  * Rebuild to add arm64 packages.
+
+ -- REMnux Distribution <distro@remnux.org>  Tue, 06 Oct 2026 16:44:27 -0400
+
 libemu (1.0.5-noble) noble; urgency=medium
 
   * Noble update. 

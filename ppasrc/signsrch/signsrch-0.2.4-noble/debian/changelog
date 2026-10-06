@@ -1,3 +1,9 @@
+signsrch (0.2.4-2-noble1) noble; urgency=medium
+
+  * Rebuild to add arm64 packages.
+
+ -- REMnux Distribution <distro@remnux.org>  Tue, 06 Oct 2026 16:44:27 -0400
+
 signsrch (0.2.4-2-noble) noble; urgency=medium
 
   * Updated for Noble. 

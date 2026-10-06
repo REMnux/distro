@@ -1,3 +1,11 @@
+jd-gui (1.6.6-2-noble2) noble; urgency=medium
+
+  * Build as architecture-independent so the package also installs on arm64.
+  * Depend on xdg-utils, which the post-install script uses.
+  * Let the install finish on systems without a desktop menu directory.
+
+ -- REMnux Distribution <distro@remnux.org>  Tue, 06 Oct 2026 15:35:53 -0400
+
 jd-gui (1.6.6-2-noble1) noble; urgency=medium
 
   * Quoted the argument expansion in the jd-gui wrapper so that file paths

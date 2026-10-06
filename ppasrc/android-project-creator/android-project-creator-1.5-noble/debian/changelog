@@ -1,3 +1,10 @@
+android-project-creator (1.5.2-noble1) noble; urgency=medium
+
+  * Build as architecture-independent so the package also installs on arm64.
+  * Fix the wrapper so it finds the jar file in /opt/AndroidProjectCreator.
+
+ -- REMnux Distribution <distro@remnux.org>  Tue, 06 Oct 2026 15:35:53 -0400
+
 android-project-creator (1.5.2-noble) noble; urgency=medium
 
   * Updated to latest upstream version and for Noble. 

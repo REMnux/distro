@@ -7,6 +7,6 @@ Standards-Version: 3.9.4
 Homepage: https://java-decompiler.github.io/
 
 Package: jd-gui
-Architecture: amd64
-Depends: default-jre, apt-utils
+Architecture: all
+Depends: default-jre, apt-utils, xdg-utils
 Description: Java decompiler with GUI

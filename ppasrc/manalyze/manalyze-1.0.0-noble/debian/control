@@ -7,7 +7,7 @@ Standards-Version: 4.1.2
 Homepage: https://github.com/JusticeRage/Manalyze
 
 Package: manalyze
-Architecture: amd64
+Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Perform static analysis of suspicious PE files
  A static analyzer for PE executables with plugin-based analysis,

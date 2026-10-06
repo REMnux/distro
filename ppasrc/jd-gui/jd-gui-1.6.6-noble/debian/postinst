@@ -10,7 +10,8 @@ case "$1" in
         
 
         
-        cd /opt/jd-gui-files; xdg-icon-resource install --size 128 --novendor ./jd_icon_128.png jd-gui; xdg-desktop-menu install ./*.desktop
+        # Menu registration fails on systems without a desktop menu directory; do not fail the install.
+        cd /opt/jd-gui-files; xdg-icon-resource install --size 128 --novendor ./jd_icon_128.png jd-gui || true; xdg-desktop-menu install ./*.desktop || true
 
         
         ;;

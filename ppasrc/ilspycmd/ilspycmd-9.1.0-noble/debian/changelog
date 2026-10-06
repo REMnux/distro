@@ -1,3 +1,9 @@
+ilspycmd (9.1.0-noble4) noble; urgency=medium
+
+  * Build as architecture-independent so the package also installs on arm64.
+
+ -- REMnux Distribution <distro@remnux.org>  Tue, 06 Oct 2026 15:35:53 -0400
+
 ilspycmd (9.1.0-noble3) noble; urgency=medium
 
   * Disabled the automatic update check, which made the tool hang after
