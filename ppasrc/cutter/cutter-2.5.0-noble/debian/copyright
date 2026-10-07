@@ -1,0 +1,480 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: Cutter
+Source: https://github.com/rizinorg/cutter/releases/tag/v2.5.0
+
+Files: *
+Copyright: Cutter contributors (https://github.com/rizinorg/cutter/graphs/contributors)
+License: GPL-3+
+
+Files: src/re.rizin.cutter.appdata.xml
+Copyright: Cutter contributors
+License: CC0-1.0
+
+Files: rizin/*
+Copyright: Rizin contributors (https://github.com/rizinorg/rizin/graphs/contributors)
+License: LGPL-3
+Comment: Rizin's files carry SPDX headers; most are LGPL-3.0-only, and the texts of
+ the other licenses some files use are in rizin/LICENSES/.
+
+Files: rizinsubprojects/capstone-next/*
+Copyright: 2013 COSEINC; Nguyen Anh Quynh and the Capstone contributors
+License: BSD-3-Clause-Capstone and NCSA-LLVM
+
+Files: rizinsubprojects/libmspack/*
+Copyright: 2003-2023 Stuart Caie
+License: LGPL-2.1
+
+Files: rizinsubprojects/libdemangle/*
+Copyright: 2021-2025 deroad; 2025 Siddharth Mishra; 2023-2024 RizinOrg
+License: LGPL-3
+Comment: One file is MIT-licensed, as its SPDX header states.
+
+Files: rizinsubprojects/blake2/*
+Copyright: 2012 Samuel Neves and the BLAKE2 authors
+License: CC0-1.0
+
+Files: rizinsubprojects/blake3/*
+Copyright: 2019 Jack O'Connor and Samuel Neves
+License: CC0-1.0 or Apache-2.0
+
+Files: rizinsubprojects/rizin-grammar-c/* rizinsubprojects/packagecache/v0.26.9.tar.gz
+Copyright: 2014-2018 Max Brunsfeld
+License: MIT
+
+Files: rizinsubprojects/packagecache/zydis-amalgamated.tar.gz
+Copyright: Florian Bernd and the Zydis contributors
+License: MIT
+
+Files: rizinsubprojects/softfloat/*
+Copyright: 2011-2018 The Regents of the University of California
+License: BSD-3-Clause-SoftFloat
+
+Files: rizinsubprojects/packagecache/libzip-1.11.4.tar.gz
+Copyright: 1999-2020 Dieter Baron and Thomas Klausner
+License: BSD-3-Clause-libzip
+
+Files: rizinsubprojects/packagecache/lz4-1.10.0.tgz
+Copyright: 2011-2020 Yann Collet
+License: BSD-2-Clause-lz4
+Comment: Rizin builds only lz4's lib directory, which uses this license.
+
+Files: rizinsubprojects/packagecache/pcre2-10.47.tar.gz
+Copyright: University of Cambridge and the PCRE2 authors
+License: PCRE2
+
+Files: rizinsubprojects/packagecache/xz-5.8.3.tar.gz
+Copyright: The XZ Utils authors
+License: 0BSD
+Comment: Rizin builds liblzma, which is under the BSD Zero Clause License.
+
+Files: rizinsubprojects/packagecache/zlib-1.3.2.tar.gz
+Copyright: 1995-2026 Jean-loup Gailly and Mark Adler
+License: Zlib
+
+Files: rizinsubprojects/packagecache/zstd-1.5.7.tar.gz
+Copyright: Meta Platforms, Inc. and affiliates
+License: BSD-3-Clause-zstd
+Comment: zstd is dual-licensed BSD or GPL-2; this package uses it under the BSD terms.
+
+Files: debian/*
+Copyright: 2026 REMnux Distribution <distro@remnux.org>
+License: GPL-3+
+
+License: GPL-3+
+ This program is free software: you can redistribute it and/or modify it under
+ the terms of the GNU General Public License as published by the Free Software
+ Foundation, either version 3 of the License, or (at your option) any later
+ version.
+ .
+ On Debian systems, the complete text of the GNU General Public License version 3
+ can be found in /usr/share/common-licenses/GPL-3.
+
+License: LGPL-3
+ On Debian systems, the complete text of the GNU Lesser General Public License
+ version 3 can be found in /usr/share/common-licenses/LGPL-3.
+
+License: LGPL-2.1
+ On Debian systems, the complete text of the GNU Lesser General Public License
+ version 2.1 can be found in /usr/share/common-licenses/LGPL-2.1.
+
+License: CC0-1.0
+ On Debian systems, the complete text of the CC0 1.0 Universal license can be
+ found in /usr/share/common-licenses/CC0-1.0.
+
+License: Apache-2.0
+ On Debian systems, the complete text of the Apache License 2.0 can be found in
+ /usr/share/common-licenses/Apache-2.0.
+
+License: MIT
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ .
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+
+License: BSD-3-Clause-Capstone
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are met:
+ .
+ * Redistributions of source code must retain the above copyright notice,
+   this list of conditions and the following disclaimer.
+ * Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+ * Neither the name of the developer(s) nor the names of its
+   contributors may be used to endorse or promote products derived from this
+   software without specific prior written permission.
+ .
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ POSSIBILITY OF SUCH DAMAGE.
+
+License: NCSA-LLVM
+ ==============================================================================
+ LLVM Release License
+ ==============================================================================
+ University of Illinois/NCSA
+ Open Source License
+ .
+ Copyright (c) 2003-2013 University of Illinois at Urbana-Champaign.
+ All rights reserved.
+ .
+ Developed by:
+ .
+     LLVM Team
+ .
+     University of Illinois at Urbana-Champaign
+ .
+     http://llvm.org
+ .
+ Permission is hereby granted, free of charge, to any person obtaining a copy of
+ this software and associated documentation files (the "Software"), to deal with
+ the Software without restriction, including without limitation the rights to
+ use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+ of the Software, and to permit persons to whom the Software is furnished to do
+ so, subject to the following conditions:
+ .
+     * Redistributions of source code must retain the above copyright notice,
+       this list of conditions and the following disclaimers.
+ .
+     * Redistributions in binary form must reproduce the above copyright notice,
+       this list of conditions and the following disclaimers in the
+       documentation and/or other materials provided with the distribution.
+ .
+     * Neither the names of the LLVM Team, University of Illinois at
+       Urbana-Champaign, nor the names of its contributors may be used to
+       endorse or promote products derived from this Software without specific
+       prior written permission.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+ CONTRIBUTORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS WITH THE
+ SOFTWARE.
+ .
+ ==============================================================================
+ Copyrights and Licenses for Third Party Software Distributed with LLVM:
+ ==============================================================================
+ The LLVM software contains code written by third parties.  Such software will
+ have its own individual LICENSE.TXT file in the directory in which it appears.
+ This file will describe the copyrights, license, and restrictions which apply
+ to that code.
+ .
+ The disclaimer of warranty in the University of Illinois Open Source License
+ applies to all code in the LLVM Distribution, and nothing in any of the
+ other licenses gives permission to use the names of the LLVM Team or the
+ University of Illinois to endorse or promote products derived from this
+ Software.
+ .
+ The following pieces of software have additional or alternate copyrights,
+ licenses, and/or restrictions:
+ .
+ Program             Directory
+ -------             ---------
+ Autoconf            llvm/autoconf
+                     llvm/projects/ModuleMaker/autoconf
+                     llvm/projects/sample/autoconf
+ Google Test         llvm/utils/unittest/googletest
+ OpenBSD regex       llvm/lib/Support/{reg*, COPYRIGHT.regex}
+ pyyaml tests        llvm/test/YAMLParser/{*.data, LICENSE.TXT}
+ ARM contributions   llvm/lib/Target/ARM/LICENSE.TXT
+ md5 contributions   llvm/lib/Support/MD5.cpp llvm/include/llvm/Support/MD5.h
+
+License: BSD-3-Clause-SoftFloat
+ License for Berkeley SoftFloat Release 3e
+ .
+ John R. Hauser
+ 2018 January 20
+ .
+ The following applies to the whole of SoftFloat Release 3e as well as to
+ each source file individually.
+ .
+ Copyright 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018 The Regents of the
+ University of California.  All rights reserved.
+ .
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are met:
+ .
+  1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions, and the following disclaimer.
+ .
+  2. Redistributions in binary form must reproduce the above copyright
+     notice, this list of conditions, and the following disclaimer in the
+     documentation and/or other materials provided with the distribution.
+ .
+  3. Neither the name of the University nor the names of its contributors
+     may be used to endorse or promote products derived from this software
+     without specific prior written permission.
+ .
+ THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS "AS IS", AND ANY
+ EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE, ARE
+ DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR ANY
+ DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+License: BSD-3-Clause-libzip
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+ .
+ 1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+ .
+ 2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in
+   the documentation and/or other materials provided with the
+   distribution.
+ .
+ 3. The names of the authors may not be used to endorse or promote
+   products derived from this software without specific prior
+   written permission.
+ .
+ THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS
+ OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY
+ DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+License: BSD-2-Clause-lz4
+ LZ4 Library
+ Copyright (c) 2011-2020, Yann Collet
+ All rights reserved.
+ .
+ Redistribution and use in source and binary forms, with or without modification,
+ are permitted provided that the following conditions are met:
+ .
+ * Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+ .
+ * Redistributions in binary form must reproduce the above copyright notice, this
+   list of conditions and the following disclaimer in the documentation and/or
+   other materials provided with the distribution.
+ .
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+License: PCRE2
+ PCRE2 Licence
+ =============
+ .
+ | SPDX-License-Identifier: | BSD-3-Clause WITH PCRE2-exception |
+ |---------|-------|
+ .
+ PCRE2 is a library of functions to support regular expressions whose syntax
+ and semantics are as close as possible to those of the Perl 5 language.
+ .
+ Releases 10.00 and above of PCRE2 are distributed under the terms of the "BSD"
+ licence, as specified below, with one exemption for certain binary
+ redistributions. The documentation for PCRE2, supplied in the "doc" directory,
+ is distributed under the same terms as the software itself. The data in the
+ testdata directory is not copyrighted and is in the public domain.
+ .
+ The basic library functions are written in C and are freestanding. Also
+ included in the distribution is a just-in-time compiler that can be used to
+ optimize pattern matching. This is an optional feature that can be omitted when
+ the library is built. The just-in-time compiler is separately licensed under the
+ "2-clause BSD" licence.
+ .
+ .
+ COPYRIGHT
+ ---------
+ .
+ ### The basic library functions
+ .
+     Written by:       Philip Hazel
+     Email local part: Philip.Hazel
+     Email domain:     gmail.com
+ .
+     Retired from University of Cambridge Computing Service,
+     Cambridge, England.
+ .
+     Copyright (c) 1997-2007 University of Cambridge
+     Copyright (c) 2007-2024 Philip Hazel
+     All rights reserved.
+ .
+ ### PCRE2 Just-In-Time compilation support
+ .
+     Written by:       Zoltan Herczeg
+     Email local part: hzmester
+     Email domain:     freemail.hu
+ .
+     Copyright (c) 2010-2024 Zoltan Herczeg
+     All rights reserved.
+ .
+ ### Stack-less Just-In-Time compiler
+ .
+     Written by:       Zoltan Herczeg
+     Email local part: hzmester
+     Email domain:     freemail.hu
+ .
+     Copyright (c) 2009-2024 Zoltan Herczeg
+     All rights reserved.
+ .
+ The code in the `deps/sljit` directory has its own LICENSE file.
+ .
+ ### All other contributions
+ .
+ Many other contributors have participated in the authorship of PCRE2. As PCRE2
+ has never required a Contributor Licensing Agreement, or other copyright
+ assignment agreement, all contributions have copyright retained by each
+ original contributor or their employer.
+ .
+ .
+ THE "BSD" LICENCE
+ -----------------
+ .
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are met:
+ .
+ * Redistributions of source code must retain the above copyright notices,
+   this list of conditions and the following disclaimer.
+ .
+ * Redistributions in binary form must reproduce the above copyright
+   notices, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+ .
+ * Neither the name of the University of Cambridge nor the names of any
+   contributors may be used to endorse or promote products derived from this
+   software without specific prior written permission.
+ .
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ POSSIBILITY OF SUCH DAMAGE.
+ .
+ .
+ EXEMPTION FOR BINARY LIBRARY-LIKE PACKAGES
+ ------------------------------------------
+ .
+ The second condition in the BSD licence (covering binary redistributions) does
+ not apply all the way down a chain of software. If binary package A includes
+ PCRE2, it must respect the condition, but if package B is software that
+ includes package A, the condition is not imposed on package B unless it uses
+ PCRE2 independently.
+
+License: 0BSD
+ Permission to use, copy, modify, and/or distribute this
+ software for any purpose with or without fee is hereby granted.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
+ WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
+ WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL
+ THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR
+ CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
+ NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+License: Zlib
+ This software is provided 'as-is', without any express or implied
+   warranty.  In no event will the authors be held liable for any damages
+   arising from the use of this software.
+ .
+   Permission is granted to anyone to use this software for any purpose,
+   including commercial applications, and to alter it and redistribute it
+   freely, subject to the following restrictions:
+ .
+   1. The origin of this software must not be misrepresented; you must not
+      claim that you wrote the original software. If you use this software
+      in a product, an acknowledgment in the product documentation would be
+      appreciated but is not required.
+   2. Altered source versions must be plainly marked as such, and must not be
+      misrepresented as being the original software.
+   3. This notice may not be removed or altered from any source distribution.
+ .
+   Jean-loup Gailly        Mark Adler
+   jloup@gzip.org          madler@alumni.caltech.edu
+
+License: BSD-3-Clause-zstd
+ Redistribution and use in source and binary forms, with or without modification,
+ are permitted provided that the following conditions are met:
+ .
+  * Redistributions of source code must retain the above copyright notice, this
+    list of conditions and the following disclaimer.
+ .
+  * Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+ .
+  * Neither the name Facebook, nor Meta, nor the names of its contributors may
+    be used to endorse or promote products derived from this software without
+    specific prior written permission.
+ .
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.

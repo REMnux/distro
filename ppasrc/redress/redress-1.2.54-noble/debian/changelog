@@ -1,0 +1,7 @@
+redress (1.2.54-noble1) noble; urgency=medium
+
+  * Initial package: build redress 1.2.54 from the upstream Go source for arm64, where
+    upstream publishes no Linux build. Module sources are vendored in a
+    component tarball because Launchpad builders have no network.
+
+ -- REMnux Distribution <distro@remnux.org>  Tue, 06 Oct 2026 23:54:27 -0400

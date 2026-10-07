@@ -1,0 +1,43 @@
+#!/usr/bin/make -f
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+PREFIX := /usr/lib/cutter
+# Rizin subprojects from the rizinsubprojects component tarball. Launchpad builders have no
+# network, so meson must find them in place. Git-pinned ones are copied as directories;
+# release tarballs go to meson's package cache, where meson checks them against the
+# source_hash in each .wrap file before extracting.
+GIT_SUBPROJECTS := capstone-next libmspack libdemangle blake2 blake3 rizin-grammar-c softfloat
+EXTRACTED_SUBPROJECTS := libzip-1.11.4 lz4-1.10.0 pcre2-10.47 tree-sitter-0.26.9 xz-5.8.3 zlib-1.3.2 zstd-1.5.7 zydis
+
+%:
+	dh $@ --buildsystem=cmake
+
+override_dh_auto_configure:
+	mkdir -p rizin/subprojects/packagecache
+	cp -a rizinsubprojects/packagecache/. rizin/subprojects/packagecache/
+	for d in $(GIT_SUBPROJECTS); do cp -a rizinsubprojects/$$d rizin/subprojects/$$d; done
+	# CUTTER_ENABLE_PACKAGING builds Rizin with -Dportable=true, so Rizin finds its plugins and
+	# data relative to its install location. With dependency downloads off (the default) it
+	# adds nothing else on Linux.
+	dh_auto_configure -- \
+		-DCMAKE_INSTALL_PREFIX=$(PREFIX) -DCMAKE_INSTALL_LIBDIR=lib \
+		-DCMAKE_INSTALL_RPATH=$(PREFIX)/lib \
+		-DCUTTER_USE_BUNDLED_RIZIN=ON -DCUTTER_ENABLE_PACKAGING=ON \
+		-DCUTTER_INCLUDE_GIT_HASH=OFF
+
+override_dh_auto_install:
+	dh_auto_install
+	# Development files and upstream desktop integration are not shipped: REMnux provides its own
+	# menu entry and icon for Cutter.
+	cd debian/cutter$(PREFIX) && rm -rf include lib/pkgconfig lib/cmake share/applications share/icons share/metainfo
+	find debian/cutter$(PREFIX) -name '*.a' -delete
+
+override_dh_shlibdeps:
+	dh_shlibdeps -l$(CURDIR)/debian/cutter$(PREFIX)/lib
+
+override_dh_makeshlibs:
+	dh_makeshlibs -X$(PREFIX)
+
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -rf rizin/subprojects/packagecache $(addprefix rizin/subprojects/,$(GIT_SUBPROJECTS) $(EXTRACTED_SUBPROJECTS))

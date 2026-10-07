@@ -1,0 +1,7 @@
+cutter (2.5.0-noble1) noble; urgency=medium
+
+  * Initial package: Cutter 2.5.0 with its bundled Rizin 0.9.1, built from the
+    upstream source release for arm64. Rizin's meson subprojects are included as
+    a component tarball because Launchpad builders have no network access.
+
+ -- REMnux Distribution <distro@remnux.org>  Tue, 06 Oct 2026 23:32:08 -0400

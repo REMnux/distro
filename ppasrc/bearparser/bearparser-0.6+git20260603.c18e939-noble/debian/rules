@@ -1,0 +1,11 @@
+#!/usr/bin/make -f
+%:
+	dh $@ --buildsystem=cmake
+
+override_dh_auto_configure:
+	dh_auto_configure -- -DUSE_QT4=OFF -DUSE_QT5=OFF -DCMD_BUILD_TESTING=OFF
+
+# Upstream installs bearcommander at the prefix root; install it to /usr/bin, where the
+# earlier package put it, so existing users keep the same command path.
+override_dh_auto_install:
+	install -D -m 0755 $$(find obj-* -type f -name bearcommander -perm -u+x | head -1) debian/bearparser/usr/bin/bearcommander

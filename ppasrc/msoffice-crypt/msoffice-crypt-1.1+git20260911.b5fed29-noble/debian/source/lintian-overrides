@@ -1,0 +1,3 @@
+# Prebuilt Windows DLLs that cybozulib ships for its Windows builds. The Linux build only reads
+# cybozulib's headers.
+msoffice-crypt source: source-contains-prebuilt-windows-binary [cybozulib/bin/*]

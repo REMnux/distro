@@ -1,0 +1,65 @@
+version: '{branch}.{build}'
+skip_tags: true
+
+image:
+- Visual Studio 2022
+- Visual Studio 2019
+
+matrix:
+  exclude:
+    - platform: x86
+      image: Visual Studio 2022
+    - platform: x64
+      image: Visual Studio 2019
+    - platform: x86
+
+platform:
+  - x64
+  - x86
+
+branches:
+  only:
+    - master
+build:
+  verbosity: detailed
+
+configuration:
+  - Release
+  
+environment:
+  artifactName: $(APPVEYOR_PROJECT_NAME)-$(APPVEYOR_REPO_COMMIT)-$(PLATFORM)
+  buildPlatform: $(PLATFORM)
+
+for:  
+  -
+    matrix:
+      only:
+        - image: Visual Studio 2022
+        - image: Visual Studio 2019
+        
+    install:
+     - git submodule update --init --recursive
+     - if [%buildPlatform%]==[x64] (set QT_VER=6)
+     - if [%buildPlatform%]==[x64] (set QT=C:\Qt\6.8\msvc2022_64)
+     - if [%buildPlatform%]==[x86] (set QT_VER=5) 
+     - if [%buildPlatform%]==[x86] (set QT=C:\Qt\5.15.2\msvc2019)
+     - set QT_DIR=%QT%
+     - set PATH=%PATH%;%QT%\bin;%QT%\lib\cmake
+
+before_build:
+  - mkdir build
+  - cd build
+    
+build_script:
+  - if [%buildPlatform%]==[x64] ( cmake .. -A x64 )
+  - if [%buildPlatform%]==[x86] ( cmake .. -A Win32 -DUSE_QT5=ON )
+  - cmake --build . --config %CONFIGURATION%
+  
+after_build:
+  - mkdir %artifactName%
+  - cp -r commander/%CONFIGURATION%/* %artifactName%
+  - cp "%QT%\bin\Qt%QT_VER%Core.dll" %artifactName%
+  
+artifacts:
+  - path: build\%artifactName%
+  

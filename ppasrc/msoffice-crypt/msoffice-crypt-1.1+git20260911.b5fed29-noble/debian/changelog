@@ -1,0 +1,22 @@
+msoffice-crypt (1.1+git20260911.b5fed29-noble1) noble; urgency=medium
+
+  * Build from upstream source (commit b5fed29, 2026-09-11) instead of shipping
+    a prebuilt x86-64 binary, so Launchpad builds it for amd64 and arm64. This
+    upstream version also fixes AES-256 key generation for -encMode 1.
+  * Compile against cybozulib 4959b9a (component tarball) so hashing and AES
+    still go through OpenSSL, keeping SHA-384 support and CPUs without AES-NI.
+  * Depend on the OpenSSL runtime library instead of libssl-dev.
+
+ -- REMnux Distribution <distro@remnux.org>  Tue, 06 Oct 2026 23:47:58 -0400
+
+msoffice-crypt (1.1-noble) noble; urgency=medium
+
+  * Noble compatibility. 
+
+ -- REMnux Distribution <distro@remnux.org>  Mon, 28 Jul 2025 12:01:44 -0400
+
+msoffice-crypt (1.1-focal) focal; urgency=medium
+
+  * Initial Release.
+
+ -- REMnux Distribution <distro@remnux.org>  Mon, 06 Jul 2020 22:41:23 -0400

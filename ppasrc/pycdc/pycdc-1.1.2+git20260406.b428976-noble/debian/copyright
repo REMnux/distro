@@ -1,0 +1,19 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: Decompyle++
+Source: https://github.com/zrax/pycdc
+
+Files: *
+Copyright: Michael Hansen and Darryl Pogue, and pycdc contributors
+License: GPL-3
+
+Files: debian/*
+Copyright: 2020-2026 REMnux Distribution <distro@remnux.org>
+License: GPL-3
+
+License: GPL-3
+ This program is free software: you can redistribute it and/or modify it under
+ the terms of the GNU General Public License version 3 as published by the Free
+ Software Foundation.
+ .
+ On Debian systems, the complete text of the GNU General Public License version 3
+ can be found in /usr/share/common-licenses/GPL-3.

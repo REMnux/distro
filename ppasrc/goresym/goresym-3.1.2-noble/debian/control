@@ -1,0 +1,16 @@
+Source: goresym
+Section: utils
+Priority: optional
+Maintainer: REMnux Distribution <distro@remnux.org>
+Build-Depends: debhelper-compat (= 13), golang-1.22-go
+Standards-Version: 4.6.2
+Homepage: https://github.com/mandiant/GoReSym
+Rules-Requires-Root: no
+
+Package: goresym
+Architecture: arm64
+Depends: ${misc:Depends}
+Built-Using: ${misc:Built-Using}
+Description: Extract metadata and symbols from Go binaries
+ GoReSym parses Go binaries, including stripped ones, and recovers build
+ metadata, function names, types, and source file paths.

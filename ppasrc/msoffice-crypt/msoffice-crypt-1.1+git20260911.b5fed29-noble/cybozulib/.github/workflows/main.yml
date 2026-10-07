@@ -1,0 +1,12 @@
+name: test
+on: [push]
+
+jobs:
+  build:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - run: make test TRAVIS_TEST=1 TEST_OUTPUT=1 -j4
+    - run: make clean
+    - run: make test TRAVIS_TEST=1 TEST_OUTPUT=1 -j4 CXX=clang++

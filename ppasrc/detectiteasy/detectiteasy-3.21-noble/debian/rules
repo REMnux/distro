@@ -1,0 +1,38 @@
+#!/usr/bin/make -f
+# Builds Detect It Easy with qmake the way the author's build_dpkg.sh does, and installs the
+# same layout as the author's detectiteasy package, so it upgrades that package in place.
+PKG := debian/detectiteasy
+
+%:
+	dh $@
+
+# DIE builds with qmake; the configure.ac in its source tree is not used and does not autoreconf.
+override_dh_autoreconf:
+
+override_dh_auto_configure:
+	cp -f build_tools/build.pri .
+	qmake die_source.pro "DEFINES+=QT_NO_DEBUG_OUTPUT"
+
+override_dh_auto_build:
+	$(MAKE)
+	cd gui_source && lrelease gui_source_tr.pro
+
+override_dh_auto_clean:
+	[ ! -f Makefile ] || $(MAKE) distclean || true
+	rm -rf build build.pri
+	rm -f gui_source/translation/*.qm
+
+override_dh_auto_install:
+	install -d $(PKG)/usr/bin $(PKG)/usr/lib/die/lang $(PKG)/usr/lib/die/signatures \
+	  $(PKG)/usr/share/applications $(PKG)/usr/share/icons $(PKG)/usr/share/metainfo
+	install -m 0755 build/release/die build/release/diec build/release/diel $(PKG)/usr/bin/
+	install -m 0644 LINUX/io.github.horsicq.detect-it-easy.desktop $(PKG)/usr/share/applications/
+	cp -R LINUX/hicolor $(PKG)/usr/share/icons/
+	install -m 0644 LINUX/io.github.horsicq.detect-it-easy.metainfo.xml $(PKG)/usr/share/metainfo/
+	cp -R XStyles/qss XInfoDB/info Detect-It-Easy/db Detect-It-Easy/db_custom XPEID/peid XYara/yara_rules images $(PKG)/usr/lib/die/
+	install -m 0644 gui_source/translation/*.qm $(PKG)/usr/lib/die/lang/
+	install -m 0644 signatures/crypto.db $(PKG)/usr/lib/die/signatures/
+
+# The signature databases are data, not ELF files.
+override_dh_strip:
+	dh_strip --exclude=/usr/lib/die

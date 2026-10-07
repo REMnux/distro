@@ -1,0 +1,16 @@
+Source: bearparser
+Section: utils
+Priority: optional
+Maintainer: REMnux Distribution <distro@remnux.org>
+Build-Depends: debhelper-compat (= 13), cmake, qt6-base-dev
+Standards-Version: 4.6.2
+Homepage: https://github.com/hasherezade/bearparser
+Rules-Requires-Root: no
+
+Package: bearparser
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Parse PE file contents
+ bearcommander is the command-line interface to bearparser, a portable
+ executable parsing library by hasherezade. This package builds it from
+ source, replacing the earlier package that shipped a prebuilt binary.

@@ -1,0 +1,15 @@
+Description: Fix a variable that shadows an outer declaration in XOptions
+ Upstream's own Dockerfile applies the same sed before building.
+Forwarded: no
+---
+--- a/XOptions/xoptions.cpp
++++ b/XOptions/xoptions.cpp
+@@ -2316,7 +2316,7 @@
+     if (!bResult) {
+         qint32 nIndex = 0;
+         while (true) {
+-            QString sResult = qApp->property(QString("dataPathAlt%1").arg(nIndex).toUtf8().data()).toString();
++            sResult = qApp->property(QString("dataPathAlt%1").arg(nIndex).toUtf8().data()).toString();
+ 
+             if (QDir(sResult).exists()) {
+                 bResult = true;

@@ -1,0 +1,9 @@
+#!/usr/bin/make -f
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+%:
+	dh $@ --buildsystem=cmake
+
+# Upstream's tests drive the built binaries with Python scripts and pinned Python versions;
+# the verify step of the REMnux package test runs the tools instead.
+override_dh_auto_test:

@@ -1,0 +1,14 @@
+def handle_specific ( flag ) : <EOL>
+<INDENT>
+try : <EOL>
+<INDENT>
+if flag : <EOL>
+<INDENT>
+raise ValueError ( 'boom' ) <EOL>
+<OUTDENT>
+<OUTDENT>
+except ValueError : <EOL>
+<INDENT>
+return 'value' <EOL>
+<OUTDENT>
+return 'ok' <EOL>

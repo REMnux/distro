@@ -1,0 +1,17 @@
+Source: sandfly-processdecloak
+Section: utils
+Priority: optional
+Maintainer: REMnux Distribution <distro@remnux.org>
+Build-Depends: debhelper-compat (= 13), golang-go
+Standards-Version: 4.6.2
+Homepage: https://github.com/sandflysecurity/sandfly-processdecloak
+Rules-Requires-Root: no
+
+Package: sandfly-processdecloak
+Architecture: any
+Depends: ${misc:Depends}
+Built-Using: ${misc:Built-Using}
+Description: Find hidden processes on the local Linux system
+ sandfly-processdecloak finds processes that loadable kernel module stealth
+ rootkits hide on Linux. This package builds it from the upstream Go source,
+ replacing the earlier package that shipped a prebuilt x86-64 binary.

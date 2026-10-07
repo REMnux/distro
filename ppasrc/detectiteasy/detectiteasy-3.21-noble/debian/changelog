@@ -1,0 +1,7 @@
+detectiteasy (3.21-noble1) noble; urgency=medium
+
+  * Build Detect It Easy 3.21 from the author's source release for amd64 and
+    arm64, installing the same layout and commands (die, diec, diel) as the
+    author's detectiteasy package that REMnux installed before.
+
+ -- REMnux Distribution <distro@remnux.org>  Tue, 06 Oct 2026 22:59:34 -0400

@@ -1,0 +1,16 @@
+Source: redress
+Section: utils
+Priority: optional
+Maintainer: REMnux Distribution <distro@remnux.org>
+Build-Depends: debhelper-compat (= 13), golang-1.24-go
+Standards-Version: 4.6.2
+Homepage: https://github.com/goretk/redress
+Rules-Requires-Root: no
+
+Package: redress
+Architecture: arm64
+Depends: ${misc:Depends}
+Built-Using: ${misc:Built-Using}
+Description: Analyze stripped Go binaries
+ redress recovers symbols, types, and source structure from stripped Go
+ binaries and integrates with radare2.

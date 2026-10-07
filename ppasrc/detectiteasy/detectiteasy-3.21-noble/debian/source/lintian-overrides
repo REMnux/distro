@@ -1,0 +1,5 @@
+# Short plain-text descriptions of packers and protectors that DIE shows in its UI; some have
+# long lines that lintian mistakes for minified code. They are the preferred form for editing.
+detectiteasy source: source-is-missing [XInfoDB/info/html/*]
+# Upstream's prebuilt OpenSSL DLLs for its Windows builds. The Linux build never uses them.
+detectiteasy source: source-contains-prebuilt-windows-binary [build_tools/openssl/*]

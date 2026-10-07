@@ -1,0 +1,3 @@
+# libmspack's own regression-test inputs (malformed CHM files for past CVEs), inside the bundled
+# rizin subproject sources. They are test data, never built or installed.
+cutter source: source-contains-prebuilt-ms-help-file [rizinsubprojects/libmspack/libmspack/test/test_files/chmd/*]

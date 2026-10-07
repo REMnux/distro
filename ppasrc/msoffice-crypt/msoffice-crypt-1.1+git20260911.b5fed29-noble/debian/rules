@@ -1,0 +1,23 @@
+#!/usr/bin/make -f
+include /usr/share/dpkg/buildflags.mk
+
+%:
+	dh $@
+
+# Build only the command-line tool. Upstream's makefiles assign CFLAGS themselves, so pass the
+# Debian compiler flags through CFLAGS_OPT, which they append ahead of -Iinclude.
+# The cybozulib component (commit 4959b9a, the last before cybozulib replaced OpenSSL) comes
+# first on the include path. Its crypto.hpp hashes and encrypts through OpenSSL, as the earlier
+# REMnux binary did: that keeps SHA-384 documents decryptable and lets OpenSSL pick AES-NI at
+# run time. The headers upstream vendored in include/cybozu (2026-08) drop SHA-384 and use
+# AES-NI instructions unconditionally on x86, which crashes on CPUs without them.
+override_dh_auto_build:
+	$(MAKE) -C src RELEASE=1 CFLAGS_OPT="-I$(CURDIR)/cybozulib/include -O2 -DNDEBUG $(CPPFLAGS) $(CXXFLAGS)"
+
+override_dh_auto_test:
+
+override_dh_auto_install:
+	install -D -m 0755 bin/msoffice-crypt.exe debian/msoffice-crypt/usr/bin/msoffice-crypt
+
+override_dh_auto_clean:
+	rm -rf src/release bin/msoffice-crypt.exe

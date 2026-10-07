@@ -1,0 +1,3 @@
+# Upstream's test inputs: Go binaries built from testproject/ by build_test_files.sh. They are
+# test data for upstream's own tests, never built or installed by this package.
+goresym source: source-is-missing [testproject/*]

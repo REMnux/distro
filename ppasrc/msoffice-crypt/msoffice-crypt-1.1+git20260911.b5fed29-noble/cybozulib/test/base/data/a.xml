@@ -1,0 +1,26 @@
+<?xml version="1.0" ?>
+<cookList>
+    <recipe time="3h" name='pan' preparations-time='5min'>
+        <dish>あんパン</dish>
+        <material quantity="3" unit="cup">小麦</material>
+        <material quantity="0.25" unit="オンス">イースト</material>
+        <material quantity="1.5" unit="カップ">水</material>
+        <material quantity="1" unit="スプーン">塩</material>
+        <point>
+            <process>混ぜる</process>
+            <process>こねる</process>
+            <process>放置</process>
+            <process>焼く</process>
+       </point>
+   </recipe>
+   <recipe time="30分" name="お好み焼き'" preparations-time="5分">
+       <dish>もんじゅ</dish>
+       <material quantity="3" unit="カップ">小麦粉</material>
+       <material quantity="0.25" unit="g">キャベツ&amp;豚肉</material>
+       <material quantity="1.5" unit="ml">たまご</material>
+       <point>
+           <process>切って混ぜる</process>
+            <process>じっくり焼く</process>
+        </point>
+    </recipe>
+</cookList>

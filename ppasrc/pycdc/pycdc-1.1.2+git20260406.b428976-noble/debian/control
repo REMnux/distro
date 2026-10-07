@@ -1,0 +1,17 @@
+Source: pycdc
+Section: utils
+Priority: optional
+Maintainer: REMnux Distribution <distro@remnux.org>
+Build-Depends: debhelper-compat (= 13), cmake, python3
+Standards-Version: 4.6.2
+Homepage: https://github.com/zrax/pycdc
+Rules-Requires-Root: no
+
+Package: pycdc
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: C++ Python bytecode disassembler and decompiler
+ Decompyle++ (pycdc) turns compiled Python bytecode back into readable Python
+ source, and pycdas disassembles it. This package builds both from upstream
+ source (commit b428976), replacing the earlier package that shipped prebuilt
+ x86-64 binaries.

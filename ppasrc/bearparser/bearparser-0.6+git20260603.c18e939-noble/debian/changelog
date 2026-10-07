@@ -1,0 +1,19 @@
+bearparser (0.6+git20260603.c18e939-noble1) noble; urgency=medium
+
+  * Build bearcommander from upstream source (commit c18e939) with CMake and Qt 6,
+    replacing the earlier package that shipped a prebuilt x86-64 binary. This
+    lets Launchpad build it for amd64 and arm64.
+
+ -- REMnux Distribution <distro@remnux.org>  Tue, 06 Oct 2026 22:50:45 -0400
+
+bearparser (0.6-noble) noble; urgency=medium
+
+  * Updated to latest upstream version and for Noble.
+
+ -- REMnux Distribution <distro@remnux.org>  Sat, 26 Jul 2025 11:42:24 -0400
+
+bearparser (0.3-focal) focal; urgency=medium
+
+  * Initial Release.
+
+ -- REMnux Distribution <distro@remnux.org>  Thu, 21 May 2020 00:22:14 -0400

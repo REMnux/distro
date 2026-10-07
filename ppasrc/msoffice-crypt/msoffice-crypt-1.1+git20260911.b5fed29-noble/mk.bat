@@ -1,0 +1,1 @@
+cl /MT /Ox /EHsc src\msoffice-crypt.cpp -I .\include -DNOMINMAX -DNDEBUG /Febin\msoffice-crypt.exe

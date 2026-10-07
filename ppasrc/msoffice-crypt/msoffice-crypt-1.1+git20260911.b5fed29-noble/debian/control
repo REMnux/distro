@@ -1,0 +1,16 @@
+Source: msoffice-crypt
+Section: utils
+Priority: optional
+Maintainer: REMnux Distribution <distro@remnux.org>
+Build-Depends: debhelper-compat (= 13), libssl-dev
+Standards-Version: 4.6.2
+Homepage: https://github.com/herumi/msoffice
+Rules-Requires-Root: no
+
+Package: msoffice-crypt
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Encrypt and decrypt OOXML Microsoft Office documents
+ msoffice-crypt encrypts and decrypts Office Open XML documents (docx, xlsx,
+ pptx) with a password. This package builds it from upstream source (commit
+ b5fed29), replacing the earlier package that shipped a prebuilt x86-64 binary.

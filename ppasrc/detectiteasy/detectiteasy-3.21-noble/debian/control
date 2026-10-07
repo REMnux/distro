@@ -1,0 +1,16 @@
+Source: detectiteasy
+Section: devel
+Priority: optional
+Maintainer: REMnux Distribution <distro@remnux.org>
+Build-Depends: debhelper-compat (= 13), qtbase5-dev, qtscript5-dev, qttools5-dev, qttools5-dev-tools, libqt5svg5-dev, libqt5opengl5-dev
+Standards-Version: 4.6.2
+Homepage: https://github.com/horsicq/Detect-It-Easy
+Rules-Requires-Root: no
+
+Package: detectiteasy
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Determine types of files (Detect It Easy)
+ Detect It Easy identifies file types, compilers, packers, and protectors.
+ Provides die (GUI), diec (console), and diel (lite GUI), with the signature
+ databases under /usr/lib/die, in the same layout as the author's package.

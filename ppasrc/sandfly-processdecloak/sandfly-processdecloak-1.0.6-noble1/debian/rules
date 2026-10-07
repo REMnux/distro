@@ -1,0 +1,23 @@
+#!/usr/bin/make -f
+# The module has no dependencies, so the build needs no network. Keep Go's caches inside the
+# build tree and never download a newer toolchain.
+export GOCACHE := $(CURDIR)/debian/.gocache
+export GOPATH := $(CURDIR)/debian/.gopath
+export GOTOOLCHAIN := local
+export GOFLAGS := -trimpath -buildvcs=false
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	go build -ldflags="-s -w" -o sandfly-processdecloak .
+
+override_dh_auto_test:
+
+override_dh_auto_install:
+	install -D -m 0755 sandfly-processdecloak debian/sandfly-processdecloak/usr/bin/sandfly-processdecloak
+
+override_dh_dwz:
+
+override_dh_auto_clean:
+	rm -rf sandfly-processdecloak debian/.gocache debian/.gopath

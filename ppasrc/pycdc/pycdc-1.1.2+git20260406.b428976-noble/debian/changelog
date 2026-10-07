@@ -1,0 +1,25 @@
+pycdc (1.1.2+git20260406.b428976-noble1) noble; urgency=medium
+
+  * Build pycdc and pycdas from upstream source (commit b428976, 2026-04-06)
+    with CMake instead of shipping prebuilt x86-64 binaries, so Launchpad
+    builds them for amd64 and arm64.
+
+ -- REMnux Distribution <distro@remnux.org>  Tue, 06 Oct 2026 23:46:44 -0400
+
+pycdc (1.1.2-noble) noble; urgency=medium
+
+  * Updated to latest upstream release and for Noble. 
+
+ -- REMnux Distribution <distro@remnux.org>  Mon, 28 Jul 2025 15:10:43 -0400
+
+pycdc (1.1.1-focal) focal; urgency=medium
+
+  * Updated to latest upstream release and for bionic and focal
+
+ -- REMnux Distribution <distro@remnux.org>  Sun, 28 Jun 2020 14:05:37 -0400
+
+pycdc (1.0.0-1) trusty; urgency=medium
+
+  * Initial Release.
+
+ -- REMnux Distribution (https://REMnux.org) <distro@remnux.org>  Tue, 09 Jun 2015 08:25:16 -0400

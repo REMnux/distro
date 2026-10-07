@@ -1,0 +1,31 @@
+#!/usr/bin/make -f
+# Upstream publishes no Linux arm64 build, so this package builds redress for arm64; REMnux keeps
+# installing upstream's release binary on amd64. The Go module sources ship in the vendor
+# component tarball (made with `go mod vendor` and checked with `go mod verify`), because
+# Launchpad builders have no network.
+export PATH := /usr/lib/go-1.24/bin:$(PATH)
+export GOCACHE := $(CURDIR)/debian/.gocache
+export GOPATH := $(CURDIR)/debian/.gopath
+export GOTOOLCHAIN := local
+export GOFLAGS := -mod=vendor -trimpath -buildvcs=false
+
+include /usr/share/dpkg/pkg-info.mk
+# The version strings upstream's Makefile stamps into the binary for `redress version`.
+GOREVER := $(shell awk '/goretk\/gore v/ {print $$2}' go.mod)
+GOVER := $(shell /usr/lib/go-1.24/bin/go version | awk '{print $$3}')
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	go build -ldflags="-s -w -X main.redressVersion=v$(DEB_VERSION_UPSTREAM) -X main.goreVersion=$(GOREVER) -X main.compilerVersion=$(GOVER)" -o redress .
+
+override_dh_auto_test:
+
+override_dh_auto_install:
+	install -D -m 0755 redress debian/redress/usr/bin/redress
+
+override_dh_dwz:
+
+override_dh_auto_clean:
+	rm -rf redress debian/.gocache debian/.gopath

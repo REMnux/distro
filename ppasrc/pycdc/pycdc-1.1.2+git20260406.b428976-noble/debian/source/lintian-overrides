@@ -1,0 +1,4 @@
+# Upstream's decompiler test fixtures: bytecode compiled by many historical Python versions
+# from the sources in tests/input/. They are test inputs, never built or installed.
+pycdc source: source-is-missing [tests/compiled/*]
+pycdc source: source-is-missing [tests/xfail/*]
