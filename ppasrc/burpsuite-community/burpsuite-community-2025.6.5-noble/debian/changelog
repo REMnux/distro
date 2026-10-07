@@ -1,3 +1,11 @@
+burpsuite-community (2025.6.5-noble3) noble; urgency=medium
+
+  * Build as architecture-independent so the package also installs on arm64.
+  * Depend on openjdk-21-jre without an architecture qualifier.
+  * Burp's built-in browser bundles x86-64 Chromium only, so it does not run on arm64.
+
+ -- REMnux Distribution <distro@remnux.org>  Tue, 06 Oct 2026 20:53:55 -0400
+
 burpsuite-community (2025.6.5-noble2) noble; urgency=medium
 
   * Rebuilt to include burpsuite-community.jar, which was absent from the

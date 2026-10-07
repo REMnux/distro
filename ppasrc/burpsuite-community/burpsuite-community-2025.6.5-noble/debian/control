@@ -7,6 +7,6 @@ Standards-Version: 3.9.4
 Homepage: https://portswigger.net/burp/tc-community
 
 Package: burpsuite-community
-Architecture: amd64
-Depends: openjdk-21-jre:amd64
+Architecture: all
+Depends: openjdk-21-jre
 Description: Investigate website interactions using a web proxy
