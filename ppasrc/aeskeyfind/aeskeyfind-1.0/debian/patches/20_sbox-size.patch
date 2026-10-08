@@ -1,0 +1,17 @@
+Description: Fix sbox array size
+ See #692293 for details.
+Author: Samuel Henrique <samueloph@debian.org>
+Last-Update: 2017-01-01
+Index: aeskeyfind/aes.h
+===================================================================
+--- aeskeyfind.orig/aes.h
++++ aeskeyfind/aes.h
+@@ -4,7 +4,7 @@
+ typedef uint32_t aeskey_t[4];
+ typedef uint32_t keyexp_t[44];
+ 
+-extern uint8_t sbox[255];
++extern uint8_t sbox[256];
+ extern uint8_t rcon[255];
+ 
+ // Perform the AES key core operation on a word.

@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# Exit on failure immediately
+set -e
+
+# Specifies testfile containing 1K of zeros
+DMP="${AUTOPKGTEST_TMP}/zeros.dmp"
+truncate -s 1K ${DMP}
+
+# Run aeskeyfind with zero-filled dump
+# This is needed, since aeskeyfind returns 1 upon calling without parameters
+aeskeyfind ${DMP}
+
+# Clean up
+rm ${DMP}
+
+exit 0

@@ -1,7 +1,15 @@
 #!/usr/bin/make -f
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
+include /usr/share/dpkg/architecture.mk
+include /usr/share/dpkg/buildopts.mk
+
 PREFIX := /usr/lib/cutter
+BUILDDIR := $(CURDIR)/obj-$(DEB_HOST_GNU_TYPE)
+# Cutter's build installs the bundled Rizin here; the plugins compile against it.
+RIZIN_PREFIX := $(BUILDDIR)/Rizin-prefix
+STAGE := $(CURDIR)/debian/cutter$(PREFIX)
+CUTTER_PLUGDIR := $(PREFIX)/share/rizin/cutter/plugins
 # Rizin subprojects from the rizinsubprojects component tarball. Launchpad builders have no
 # network, so meson must find them in place. Git-pinned ones are copied as directories;
 # release tarballs go to meson's package cache, where meson checks them against the
@@ -23,10 +31,35 @@ override_dh_auto_configure:
 		-DCMAKE_INSTALL_PREFIX=$(PREFIX) -DCMAKE_INSTALL_LIBDIR=lib \
 		-DCMAKE_INSTALL_RPATH=$(PREFIX)/lib \
 		-DCUTTER_USE_BUNDLED_RIZIN=ON -DCUTTER_ENABLE_PACKAGING=ON \
-		-DCUTTER_INCLUDE_GIT_HASH=OFF
+		-DCUTTER_INCLUDE_GIT_HASH=OFF \
+		-DCUTTER_EXTRA_PLUGIN_DIRS=$(CUTTER_PLUGDIR)
 
 override_dh_auto_install:
 	dh_auto_install
+	# Decompiler plugins, as in Cutter's official builds: rz-ghidra (rzghidra component, with
+	# only the Ghidra decompiler and processor specs) and jsdec (jsdec component, with its
+	# QuickJS subproject). Both build against the bundled Rizin and the staged Cutter, and
+	# install under $(PREFIX). rz-ghidra compiles in the absolute path of its Sleigh specs.
+	cmake -S rzghidra -B build-rzghidra -G Ninja -DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_PREFIX_PATH="$(RIZIN_PREFIX);$(STAGE)" \
+		-DCMAKE_INSTALL_PREFIX=$(PREFIX) -DCMAKE_INSTALL_RPATH=$(PREFIX)/lib \
+		-DRIZIN_INSTALL_PLUGDIR=$(PREFIX)/lib/rizin/plugins \
+		-DBUILD_CUTTER_PLUGIN=ON -DCUTTER_INSTALL_PLUGDIR=$(CUTTER_PLUGDIR)/native \
+		-DUSE_SYSTEM_PUGIXML=ON -DUSE_SYSTEM_ZLIB=ON
+	cmake --build build-rzghidra --parallel $(DEB_BUILD_OPTION_PARALLEL)
+	DESTDIR=$(CURDIR)/debian/cutter cmake --install build-rzghidra
+	meson setup --buildtype=release --pkg-config-path=$(RIZIN_PREFIX)/lib/pkgconfig \
+		-Dbuild_type=cutter build-jsdec-lib jsdec
+	ninja -C build-jsdec-lib
+	cmake -S jsdec/cutter-plugin -B build-jsdec-plugin -G Ninja -DCMAKE_BUILD_TYPE=Release \
+		-DJSDEC_BUILD_DIR=$(CURDIR)/build-jsdec-lib -DCMAKE_PREFIX_PATH="$(RIZIN_PREFIX);$(STAGE)" \
+		-DCMAKE_INSTALL_PREFIX=$(PREFIX) -DCUTTER_INSTALL_PLUGDIR=$(CUTTER_PLUGDIR)/native
+	cmake --build build-jsdec-plugin
+	DESTDIR=$(CURDIR)/debian/cutter cmake --install build-jsdec-plugin
+	# The plugins' library search path is upstream's ($ORIGIN): they resolve librz_* from the
+	# rizin or Cutter process that loads them, so `ldd` on a plugin alone reports those
+	# libraries as not found. That is expected. Do not patchelf them: patchelf moves ELF
+	# sections, and dh_dwz then aborts ("Allocatable section ... after non-allocatable ones").
 	# Development files and upstream desktop integration are not shipped: REMnux provides its own
 	# menu entry and icon for Cutter.
 	cd debian/cutter$(PREFIX) && rm -rf include lib/pkgconfig lib/cmake share/applications share/icons share/metainfo
@@ -41,3 +74,4 @@ override_dh_makeshlibs:
 override_dh_auto_clean:
 	dh_auto_clean
 	rm -rf rizin/subprojects/packagecache $(addprefix rizin/subprojects/,$(GIT_SUBPROJECTS) $(EXTRACTED_SUBPROJECTS))
+	rm -rf build-rzghidra build-jsdec-lib build-jsdec-plugin

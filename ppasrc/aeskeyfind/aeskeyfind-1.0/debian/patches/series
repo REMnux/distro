@@ -1,0 +1,4 @@
+10_add-GCC-hardening.patch
+20_sbox-size.patch
+30_big-files-support.patch
+40_fix-undefined-left-shift.patch

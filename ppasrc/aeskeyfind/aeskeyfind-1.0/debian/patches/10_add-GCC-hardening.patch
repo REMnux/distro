@@ -1,0 +1,20 @@
+Description: add GCC hardening.
+Author: Joao Eriberto Mota Filho <eriberto@debian.org>
+Last-Update: 2015-02-26
+Index: aeskeyfind-1.0/Makefile
+===================================================================
+--- aeskeyfind-1.0.orig/Makefile
++++ aeskeyfind-1.0/Makefile
+@@ -1,10 +1,10 @@
+-CFLAGS= -Wall -O4 -std=c99
++CFLAGS += -Wall -O4 -std=c99
+ OBJS= aeskeyfind.o aes.o util.o
+ 
+ all: aeskeyfind
+ 
+ aeskeyfind: $(OBJS)
+-	$(CC) -o aeskeyfind $(OBJS)
++	$(CC) $(LDFLAGS) -o aeskeyfind $(OBJS)
+ 
+ clean:
+ 	@rm -f aeskeyfind *~ \#* $(OBJS)

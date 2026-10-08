@@ -1,3 +1,15 @@
+ghidra (12.1.2-noble1) noble; urgency=medium
+
+  * Build for arm64 as well as amd64. Upstream ships no Linux arm64 native
+    programs, so the arm64 build compiles the decompiler, Sleigh compiler,
+    GNU demanglers, and lzfse from the Ghidra 12.1.2 source (natives-src/).
+    The amd64 package is unchanged apart from this entry and the dependency
+    line. On arm64, Ghidra's 7-Zip archive support is unavailable, because
+    upstream ships 7-Zip JBinding only for x86-64.
+  * Depend on openjdk-21-jdk without the :amd64 qualifier.
+
+ -- REMnux Distribution <distro@remnux.org>  Wed, 07 Oct 2026 13:25:54 -0400
+
 ghidra (12.1.2-noble) noble; urgency=medium
 
   * Upgrade to latest upstream version.

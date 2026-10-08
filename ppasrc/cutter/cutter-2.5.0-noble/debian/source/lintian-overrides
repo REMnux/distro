@@ -1,3 +1,8 @@
 # libmspack's own regression-test inputs (malformed CHM files for past CVEs), inside the bundled
 # rizin subproject sources. They are test data, never built or installed.
 cutter source: source-contains-prebuilt-ms-help-file [rizinsubprojects/libmspack/libmspack/test/test_files/chmd/*]
+# rz-ghidra's own test fixtures: small binaries its test suite decompiles (dectest.c and rec.c,
+# their sources, sit beside them). They are test data, never built or installed.
+cutter source: source-is-missing [rzghidra/test/bins/*]
+# A license text that Ghidra ships as HTML; lintian mistakes it for generated output.
+cutter source: source-is-missing [rzghidra/ghidra/ghidra/licenses/H2_Mozilla_License_2.0.html]

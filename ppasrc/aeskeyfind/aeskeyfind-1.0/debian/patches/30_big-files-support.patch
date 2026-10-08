@@ -1,0 +1,55 @@
+Description: Support for files bigger than 4GB
+ aeskeyfind has a bug where it fails to process a file larger than 4GB properly.
+ Instead it will process only filesize & 0xffffffff. Sign confusion in entropy
+ function can also lead to a crash when processing a large file. Finally, on
+ 32-bit systems size parameter to mmap would get quietly truncated.
+
+ PS. Due to the design limitations the application cannot scan very large files
+ on 32-bit systems. This patch doesn't address that limitation, it however makes
+ the application fail gracefully if the situation is met.
+
+ https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=926786
+Author: Harry Sintonen <debianbugs@kyber.fi>
+Index: aeskeyfind/aeskeyfind.c
+===================================================================
+--- aeskeyfind.orig/aeskeyfind.c
++++ aeskeyfind/aeskeyfind.c
+@@ -90,7 +90,7 @@ static void print_key(uint32_t* map, int
+ // more than 8 repeats of any byte.  This is a primitive measure of
+ // entropy, but it works well enough.  The function keeps track of a
+ // sliding window of byte counts.
+-static int entropy(const uint8_t* bmap, int i)
++static int entropy(const uint8_t* bmap, size_t i)
+ {
+     static int new_call = 1;
+     static int byte_freq[256] = {0};
+@@ -208,7 +208,7 @@ static void find_keys(const uint8_t* bma
+ 
+ // Memory maps filename and return a pointer on success, setting len
+ // to the length of the file (does not return on error)
+-unsigned char *map_file(char *filename, unsigned int *len) {
++unsigned char *map_file(char *filename, size_t *len) {
+   int fd = open(filename, O_RDONLY);
+   if (fd < 0)
+     err(1, "image open failed");
+@@ -217,6 +217,11 @@ unsigned char *map_file(char *filename,
+   if (fstat(fd, &st) != 0)
+     err(1, "image fstat failed");
+ 
++  if (st.st_size > SIZE_MAX) {
++    errno = EINVAL;
++    err(1, "image too large to mmap");
++  }
++
+   unsigned char *map;
+   map = (unsigned char*)mmap(0, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
+   if (map == MAP_FAILED)
+@@ -265,7 +270,7 @@ int main(int argc, char * argv[])
+         exit(1);
+     }
+ 
+-    unsigned int len;
++    size_t len;
+     unsigned char *image = map_file(argv[0], &len);
+     if (len < 240) {
+         fprintf(stderr, "memory image too small\n");

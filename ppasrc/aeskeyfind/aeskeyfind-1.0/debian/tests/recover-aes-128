@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -e
+
+# Helper script to use for dumping and key extraction
+TEST_SCRIPT="debian/tests/helpers/test_aes_extraction.sh"
+
+# Defines the AES key-material
+KEY="DebianDebianDebi"
+
+# Dump memory of process, which generates key material
+sh ${TEST_SCRIPT} "$KEY"
+

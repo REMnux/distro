@@ -1,0 +1,28 @@
+Source: aeskeyfind
+Section: utils
+Priority: optional
+Maintainer: REMnux Distribution <distro@remnux.org>
+XSBC-Original-Maintainer: Debian Security Tools <team+pkg-security@tracker.debian.org>
+Uploaders: Samuel Henrique <samueloph@debian.org>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.5.1
+Rules-Requires-Root: no
+Homepage: https://citp.princeton.edu/our-work/memory/code/
+Vcs-Browser: https://salsa.debian.org/pkg-security-team/aeskeyfind
+Vcs-Git: https://salsa.debian.org/pkg-security-team/aeskeyfind.git
+
+Package: aeskeyfind
+Architecture: arm64
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: tool for locating AES keys in a captured memory image
+ This program illustrates automatic techniques for locating 128-bit and
+ 256-bit AES keys in a captured memory image.
+ .
+ The program uses various algorithms and also performs a simple entropy
+ test to filter out blocks that are not keys.  It counts the number of
+ repeated bytes and skips blocks that have too many repeats.
+ .
+ This method works even if several bits of the key schedule have been
+ corrupted due to memory decay.
+ .
+ This package is useful to several activities, as forensics investigations.

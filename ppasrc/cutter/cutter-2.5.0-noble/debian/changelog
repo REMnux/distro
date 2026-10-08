@@ -1,3 +1,13 @@
+cutter (2.5.0-noble2) noble; urgency=medium
+
+  * Add the rz-ghidra v0.9.0 and jsdec v0.9.0 decompiler plugins, as in
+    Cutter's official builds. We ship both as component tarballs so Launchpad
+    can build them offline: rz-ghidra with only the Ghidra decompiler and
+    processor specs, and jsdec with its QuickJS subproject.
+  * Build-Depend on libpugixml-dev for rz-ghidra.
+
+ -- REMnux Distribution <distro@remnux.org>  Wed, 07 Oct 2026 11:13:21 -0400
+
 cutter (2.5.0-noble1) noble; urgency=medium
 
   * Initial package: Cutter 2.5.0 with its bundled Rizin 0.9.1, built from the

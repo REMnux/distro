@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: REMnux Distribution <distro@remnux.org>
 Build-Depends: debhelper-compat (= 13), cmake, meson, ninja-build, pkgconf, python3,
  qt6-base-dev, qt6-tools-dev, qt6-tools-dev-tools, qt6-l10n-tools, libqt6svg6-dev,
- libqt6core5compat6-dev, libgraphviz-dev, zlib1g-dev
+ libqt6core5compat6-dev, libgraphviz-dev, zlib1g-dev, libpugixml-dev
 Standards-Version: 4.6.2
 Homepage: https://cutter.re
 Rules-Requires-Root: no
@@ -16,4 +16,6 @@ Description: Reverse engineering platform powered by Rizin
  Cutter is a graphical reverse engineering platform built on the Rizin
  framework. This package builds Cutter and its bundled Rizin from source for
  arm64, where upstream publishes no Linux build. Rizin is installed privately
- under /usr/lib/cutter, so its command-line tools are not added to PATH.
+ under /usr/lib/cutter, so its command-line tools are not added to PATH. The
+ package includes the rz-ghidra and jsdec decompiler plugins, as Cutter's
+ official builds do.

@@ -1,0 +1,17 @@
+Description: Fix bug caused by code with undefined behavior (left shift with negative exponent)
+Bug-Debian: https://bugs.debian.org/989179
+Bug-Ubuntu: https://bugs.launchpad.net/debian/+source/aeskeyfind/+bug/1838334
+Author: Adrian Bunk <bunk@debian.org>
+Index: aeskeyfind/aes.h
+===================================================================
+--- aeskeyfind.orig/aes.h
++++ aeskeyfind/aes.h
+@@ -12,7 +12,7 @@ extern uint8_t rcon[255];
+ static inline uint32_t key_core(uint32_t k, int i) {
+     uint32_t t = 0;
+     for (int j=0; j<4; j++)
+-        t = set_byte(t, (j-1)%4, sbox[get_byte(k,j)]);
++        t = set_byte(t, (j-1+4)%4, sbox[get_byte(k,j)]);
+     return set_byte(t, 0, get_byte(t,0) ^ rcon[i]);
+ }
+ 

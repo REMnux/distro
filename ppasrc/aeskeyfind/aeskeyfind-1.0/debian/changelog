@@ -1,0 +1,174 @@
+aeskeyfind (1:1.0-11+noble1) noble; urgency=medium
+
+  * Build for arm64, which Debian and Ubuntu skip (Debian #989179 limited the
+    package to amd64 and i386). arm64 is little-endian like x86, and a planted
+    AES-128 key schedule is recovered on arm64 as on amd64. REMnux keeps
+    installing Ubuntu's package on amd64.
+
+ -- REMnux Distribution <distro@remnux.org>  Wed, 07 Oct 2026 11:35:17 -0400
+
+aeskeyfind (1:1.0-11) unstable; urgency=medium
+
+  * Restrict the architectures we build for to amd64 and i386 (#989179)
+    Our approaches at fixing #989179 all failed to fix the integration tests
+    for the other archs, which means there are more problems afecting those
+    archs and thus we can't ensure that the package meets the Debian standards
+    for our users.
+
+ -- Samuel Henrique <samueloph@debian.org>  Tue, 15 Jun 2021 20:43:59 +0100
+
+aeskeyfind (1:1.0-10) unstable; urgency=medium
+
+  * d/p/40_fix-undefined-left-shift.patch: New patch to fix #989179 at the
+    root cause (thanks to Adrian Bunk for the patch and Jan Gru for reporting
+    the issue)
+
+ -- Samuel Henrique <samueloph@debian.org>  Mon, 14 Jun 2021 20:47:05 +0100
+
+aeskeyfind (1:1.0-9) unstable; urgency=medium
+
+  [ Samuel Henrique ]
+  * Removes -O4 optimization to fix bug caused by code with undefined behavior
+    (closes: #989179, LP: #1838334)
+
+  [ Jan Gru ]
+  * Add autopkgtests
+
+ -- Samuel Henrique <samueloph@debian.org>  Wed, 09 Jun 2021 23:53:43 +0100
+
+aeskeyfind (1:1.0-8) unstable; urgency=medium
+
+  * Re-import upstream tarball, this time with its signature
+  * Bump DH to 13
+  * Bump Standards-Version to 4.5.1
+  * Configure git-buildpackage for Debian
+
+ -- Samuel Henrique <samueloph@debian.org>  Sat, 30 Jan 2021 21:13:18 +0000
+
+aeskeyfind (1:1.0-7) unstable; urgency=medium
+
+  * d/p/30_big-files-support.patch: New patch to support bigger files,
+    thanks to Harry Sintonen for the patch (closes: #926786)
+
+ -- Samuel Henrique <samueloph@debian.org>  Mon, 25 Nov 2019 23:23:14 +0000
+
+aeskeyfind (1:1.0-6) unstable; urgency=medium
+
+  * Bump DH level to 12
+  * Update Standards-Version to 4.4.1
+  * Add salsa-ci.yml
+  * Change my email address to the debian one
+  * Update upstream url
+  * d/upstream/signing-key.asc: Remove signatures of key
+  * d/changelog: Remove trailing whitespace
+  * d/control: Add Rules-Requires-Root: no
+  * d/copyright: Update debian/* entry
+
+ -- Samuel Henrique <samueloph@debian.org>  Sun, 24 Nov 2019 21:50:06 +0000
+
+aeskeyfind (1:1.0-5) unstable; urgency=medium
+
+  * Team upload.
+
+  [ Samuel Henrique ]
+  * d/control: add myself as an uploader
+  * Bump Standards-Version to 4.0.1
+
+  [ Raphaël Hertzog ]
+  * Update team maintainer address to Debian Security Tools
+    <team+pkg-security@tracker.debian.org>
+  * Update Vcs-Git and Vcs-Browser for the move to salsa.debian.org
+  * Bump Standards-Version to 4.2.1.
+
+ -- Raphaël Hertzog <hertzog@debian.org>  Mon, 27 Aug 2018 22:14:19 +0200
+
+aeskeyfind (1:1.0-4) unstable; urgency=medium
+
+  * Team upload.
+
+  [ Joao Eriberto Mota Filho ]
+  * debian/control:
+      - Removed a MIA uploader (solves a special case pointed by QA team).
+      - Reorganize the Depends field.
+      - Updated the Vcs-git field to use https instead of git.
+  * debian/copyright:
+      - Added rights for Samuel in packaging section.
+      - Updated the packaging copyright years.
+  * debian/patches/add-gcc-hardening: renamed to 10_add-gcc-hardening.patch.
+  * debian/watch: changed the source to avoid future issues because the
+    upstream is updating the homepage.
+
+  [ Samuel Henrique ]
+  * Bumped DH level to 10.
+  * debian/control: bumped Standards-Version to 3.9.8.
+  * debian/patches/20_sbox-size.patch: added to fix sbox array size. Thanks to
+    Michael Tautschnig <mt@debian.org>. (Closes: #692293)
+  * debian/rules: added the DEB_BUILD_MAINT_OPTIONS variable to improve the GCC
+    hardening.
+  * debian/watch: bumped to version 4.
+
+ -- Joao Eriberto Mota Filho <eriberto@debian.org>  Sun, 01 Jan 2017 23:40:40 -0200
+
+aeskeyfind (1:1.0-3) unstable; urgency=medium
+
+  * Team upload.
+  * Upload to unstable.
+  * debian/control: fixed typos in short and long description. Thanks to
+      Luca Brivio <luca.brivio@gmail.com>. (Closes: #684795)
+
+ -- Joao Eriberto Mota Filho <eriberto@debian.org>  Tue, 16 Jun 2015 23:14:45 -0300
+
+aeskeyfind (1:1.0-2) experimental; urgency=medium
+
+  * Team upload.
+  * Updated DH level to 9.
+  * debian/control:
+      - Added the 'forensics' word to long description.
+      - Bumped Standards-Version to 3.9.6.
+      - Updated the Homepage field.
+      - Updated the Vcs-* fields.
+  * debian/copyright:
+      - Moved the license texts to end of file.
+      - Updated the 'Format' field in debian/copyright.
+      - Updated the GPL-2 license text.
+      - Updated the packaging copyright years.
+  * debian/patches/add-gcc-hardening: added to implement hardening.
+  * debian/upstream/signing-key.asc: added to allow the GPG signature check by
+      uscan.
+  * debian/watch:
+      - Added a check to GPG signature.
+      - Updated the rule to search for files.
+
+ -- Joao Eriberto Mota Filho <eriberto@debian.org>  Thu, 26 Feb 2015 14:21:21 -0300
+
+aeskeyfind (1:1.0-1) unstable; urgency=low
+
+  * Team upload.
+
+  [ Daniel Baumann ]
+  * Minimizing rules file.
+  * Using debhelper install file rather than adding install target in upstream
+    Makefile.
+
+  [ Julien Valroff ]
+  * Fix version number (add an epoch to ensure the new version number is
+    higher than the previously uploaded package)
+  * Bump debhelper compat to 8
+  * Bump standards version to 3.9.2 (no changes needed)
+  * Switch to 3.0 (quilt) source package format
+  * Add watch file
+  * Add manpage
+  * Fix VCS* fields
+  * Move to `utils' section as per the override
+  * Update copyright file as per current DEP-5
+  * Remove useless lintian override: use Team Upload entry
+  * Update short description and complete long description
+
+ -- Julien Valroff <julien@debian.org>  Sat, 23 Jul 2011 13:32:29 +0200
+
+aeskeyfind (1.0.0-1) unstable; urgency=low
+
+  * Initial release (Closes: #495416)
+  * Adjusted the Makefile to add $DESTDIR
+
+ -- Jacob Appelbaum <jacob@appelbaum.net>  Thu, 25 Jun 2009 12:44:00 -0300

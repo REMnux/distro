@@ -2,11 +2,11 @@ Source: ghidra
 Section: utils
 Priority: optional
 Maintainer: REMnux Distribution <distro@remnux.org>
-Build-Depends: debhelper (>= 10)
+Build-Depends: debhelper (>= 10), zlib1g-dev
 Standards-Version: 4.1.2
 Homepage: https://ghidra-sre.org
 
 Package: ghidra
-Architecture: amd64
-Depends: openjdk-21-jdk:amd64
+Architecture: amd64 arm64
+Depends: openjdk-21-jdk, ${shlibs:Depends}
 Description: Software reverse engineering tool suite

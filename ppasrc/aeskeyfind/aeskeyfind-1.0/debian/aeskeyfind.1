@@ -1,0 +1,36 @@
+.TH "aeskeyfind" "1" "07-23-2011" "User Commands" "User Commands"
+.SH "NAME"
+aeskeyfind \- Locates 128-bit and 256-bit AES keys in a captured memory image.
+.SH SYNOPSIS
+.B aeskeyfind
+[OPTION] MEMORY-IMAGE
+.SH DESCRIPTION
+aeskeyfind is a tool that illustrates automatic techniques for locating 128-bit and 256-bit AES keys in a captured memory image.
+.SH OPTIONS
+.LP
+.ne 3
+.TP
+.BI -v\c
+verbose output -- prints the extended keys and the constraints on the rows of the key schedule
+.ne 3
+.TP
+.BI -q\c
+don't display a progress bar
+.ne 3
+.TP
+.BI -t\ THRESHOLD\c
+sets the maximum number of bit errors allowed in a candidate key schedule
+.ne 3
+.TP
+.BI -h\c
+displays usage help
+.SH BUGS
+Likely.
+.SH "SEE ALSO"
+\fBbiosmemimage\fR(1),
+\fBrsakeyfind\fR(1)
+.SH AUTHOR
+.TP
+aeskeyfind was written by Nadia Heninger and Ariel Feldman.
+.TP
+This manual page was adapted by Julien Valroff <julien@debian.org> from rsakeyfind.1, originally written by Jacob Appelbaum <jacob@appelbaum.net> for the \fBDebian\fP system (but may be used by others).  Permission is granted to copy, distribute and/or modify this document under the terms of the GNU General Public License, Version 2 or any later version published by the Free Software Foundation.

@@ -1,0 +1,3 @@
+Tests: smoke, recover-aes-128, recover-aes-256
+Depends: aeskeyfind, gdb, procps, python3-pycryptodome
+Restrictions: allow-stderr
