@@ -15,3 +15,7 @@ ghidra_*.zip
 
 # Ghidra native sources, recreated by debian/get-natives-src.sh from the upstream release.
 ppasrc/ghidra/*/natives-src/
+
+# Ghidra release trees, recreated by debian/get-ghidra-tree.sh from the upstream release zip.
+# Trees committed before 12.1.4 stay tracked.
+ppasrc/ghidra/*/ghidra/

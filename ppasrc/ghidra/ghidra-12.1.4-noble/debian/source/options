@@ -1,0 +1,5 @@
+# dpkg-source's default tar-ignore list includes *.so, so earlier uploads lost
+# Ghidra's 7-Zip library and two exercise files. This list replaces the default.
+tar-ignore = .git
+tar-ignore = .gitignore
+tar-ignore = .DS_Store

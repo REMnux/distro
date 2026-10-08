@@ -1,0 +1,50 @@
+#!/usr/bin/make -f
+# The ghidra/ tree is upstream's Ghidra release. On amd64 the package ships it as is.
+# Upstream ships no Linux arm64 native programs, so on arm64 the build compiles them from
+# natives-src/ (copied from the Ghidra_12.1.4_build source tag) with upstream's flags, installs
+# them into os/linux_arm_64, and drops the x86-64 native programs. Upstream's 7-Zip JBinding
+# library exists only for Linux-amd64, Mac-x86_64, and Windows-amd64, so arm64 lacks Ghidra's
+# 7-Zip archive support (as on Apple Silicon Macs).
+include /usr/share/dpkg/architecture.mk
+
+G := debian/ghidra/opt/ghidra
+N := $(CURDIR)/natives-src
+B := $(CURDIR)/build-natives
+
+%:
+	dh $@
+
+ifeq ($(DEB_HOST_ARCH),arm64)
+override_dh_auto_build:
+	rm -rf $(B) && mkdir -p $(B)/out && cp -a $(N)/decompiler $(B)/decompiler
+	# The Makefile passes -m32 on any CPU but x86_64 unless ARCH_TYPE is set, and it does not
+	# create its object directories before compiling these targets.
+	cd $(B)/decompiler && mkdir -p ghi_opt sla_opt com_opt && $(MAKE) ARCH_TYPE= ghidra_opt sleigh_opt
+	cp $(B)/decompiler/ghidra_opt $(B)/out/decompile
+	cp $(B)/decompiler/sleigh_opt $(B)/out/sleigh
+	# Flags from upstream's GPL/DemanglerGnu/build.gradle.
+	gcc -O2 -std=gnu17 -DHAVE_STDLIB_H -DHAVE_STRING_H -I$(N)/demangler_gnu_v2_41/headers \
+		$(N)/demangler_gnu_v2_41/c/*.c -o $(B)/out/demangler_gnu_v2_41
+	gcc -O2 -std=gnu17 -DMAIN_CPLUS_DEM -DHAVE_STDLIB_H -DHAVE_STRING_H -I$(N)/demangler_gnu_v2_24/headers \
+		$(N)/demangler_gnu_v2_24/c/*.c -o $(B)/out/demangler_gnu_v2_24
+	gcc -O2 -I$(N)/lzfse $(N)/lzfse/*.c -o $(B)/out/lzfse
+
+override_dh_install:
+	dh_install
+	install -D -m 0755 -t $(G)/Ghidra/Features/Decompiler/os/linux_arm_64 $(B)/out/decompile $(B)/out/sleigh
+	install -D -m 0755 -t $(G)/GPL/DemanglerGnu/os/linux_arm_64 $(B)/out/demangler_gnu_v2_24 $(B)/out/demangler_gnu_v2_41
+	install -D -m 0755 -t $(G)/Ghidra/Features/FileFormats/os/linux_arm_64 $(B)/out/lzfse
+	rm -rf $(G)/Ghidra/Features/Decompiler/os/linux_x86_64 $(G)/GPL/DemanglerGnu/os/linux_x86_64 \
+		$(G)/Ghidra/Features/FileFormats/os/linux_x86_64 $(G)/Ghidra/Features/FileFormats/data/sevenzipnativelibs/Linux-amd64
+
+# The training binaries in docs/GhidraClass are x86-64 exercise files, kept as data.
+override_dh_strip:
+	dh_strip -Xdocs/GhidraClass
+
+override_dh_shlibdeps:
+	dh_shlibdeps -Xdocs/GhidraClass
+endif
+
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -rf $(B)
