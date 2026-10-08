@@ -15,6 +15,10 @@ Supplemental files used by the REMnux distribution, including:
 
 Source packages for Debian packages published to the [REMnux PPA](https://launchpad.net/~remnux/+archive/ubuntu/stable). Each subdirectory contains the packaging files for a specific tool, organized by Ubuntu release (Bionic, Focal, Noble).
 
+## License
+
+The REMnux project licenses the scripts and packaging files it created for this repository under the [GNU General Public License v3.0](LICENSE), unless stated otherwise. The tools packaged in `ppasrc/` keep their upstream licenses, and each package's `debian/copyright` file records them. Third-party files mirrored in `files/` also keep their own licenses.
+
 ## Related Resources
 
 - [REMnux Website](https://REMnux.org)
