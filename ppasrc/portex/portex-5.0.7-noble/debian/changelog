@@ -1,0 +1,51 @@
+portex (5.0.7-noble) noble; urgency=medium
+
+  * Updated to latest upstream version.
+
+ -- REMnux Distribution <distro@remnux.org>  Mon, 12 Oct 2026 19:24:33 -0400
+
+portex (5.0.6-noble3) noble; urgency=medium
+
+  * Build as architecture-independent so the package also installs on arm64.
+
+ -- REMnux Distribution <distro@remnux.org>  Tue, 06 Oct 2026 15:35:53 -0400
+
+portex (5.0.6-noble2) noble; urgency=medium
+
+  * Quoted the argument expansion in the portex wrapper so that file paths
+    containing spaces are passed through to PortexAnalyzer intact.
+
+ -- REMnux Distribution <distro@remnux.org>  Sat, 08 Aug 2026 09:15:57 -0400
+
+portex (5.0.6-noble1) noble; urgency=medium
+
+  * Suppress the cosmetic log4j2 StatusLogger ERROR line that the bundled
+    PortexAnalyzer.jar prints to stdout on every run (upstream fat jar ships
+    log4j-api without log4j-core), by adding -Dlog4j2.statusLoggerLevel=OFF
+    to the java invocation in the portex wrapper script.
+
+ -- REMnux Distribution <distro@remnux.org>  Sat, 01 Aug 2026 13:45:14 -0400
+
+portex (5.0.6-noble) noble; urgency=medium
+
+  * Updated to latest upstream version.
+
+ -- REMnux Distribution <distro@remnux.org>  Sun, 02 Feb 2026 19:06:00 -0500
+
+portex (5.0-noble) noble; urgency=medium
+
+  * Updated to latest upstream version and for Noble.
+
+ -- REMnux Distribution <distro@remnux.org>  Mon, 28 Jul 2025 15:01:15 -0400
+
+portex (4.0.7-focal) focal; urgency=medium
+
+  * Updated to latest upstream version.
+
+ -- REMnux Distribution <distro@remnux.org>  Mon, 07 Oct 2024 12:12:13 -0400
+
+portex (2.0.9-focal) focal; urgency=medium
+
+  * Initial Release.
+
+ -- REMnux Distribution <distro@remnux.org>  Mon, 06 Jul 2020 21:38:40 -0400
